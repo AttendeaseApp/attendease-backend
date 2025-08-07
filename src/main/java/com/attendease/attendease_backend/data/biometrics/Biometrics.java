@@ -1,6 +1,6 @@
 package com.attendease.attendease_backend.data.biometrics;
 
-import com.attendease.attendease_backend.enums.BiometricStatus;
+import com.attendease.attendease_backend.data.enums.BiometricStatus;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
 import lombok.Data;

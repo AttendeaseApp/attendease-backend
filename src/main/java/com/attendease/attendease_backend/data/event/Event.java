@@ -1,6 +1,6 @@
 package com.attendease.attendease_backend.data.event;
 
-import com.attendease.attendease_backend.enums.EventStatus;
+import com.attendease.attendease_backend.data.enums.EventStatus;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;

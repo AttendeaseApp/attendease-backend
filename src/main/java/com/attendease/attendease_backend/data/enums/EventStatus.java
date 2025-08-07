@@ -1,4 +1,4 @@
-package com.attendease.attendease_backend.enums;
+package com.attendease.attendease_backend.data.enums;
 
 public enum EventStatus {
     ACTIVE,

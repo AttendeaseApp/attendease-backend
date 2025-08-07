@@ -1,7 +1,8 @@
 package com.attendease.attendease_backend.data.user;
 
-import com.attendease.attendease_backend.enums.AccountStatus;
-import com.attendease.attendease_backend.enums.UserType;
+import com.attendease.attendease_backend.data.enums.AccountStatus;
+import com.attendease.attendease_backend.data.enums.UserType;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
 import lombok.Data;
@@ -24,11 +25,12 @@ public class User {
 
     private AccountStatus accountStatus;
     private UserType userType;
+    private UserType updatedBy;
 
     @ServerTimestamp
     private Date createdAt;
     @ServerTimestamp
     private Date updatedAt;
 
-    private String updatedBy;
+
 }

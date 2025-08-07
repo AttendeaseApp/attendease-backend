@@ -1,6 +1,6 @@
 package com.attendease.attendease_backend.data.records;
 
-import com.attendease.attendease_backend.enums.AttendanceStatus;
+import com.attendease.attendease_backend.data.enums.AttendanceStatus;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
@@ -13,7 +13,7 @@ public class Attendance {
 
     @DocumentId
     private String recordId;
-    private DocumentReference studentRefId;
+    private DocumentReference studentNumberRefId;
     private DocumentReference eventRefId;
     private DocumentReference locationRefId;
     private Date timeIn;
