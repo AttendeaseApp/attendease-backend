@@ -1,4 +1,4 @@
-name: Release
+name: Dry run only!
 
 on:
   pull_request:
