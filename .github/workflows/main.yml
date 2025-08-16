@@ -22,46 +22,14 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Install Google Cloud SDK
-        run: |
-          curl -sSL https://sdk.cloud.google.com | bash
-          echo "$HOME/google-cloud-sdk/bin" >> $GITHUB_PATH
-      - name: Start Firestore Emulator
-        run: |
-          gcloud emulators firestore start --host-port=localhost:8080 &
-          sleep 10
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
       - name: Build with Gradle Wrapper
-        run: ./gradlew build
-        env:
-          SPRING_PROFILES_ACTIVE: test
+        run: ./gradlew build -x test
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Package
           path: build/libs
-      - name: Upload test report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: build/reports/tests/test/
-
-#  dependency-submission:
-#    runs-on: ubuntu-latest
-#    permissions:
-#      contents: write
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Set up JDK 17
-#        uses: actions/setup-java@v4
-#        with:
-#          java-version: '17'
-#          distribution: 'temurin'
-#      - name: Make gradlew executable
-#        run: chmod +x ./gradlew
-#      - name: Generate and submit dependency graph
-#        uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582

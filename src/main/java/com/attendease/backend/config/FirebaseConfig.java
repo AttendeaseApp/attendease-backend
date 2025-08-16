@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -21,33 +20,19 @@ import java.io.IOException;
 @Slf4j
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account.path:classpath:service-account-key.json}")
+    @Value("${firebase.service-account.path}")
     private String serviceAccountPath;
 
     @Bean
-    @Profile("!test")
     public FirebaseApp firebaseApp() throws IOException {
         Resource resource = new PathMatchingResourcePatternResolver().getResource(serviceAccountPath);
         FileInputStream serviceAccount = new FileInputStream(resource.getFile());
 
         FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).build();
-
         if (FirebaseApp.getApps().isEmpty()) {
             FirebaseApp.initializeApp(options);
-            log.info("Firebase application has been initialized with service account.");
+            log.info("Firebase application has been initialized.");
         }
-        return FirebaseApp.getInstance();
-    }
-
-    @Bean
-    @Profile("test")
-    public FirebaseApp firebaseAppEmulator() {
-        FirebaseOptions options = FirebaseOptions.builder().setProjectId("test-project").build();
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseApp.initializeApp(options);
-            log.info("Firebase application has been initialized with emulator.");
-        }
-        System.setProperty("FIRESTORE_EMULATOR_HOST", "localhost:8080");
         return FirebaseApp.getInstance();
     }
 
