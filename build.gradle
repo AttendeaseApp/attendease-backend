@@ -34,6 +34,11 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.google.firebase:firebase-admin:9.5.0'
+
+	// https://mvnrepository.com/artifact/com.opencsv/opencsv
+	implementation("com.opencsv:opencsv:5.12.0")
+	// https://mvnrepository.com/artifact/org.springframework.data/spring-data-commons
+	implementation("org.springframework.data:spring-data-commons:3.5.3")
 }
 
 tasks.named('test') {
