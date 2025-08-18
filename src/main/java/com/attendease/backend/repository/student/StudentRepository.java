@@ -5,12 +5,12 @@ import com.attendease.backend.data.model.enums.UserType;
 import com.attendease.backend.data.model.students.Students;
 import com.attendease.backend.data.model.users.Users;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -22,6 +22,30 @@ public class StudentRepository {
 
     public StudentRepository(Firestore firestore) {
         this.firestore = firestore;
+    }
+
+    /**
+     * Checks if a student with the given student number exists.
+     * @param studentNumber The student number to check.
+     * @return true if a student with the student number exists, false otherwise.
+     */
+    public boolean existsByStudentNumber(String studentNumber) throws ExecutionException, InterruptedException {
+        return !firestore.collection("students")
+                .whereEqualTo("studentNumber", studentNumber)
+                .get()
+                .get()
+                .isEmpty();
+    }
+
+    /**
+     * Saves a student to the students collection.
+     * @param student The student to save.
+     */
+    public void saveStudent(Students student) throws ExecutionException, InterruptedException {
+        firestore.collection("students")
+                .document(student.getStudentNumber())
+                .set(student)
+                .get();
     }
 
     public void saveWithTransaction(Students student, Users user) {
@@ -63,6 +87,24 @@ public class StudentRepository {
         }
     }
 
+
+    // data retrievals
+
+    public List<Students> retrieveAllStudents() throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> studentList = firestore.collection("students").get();
+        List<QueryDocumentSnapshot> documents = studentList.get().getDocuments();
+        List<Students> students = new ArrayList<>();
+
+        for (QueryDocumentSnapshot document : documents) {
+            Students student = document.toObject(Students.class);
+            student.logFields();
+            students.add(student);
+            log.info("{} => {}", document.getId(), student);
+        }
+        return students;
+    }
+
+    // TODO: implementation
     public Optional<Students> findByStudentNumber(String studentNumber) {
         try {
             DocumentSnapshot document = firestore.collection("students").document(studentNumber).get().get();
@@ -78,9 +120,5 @@ public class StudentRepository {
             log.error("Failed to find students by number {}: {}", studentNumber, e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve students", e);
         }
-    }
-
-    public boolean existsByStudentNumber(String studentNumber) {
-        return false;
     }
 }
