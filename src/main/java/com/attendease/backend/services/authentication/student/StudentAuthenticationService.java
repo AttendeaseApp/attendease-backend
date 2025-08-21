@@ -1,11 +1,10 @@
-package com.attendease.backend.services.authentication.student.impl;
+package com.attendease.backend.services.authentication.student;
 
 import com.attendease.backend.data.model.enums.AccountStatus;
 import com.attendease.backend.data.model.enums.UserType;
 import com.attendease.backend.data.model.students.Students;
 import com.attendease.backend.data.model.users.Users;
 import com.attendease.backend.repository.student.StudentRepository;
-import com.attendease.backend.services.authentication.student.StudentAuthenticationInterface;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
@@ -22,30 +21,28 @@ import java.util.concurrent.ExecutionException;
 
 @Service
 @Slf4j
-public class StudentAuthenticationService implements StudentAuthenticationInterface {
+public class StudentAuthenticationService {
 
     private final Firestore firestore;
     private final FirebaseAuth firebaseAuth;
     private final PasswordEncoder passwordEncoder;
-    private final StudentRepository studentAuthenticationRepository;
+    private final StudentRepository studentRepository;
 
-    public StudentAuthenticationService(Firestore firestore, FirebaseAuth firebaseAuth, PasswordEncoder passwordEncoder, StudentRepository studentAuthenticationRepository) {
+    public StudentAuthenticationService(Firestore firestore, FirebaseAuth firebaseAuth, PasswordEncoder passwordEncoder, StudentRepository studentRepository) {
         this.firestore = firestore;
         this.firebaseAuth = firebaseAuth;
         this.passwordEncoder = passwordEncoder;
-        this.studentAuthenticationRepository = studentAuthenticationRepository;
+        this.studentRepository = studentRepository;
     }
 
-
-    @Override
     public String registerNewStudentAccount(Students student) throws Exception {
         try {
-            if (studentAuthenticationRepository.existsByStudentNumber(student.getStudentNumber())) {
+            if (studentRepository.existsByStudentNumber(student.getStudentNumber())) {
                 throw new IllegalStateException("Students with number " + student.getStudentNumber() + " already exists");
             }
 
             Users user = createUserFromStudent(student);
-            studentAuthenticationRepository.saveWithTransaction(student, user);
+            studentRepository.saveWithTransaction(student, user);
             return "Students registered successfully";
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw e;
@@ -54,7 +51,6 @@ public class StudentAuthenticationService implements StudentAuthenticationInterf
         }
     }
 
-    @Override
     public String loginStudent(Students loginRequest) throws ExecutionException, InterruptedException {
         QuerySnapshot studentSnapshot = firestore.collection("students")
                 .whereEqualTo("studentNumber", loginRequest.getStudentNumber()).limit(1).get().get();
