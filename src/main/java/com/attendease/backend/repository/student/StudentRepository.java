@@ -1,5 +1,6 @@
 package com.attendease.backend.repository.student;
 
+import com.attendease.backend.data.model.biometrics.BiometricData;
 import com.attendease.backend.data.model.enums.AccountStatus;
 import com.attendease.backend.data.model.enums.UserType;
 import com.attendease.backend.data.model.students.Students;
@@ -104,7 +105,6 @@ public class StudentRepository {
         return students;
     }
 
-    // TODO: implementation
     public Optional<Students> findByStudentNumber(String studentNumber) {
         try {
             DocumentSnapshot document = firestore.collection("students").document(studentNumber).get().get();

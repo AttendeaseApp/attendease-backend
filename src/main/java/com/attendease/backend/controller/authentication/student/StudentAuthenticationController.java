@@ -2,11 +2,11 @@ package com.attendease.backend.controller.authentication.student;
 
 import com.attendease.backend.data.model.students.Students;
 import com.attendease.backend.data.dto.request.StudentLoginRequest;
-import com.attendease.backend.services.authentication.student.impl.StudentAuthenticationService;
+import com.attendease.backend.services.authentication.student.StudentAuthenticationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
@@ -16,16 +16,16 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class StudentAuthenticationController {
 
-    private final StudentAuthenticationService studentLoginService;
+    private final StudentAuthenticationService studentAuthenticationService;
 
-    public StudentAuthenticationController(StudentAuthenticationService studentLoginService) {
-        this.studentLoginService = studentLoginService;
+    public StudentAuthenticationController(StudentAuthenticationService studentAuthenticationService) {
+        this.studentAuthenticationService = studentAuthenticationService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<String> registerStudent(@Valid @RequestBody Students student) {
         try {
-            String result = studentLoginService.registerNewStudentAccount(student);
+            String result = studentAuthenticationService.registerNewStudentAccount(student);
             return new ResponseEntity<>(result, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             log.error("Error registering StudentService: {}", e.getMessage());
@@ -42,7 +42,7 @@ public class StudentAuthenticationController {
             tempStudent.setStudentNumber(loginRequest.getStudentNumber());
             tempStudent.setPassword(loginRequest.getPassword());
 
-            String customToken = studentLoginService.loginStudent(tempStudent);
+            String customToken = studentAuthenticationService.loginStudent(tempStudent);
             return new ResponseEntity<>(customToken, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             log.warn("Login attempt failed: {}", e.getMessage());
