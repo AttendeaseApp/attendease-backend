@@ -4,7 +4,7 @@ import com.attendease.backend.data.model.users.Users;
 import com.attendease.backend.data.model.enums.AccountStatus;
 import com.attendease.backend.data.model.enums.UserType;
 import com.attendease.backend.data.dto.request.OsaLoginRequest;
-import com.attendease.backend.services.authentication.osa.impl.OsaAuthenticationService;
+import com.attendease.backend.services.authentication.osa.OsaAuthenticationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

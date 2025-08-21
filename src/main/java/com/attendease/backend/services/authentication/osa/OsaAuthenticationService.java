@@ -1,7 +1,6 @@
-package com.attendease.backend.services.authentication.osa.impl;
+package com.attendease.backend.services.authentication.osa;
 
 import com.attendease.backend.data.model.users.Users;
-import com.attendease.backend.services.authentication.osa.OsaAuthenticationInterface;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
@@ -15,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 
 @Service
 @Slf4j
-public class OsaAuthenticationService implements OsaAuthenticationInterface {
+public class OsaAuthenticationService {
 
     private final Firestore firestore;
     private final FirebaseAuth firebaseAuth;
@@ -27,7 +26,6 @@ public class OsaAuthenticationService implements OsaAuthenticationInterface {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
     public String registerNewOsaAccount(Users user) {
         try {
             String result = firestore.runTransaction(transaction -> {
@@ -63,12 +61,9 @@ public class OsaAuthenticationService implements OsaAuthenticationInterface {
         }
     }
 
-    @Override
     public String loginOsa(Users loginRequest) throws ExecutionException, InterruptedException {
         QuerySnapshot osaSnapshot = firestore.collection("users")
-                .whereEqualTo("email", loginRequest.getEmail())
-                .limit(1)
-                .get()
+                .whereEqualTo("email", loginRequest.getEmail()).limit(1).get()
                 .get();
 
         if (osaSnapshot.isEmpty()) {
