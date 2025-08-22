@@ -1,22 +1,12 @@
-/**
- * Service implementation for OSA managing user-related operations such as retrieval, updating,
- * deactivation, reactivation, deletion, and searching of users and students.
- * This class interacts with Firestore through repositories to perform CRUD operations and
- * bulk operations on user data.
- */
-
 package com.attendease.backend.userManagement.service;
 
-import com.attendease.backend.userManagement.dto.StudentDTO;
-import com.attendease.backend.userManagement.dto.BulkUserOperationsDTO;
-import com.attendease.backend.userManagement.dto.UpdateUserInfoDTO;
-import com.attendease.backend.userManagement.dto.UserSearchDTO;
-import com.attendease.backend.userManagement.dto.UsersDTO;
+import com.attendease.backend.userManagement.dto.*;
 import com.attendease.backend.model.enums.AccountStatus;
 import com.attendease.backend.model.enums.UserType;
 import com.attendease.backend.model.students.Students;
 import com.attendease.backend.model.users.Users;
 import com.attendease.backend.authentication.student.repository.StudentAuthenticationRepository;
+import com.attendease.backend.userManagement.dto.UserWithStudentInfo;
 import com.attendease.backend.userManagement.repository.UserRepository;
 import com.google.cloud.firestore.Firestore;
 import com.opencsv.CSVReader;
@@ -31,18 +21,15 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of user management service for handling user and student operations.
- * Provides methods for importing, retrieving, updating, deactivating, reactivating,
- * deleting, and searching users and students in the system.
- */
 @Service
 @Slf4j
 public class UserManagementServiceImpl {
@@ -51,152 +38,82 @@ public class UserManagementServiceImpl {
     private final Firestore firestore;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Constructor for UserManagementServiceImpl.
-     * @param studentRepository Repository for student-related data operations.
-     * @param userRepository Repository for user-related data operations.
-     */
-    public UserManagementServiceImpl(Firestore firestore, StudentAuthenticationRepository studentRepository, UserRepository userRepository, PasswordEncoder passwordEncoder ) {
+    private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public UserManagementServiceImpl(
+            Firestore firestore,
+            StudentAuthenticationRepository studentRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder)
+    {
         this.firestore = firestore;
         this.studentRepository = studentRepository;
-        this.userRepository =userRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Imports students from a CSV file and saves them as Users and Students in Firestore.
-     * @param file The CSV file containing student data.
-     * @return List of UsersDTO for successfully imported students.
-     * @throws IOException if there's an error reading the CSV file.
-     * @throws CsvValidationException if the CSV file is malformed.
-     * @throws ExecutionException if Firestore operations fail.
-     * @throws InterruptedException if Firestore operations are interrupted.
+     * Imports students from CSV with improved validation and error handling
      */
     public List<UsersDTO> importStudentsViaCSV(MultipartFile file) throws IOException, CsvValidationException, ExecutionException, InterruptedException {
+        validateCSVFile(file);
         List<UsersDTO> importedUsers = new ArrayList<>();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        List<String> errors = new ArrayList<>();
+        int rowNumber = 0;
 
         try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             String[] header = csvReader.readNext();
-            if (header == null) {
-                log.error("CSV file is empty or invalid");
-                throw new IllegalArgumentException("CSV file is empty or invalid");
-            }
-
-            // validation of the required columns
-            List<String> requiredColumns = List.of("firstName", "lastName", "studentNumber", "password");
-            for (String col : requiredColumns) {
-                if (!List.of(header).contains(col)) {
-                    log.error("Missing required column: {}", col);
-                    throw new IllegalArgumentException("Missing required column: " + col);
-                }
-            }
+            validateCSVHeader(header);
 
             String[] row;
             while ((row = csvReader.readNext()) != null) {
-                try{
-                    Users user = new Users();
-                    Students student = new Students();
-                    String userId = UUID.randomUUID().toString();
-                    user.setUserId(userId);
-                    user.setUserType(UserType.STUDENT);
-                    user.setAccountStatus(AccountStatus.ACTIVE);
-                    user.setUpdatedBy(UserType.SYSTEM);
-
-                    for (int i = 0; i < header.length && i < row.length; i++) {
-                        String value = row[i] != null && !row[i].isEmpty() ? row[i] : null;
-                        switch (header[i].toLowerCase()) {
-                            case "firstname":
-                                user.setFirstName(value);
-                                break;
-                            case "lastname":
-                                user.setLastName(value);
-                                break;
-                            case "password":
-                                if (value != null) {
-                                    String hashedPassword = passwordEncoder.encode(value);
-                                    user.setPassword(hashedPassword);
-                                }
-                                break;
-                            case "email":
-                                user.setEmail(value);
-                                break;
-                            case "studentnumber":
-                                student.setStudentNumber(value);
-                                break;
-                            case "section":
-                                student.setSection(value);
-                                break;
-                            case "yearlevel":
-                                student.setYearLevel(value);
-                                break;
-                            case "courserefid":
-                                if (value != null) {
-                                    student.setCourseRefId(firestore.document(value));
-                                }
-                                break;
-                            case "birthdate":
-                                if (value != null) {
-                                    LocalDate localDate = LocalDate.parse(value, dateFormatter);
-                                    user.setBirthdate(Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
-                                }
-                                break;
-                            case "address":
-                                user.setAddress(value);
-                                break;
-                            case "contactnumber":
-                                user.setContactNumber(value);
-                                break;
-                        }
-                    }
-
-                    if (user.getFirstName() == null || user.getLastName() == null || student.getStudentNumber() == null || user.getPassword() == null) {
-                        log.warn("Skipping row due to missing required fields: {}", String.join(",", row));
+                rowNumber++;
+                try {
+                    CSVRowData rowData = parseCSVRow(header, row);
+                    if (!isValidRowData(rowData)) {
+                        log.warn("Skipping row {} due to missing required fields", rowNumber);
+                        errors.add("Row " + rowNumber + ": Missing required fields");
                         continue;
                     }
 
-                    if (studentRepository.existsByStudentNumber(student.getStudentNumber())) {
-                        log.warn("Skipping row due to duplicate studentNumber: {}", student.getStudentNumber());
+                    if (studentRepository.existsByStudentNumber(rowData.getStudentNumber())) {
+                        log.warn("Skipping row {} due to duplicate studentNumber: {}", rowNumber, rowData.getStudentNumber());
+                        errors.add("Row " + rowNumber + ": Duplicate student number " + rowData.getStudentNumber());
                         continue;
                     }
 
-                    userRepository.saveUser(user);
-                    log.info("Saved user: {}", user.getUserId());
+                    UsersDTO imported = createUserAndStudent(rowData);
+                    importedUsers.add(imported);
+                    log.info("Successfully imported student: {}", rowData.getStudentNumber());
 
-                    // set userRefId and save student
-                    student.setUserRefId(firestore.collection("users").document(user.getUserId()));
-                    studentRepository.saveStudent(student);
-                    log.info("Saved student for user: {}", user.getUserId());
-
-                    UsersDTO userDTO = new UsersDTO(user, student);
-                    importedUsers.add(userDTO);
-                    log.info("Imported user: {}", userDTO);
                 } catch (Exception e) {
-                    log.error("Error processing CSV row: {}", String.join(",", row), e);
+                    log.error("Error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
+                    errors.add("Row " + rowNumber + ": " + e.getMessage());
                 }
             }
         }
-        log.info("Imported {} students from CSV", importedUsers.size());
+
+        if (!errors.isEmpty()) {
+            log.warn("CSV import completed with {} errors: {}", errors.size(), errors);
+        }
+
+        log.info("Successfully imported {} out of {} rows from CSV", importedUsers.size(), rowNumber);
         return importedUsers;
     }
 
-
     /**
-     * Retrieves all users from the repository and maps them to UsersDTO.
-     * @return List of UsersDTO containing user information.
-     * @throws RuntimeException if retrieval fails due to ExecutionException or InterruptedException.
+     * retrieves all users
      */
     public List<UsersDTO> retrieveAllUsersService() {
         try {
-            List<Users> users = userRepository.retrieveAllUsers();
-            List<UsersDTO> userDTOs = users.stream().map(user -> {
-                UsersDTO dto = user instanceof Students ? new UsersDTO(user, (Students) user) : new UsersDTO(user);
+            List<UserWithStudentInfo> usersWithInfo = userRepository.retrieveAllUsersWithStudentInfo();
 
-                log.info("Mapped to UserDTO: {}", dto);
-                return dto;
-            }).collect(Collectors.toList());
+            List<UsersDTO> userDTOs = usersWithInfo.stream()
+                    .map(this::mapToUsersDTO)
+                    .collect(Collectors.toList());
 
-            log.info("Returning {} UserDTOs: {}", userDTOs.size(), userDTOs);
+            log.info("Successfully retrieved and mapped {} users", userDTOs.size());
             return userDTOs;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to retrieve users", e);
@@ -204,24 +121,23 @@ public class UserManagementServiceImpl {
         }
     }
 
-
     /**
-     * Retrieves all students from the repository and maps them to StudentDTO.
-     * @return List of StudentDTO containing student information.
-     * @throws RuntimeException if retrieval fails due to ExecutionException or InterruptedException.
+     * retrieves all students
      */
     public List<StudentDTO> retrieveAllStudentsService() {
         try {
             List<Students> students = studentRepository.retrieveAllStudents();
-            log.info("Retrieved {} students from repository: {}", students.size(), students);
+            log.info("Retrieved {} students from repository", students.size());
+
             List<StudentDTO> studentDTOs = students.stream()
                     .map(student -> {
                         StudentDTO dto = new StudentDTO(student);
-                        log.info("Mapped student to DTO: {}", dto);
+                        log.debug("Mapped student to DTO: {}", dto);
                         return dto;
                     })
                     .collect(Collectors.toList());
-            log.info("Returning {} StudentDTOs: {}", studentDTOs.size(), studentDTOs);
+
+            log.info("Successfully mapped {} students to DTOs", studentDTOs.size());
             return studentDTOs;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to retrieve students", e);
@@ -229,102 +145,240 @@ public class UserManagementServiceImpl {
         }
     }
 
-
     /**
-     * Updates user information based on the provided user ID and update DTO.
-     * @param userId The ID of the user to update.
-     * @param updateDTO Data transfer object containing updated user information.
-     * @return UsersDTO representing the updated user.
-     * @throws RuntimeException if update fails due to ExecutionException or InterruptedException.
+     * Updates user information
      */
     public UsersDTO updateUserInformationService(String userId, UpdateUserInfoDTO updateDTO) {
         try {
-            Users updatedUser = userRepository.updateUser(userId, updateDTO);
-            UsersDTO userDTO = updatedUser instanceof Students ? new UsersDTO(updatedUser, (Students) updatedUser) : new UsersDTO(updatedUser);
-            log.info("Updated user {} and mapped to UserDTO: {}", userId, userDTO);
+            UserWithStudentInfo updatedInfo = userRepository.updateUser(userId, updateDTO);
+            UsersDTO userDTO = mapToUsersDTO(updatedInfo);
+
+            log.info("Successfully updated user {} and mapped to UserDTO", userId);
             return userDTO;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to update user {}", userId, e);
-            throw new RuntimeException("Failed to update user", e);
+            throw new RuntimeException("Failed to update user: " + e.getMessage(), e);
         }
     }
 
-
-    // user deactivation methods
-
     /**
-     * Deactivates a user account based on the provided user ID.
-     * @param userId The ID of the user to deactivate.
-     * @return UsersDTO representing the deactivated user.
-     * @throws RuntimeException if deactivation fails due to ExecutionException or InterruptedException.
+     * Deactivates a user
      */
     public UsersDTO deactivateUserService(String userId) {
         try {
-            Users user = userRepository.deactivateUser(userId);
-            UsersDTO userDTO = user instanceof Students ? new UsersDTO(user, (Students) user) : new UsersDTO(user);
-            log.info("Deactivated user {} and mapped to UserDTO: {}", userId, userDTO);
+            UserWithStudentInfo userInfo = userRepository.deactivateUser(userId);
+            UsersDTO userDTO = mapToUsersDTO(userInfo);
+
+            log.info("Successfully deactivated user {} and mapped to UserDTO", userId);
             return userDTO;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to deactivate user {}", userId, e);
-            throw new RuntimeException("Failed to deactivate user", e);
+            throw new RuntimeException("Failed to deactivate user: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Deactivates multiple user accounts based on the provided list of user IDs.
-     * @param bulkDTO Data transfer object containing a list of user IDs to deactivate.
-     * @return List of UsersDTO representing the deactivated users.
-     * @throws RuntimeException if bulk deactivation fails due to ExecutionException or InterruptedException.
+     * Bulk deactivation
      */
     public List<UsersDTO> bulkDeactivationOnUsersService(BulkUserOperationsDTO bulkDTO) {
         try {
-            List<Users> users = userRepository.deactivateUsers(bulkDTO.getUserIds());
-            List<UsersDTO> userDTOs = users.stream().map(user -> user instanceof Students ? new UsersDTO(user, (Students) user) : new UsersDTO(user)).collect(Collectors.toList());
-            log.info("Deactivated {} users and mapped to UserDTOs", userDTOs.size());
+            List<UserWithStudentInfo> usersInfo = userRepository.deactivateUsers(bulkDTO.getUserIds());
+
+            List<UsersDTO> userDTOs = usersInfo.stream()
+                    .map(this::mapToUsersDTO)
+                    .collect(Collectors.toList());
+
+            log.info("Successfully deactivated {} users in bulk", userDTOs.size());
             return userDTOs;
         } catch (ExecutionException | InterruptedException e) {
-            log.error("Failed to deactivate users", e);
-            throw new RuntimeException("Failed to deactivate users", e);
+            log.error("Failed to perform bulk deactivation", e);
+            throw new RuntimeException("Failed to deactivate users: " + e.getMessage(), e);
         }
     }
 
-
-    // reactivate user account methods
-
     /**
-     * Reactivates a user account based on the provided user ID.
-     * @param userId The ID of the user to reactivate.
-     * @return UsersDTO representing the reactivated user.
-     * @throws RuntimeException if reactivation fails due to ExecutionException or InterruptedException.
+     * Reactivates a user
      */
     public UsersDTO reactivateUserService(String userId) {
         try {
-            Users user = userRepository.reactivateUser(userId);
-            UsersDTO userDTO = user instanceof Students ? new UsersDTO(user, (Students) user) : new UsersDTO(user);
-            log.info("Reactivated user {} and mapped to UserDTO: {}", userId, userDTO);
+            UserWithStudentInfo userInfo = userRepository.reactivateUser(userId);
+            UsersDTO userDTO = mapToUsersDTO(userInfo);
+
+            log.info("Successfully reactivated user {} and mapped to UserDTO", userId);
             return userDTO;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to reactivate user {}", userId, e);
-            throw new RuntimeException("Failed to reactivate user", e);
+            throw new RuntimeException("Failed to reactivate user: " + e.getMessage(), e);
         }
     }
 
-    // searching users
     /**
-     * Searches for users based on the provided search criteria.
-     * @param searchDTO Data transfer object containing search parameters.
-     * @return List of UsersDTO representing the matching users.
-     * @throws RuntimeException if search fails due to ExecutionException or InterruptedException.
+     * Enhanced user search with better performance
      */
     public List<UsersDTO> searchUsers(UserSearchDTO searchDTO) {
         try {
-            List<Users> users = userRepository.searchUsers(searchDTO);
-            List<UsersDTO> userDTOs = users.stream().map(user -> user instanceof Students ? new UsersDTO(user, (Students) user) : new UsersDTO(user)).collect(Collectors.toList());
-            log.info("Returning {} UserDTOs for search", userDTOs.size());
+            List<UserWithStudentInfo> usersInfo = userRepository.searchUsers(searchDTO);
+            List<UsersDTO> userDTOs = usersInfo.stream().map(this::mapToUsersDTO).collect(Collectors.toList());
+
+            log.info("Successfully found {} users matching search criteria", userDTOs.size());
             return userDTOs;
         } catch (ExecutionException | InterruptedException e) {
             log.error("Failed to search users", e);
-            throw new RuntimeException("Failed to search users", e);
+            throw new RuntimeException("Failed to search users: " + e.getMessage(), e);
+        }
+    }
+
+    // private helper methods
+    private void validateCSVFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("CSV file is required and cannot be empty");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".csv")) {
+            throw new IllegalArgumentException("File must be a CSV file");
+        }
+    }
+
+    private void validateCSVHeader(String[] header) {
+        if (header == null || header.length == 0) {
+            throw new IllegalArgumentException("CSV file is empty or has no header");
+        }
+
+        Set<String> headerSet = Set.of(header);
+        List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream()
+                .filter(col -> !headerSet.contains(col))
+                .collect(Collectors.toList());
+
+        if (!missingColumns.isEmpty()) {
+            throw new IllegalArgumentException("Missing required columns: " + String.join(", ", missingColumns));
+        }
+    }
+
+    private CSVRowData parseCSVRow(String[] header, String[] row) {
+        CSVRowData data = new CSVRowData();
+
+        for (int i = 0; i < header.length && i < row.length; i++) {
+            String value = (row[i] != null && !row[i].trim().isEmpty()) ? row[i].trim() : null;
+
+            switch (header[i].toLowerCase()) {
+                case "firstname":
+                    data.setFirstName(value);
+                    break;
+                case "lastname":
+                    data.setLastName(value);
+                    break;
+                case "password":
+                    data.setPassword(value);
+                    break;
+                case "email":
+                    data.setEmail(value);
+                    break;
+                case "studentnumber":
+                    data.setStudentNumber(value);
+                    break;
+                case "section":
+                    data.setSection(value);
+                    break;
+                case "yearlevel":
+                    data.setYearLevel(value);
+                    break;
+                case "courserefid":
+                    data.setCourseRefId(value);
+                    break;
+                case "birthdate":
+                    data.setBirthdate(parseDate(value));
+                    break;
+                case "address":
+                    data.setAddress(value);
+                    break;
+                case "contactnumber":
+                    data.setContactNumber(value);
+                    break;
+                default:
+                    log.debug("Ignoring unknown column: {}", header[i]);
+                    break;
+            }
+        }
+
+        return data;
+    }
+
+    private Date parseDate(String dateString) {
+        if (dateString == null) return null;
+
+        try {
+            LocalDate localDate = LocalDate.parse(dateString, DATE_FORMATTER);
+            return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        } catch (DateTimeParseException e) {
+            log.warn("Invalid date format: {}. Expected format: yyyy-MM-dd", dateString);
+            return null;
+        }
+    }
+
+    private boolean isValidRowData(CSVRowData data) {
+        return data.getFirstName() != null &&
+                data.getLastName() != null &&
+                data.getStudentNumber() != null &&
+                data.getPassword() != null;
+    }
+
+    private UsersDTO createUserAndStudent(CSVRowData data) throws ExecutionException, InterruptedException {
+        Users user = createUserFromRowData(data);
+        userRepository.saveUser(user);
+        log.info("Saved user: {}", user.getUserId());
+
+        Students student = createStudentFromRowData(data, user.getUserId());
+        studentRepository.saveStudent(student);
+        log.info("Saved student for user: {}", user.getUserId());
+
+        return new UsersDTO(user, student);
+    }
+
+    private Users createUserFromRowData(CSVRowData data) {
+        Users user = new Users();
+        user.setUserId(UUID.randomUUID().toString());
+        user.setUserType(UserType.STUDENT);
+        user.setAccountStatus(AccountStatus.ACTIVE);
+        user.setUpdatedBy(UserType.SYSTEM);
+
+        user.setFirstName(data.getFirstName());
+        user.setLastName(data.getLastName());
+        user.setEmail(data.getEmail());
+        user.setBirthdate(data.getBirthdate());
+        user.setAddress(data.getAddress());
+        user.setContactNumber(data.getContactNumber());
+
+        if (data.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(data.getPassword()));
+        }
+
+        return user;
+    }
+
+    private Students createStudentFromRowData(CSVRowData data, String userId) {
+        Students student = new Students();
+        student.setUserRefId(firestore.collection("users").document(userId));
+        student.setStudentNumber(data.getStudentNumber());
+        student.setSection(data.getSection());
+        student.setYearLevel(data.getYearLevel());
+
+        if (data.getCourseRefId() != null) {
+            try {
+                student.setCourseRefId(firestore.document(data.getCourseRefId()));
+            } catch (Exception e) {
+                log.warn("Invalid courseRefId: {}, skipping", data.getCourseRefId());
+            }
+        }
+
+        return student;
+    }
+
+    private UsersDTO mapToUsersDTO(UserWithStudentInfo userInfo) {
+        if (userInfo.hasStudentInfo()) {
+            return new UsersDTO(userInfo.getUser(), userInfo.getStudentInfo());
+        } else {
+            return new UsersDTO(userInfo.getUser());
         }
     }
 }

@@ -14,7 +14,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import com.attendease.backend.userManagement.dto.UserWithStudentInfo;
+
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -28,193 +32,190 @@ public class UserRepository {
 
     public void saveUser(Users user) throws ExecutionException, InterruptedException {
         firestore.collection("users")
-                 .document(user.getUserId())
-                 .set(user)
-                 .get();
+                .document(user.getUserId())
+                .set(user)
+                .get();
     }
 
     /**
-     * retrieves all users including OSA AND STUDENTS
-     * */
-    public List<Users> retrieveAllUsers() throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> userList = firestore.collection("users").get();
-        List<QueryDocumentSnapshot> userDocuments = userList.get().getDocuments();
-        List<Users> users = new ArrayList<>();
+     * Retrieves all users with their associated student data if applicable
+     */
+    public List<UserWithStudentInfo> retrieveAllUsersWithStudentInfo() throws ExecutionException, InterruptedException {
+        // Get all users
+        ApiFuture<QuerySnapshot> usersFuture = firestore.collection("users").get();
+        List<QueryDocumentSnapshot> userDocuments = usersFuture.get().getDocuments();
 
-        ApiFuture<QuerySnapshot> studentList = firestore.collection("students").get();
-        List<QueryDocumentSnapshot> studentDocuments = studentList.get().getDocuments();
-        List<Students> students = new ArrayList<>();
-        
-        for (QueryDocumentSnapshot document : studentDocuments) {
-            Students student = document.toObject(Students.class);
-            student.logFields();
-            students.add(student);
-            log.info("Student {} => {}", document.getId(), student);
-        }
+        // Get all students in parallel
+        ApiFuture<QuerySnapshot> studentsFuture = firestore.collection("students").get();
+        List<QueryDocumentSnapshot> studentDocuments = studentsFuture.get().getDocuments();
+
+        // Create a map of userId to Students for efficient lookup
+        Map<String, Students> studentMap = studentDocuments.stream()
+                .map(doc -> {
+                    Students student = doc.toObject(Students.class);
+                    student.logFields();
+                    return student;
+                })
+                .filter(student -> student.getUserRefId() != null)
+                .collect(Collectors.toMap(
+                        student -> extractUserIdFromPath(student.getUserRefId().getPath()),
+                        student -> student
+                ));
+
+        List<UserWithStudentInfo> result = new ArrayList<>();
 
         for (QueryDocumentSnapshot userDoc : userDocuments) {
             Users user = userDoc.toObject(Users.class);
-            log.info("User {} => {}", userDoc.getId(), user);
-            Users finalUser = user;
-            Students matchingStudent = students.stream().filter(student -> {
-                        DocumentReference userRefId = student.getUserRefId();
-                        return userRefId != null && userRefId.getPath().endsWith("/users/" + finalUser.getUserId());}).findFirst().orElse(null);
-            if (matchingStudent != null) {
-                user = matchingStudent;
-            }
-            users.add(user);
+            Students studentInfo = studentMap.get(user.getUserId());
+
+            result.add(new UserWithStudentInfo(user, studentInfo));
+            log.debug("User {} => {} with student info: {}",
+                    userDoc.getId(), user, studentInfo != null);
         }
-        log.info("Retrieved {} users with students", users.size());
-        return users;
+
+        log.info("Retrieved {} users with student information", result.size());
+        return result;
     }
 
     /**
-     * updates user information
-     * */
-    public Users updateUser(String userId, UpdateUserInfoDTO updateDTO) throws ExecutionException, InterruptedException {
+     * Updates user information with proper transaction handling
+     */
+    public UserWithStudentInfo updateUser(String userId, UpdateUserInfoDTO updateDTO)
+            throws ExecutionException, InterruptedException {
+
         DocumentReference userRef = firestore.collection("users").document(userId);
-        ApiFuture<DocumentSnapshot> userFuture = userRef.get();
-        DocumentSnapshot userSnapshot = userFuture.get();
 
-        if (!userSnapshot.exists()) {
-            throw new RuntimeException("User not found with ID: " + userId);
-        }
-
-        Users user = userSnapshot.toObject(Users.class);
-        log.info("Retrieved user {}: {}", userId, user);
-
-        if (user == null) {
-            throw new RuntimeException("User object could not be parsed for ID: " + userId);
-        }
-
-        if (updateDTO.getFirstName() != null) {
-            user.setFirstName(updateDTO.getFirstName());
-        }
-        if (updateDTO.getMiddleName() != null) {
-            user.setMiddleName(updateDTO.getMiddleName());
-        }
-        if (updateDTO.getLastName() != null) {
-            user.setLastName(updateDTO.getLastName());
-        }
-        if (updateDTO.getBirthdate() != null) {
-            user.setBirthdate(updateDTO.getBirthdate());
-        }
-        if (updateDTO.getAddress() != null) {
-            user.setAddress(updateDTO.getAddress());
-        }
-        if (updateDTO.getContactNumber() != null) {
-            user.setContactNumber(updateDTO.getContactNumber());
-        }
-        if (updateDTO.getEmail() != null) {
-            user.setEmail(updateDTO.getEmail());
-        }
-        if (updateDTO.getAccountStatus() != null) {
-            user.setAccountStatus(updateDTO.getAccountStatus());
-        }
-
-        // update user document
-        userRef.set(user).get();
-        log.info("Updated user {} with general fields", userId);
-
-        if (user.getUserType() == UserType.STUDENT) {
-            ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students").whereEqualTo("userRefId", userRef).get();
-            QuerySnapshot studentQuery = studentQueryFuture.get();
-
-            if (studentQuery.isEmpty()) {
-                throw new RuntimeException("Student record not found for user ID: " + userId);
+        // Use a transaction to ensure data consistency
+        ApiFuture<UserWithStudentInfo> transactionFuture = firestore.runTransaction(transaction -> {
+            // Get user document
+            DocumentSnapshot userSnapshot = transaction.get(userRef).get();
+            if (!userSnapshot.exists()) {
+                throw new RuntimeException("User not found with ID: " + userId);
             }
 
-            DocumentSnapshot studentSnapshot = studentQuery.getDocuments().getFirst();
-            Students student = studentSnapshot.toObject(Students.class);
-            student.logFields();
+            Users user = userSnapshot.toObject(Users.class);
+            if (user == null) {
+                throw new RuntimeException("User object could not be parsed for ID: " + userId);
+            }
 
-            if (updateDTO.getStudentNumber() != null) student.setStudentNumber(updateDTO.getStudentNumber());
-            if (updateDTO.getSection() != null) student.setSection(updateDTO.getSection());
-            if (updateDTO.getYearLevel() != null) student.setYearLevel(updateDTO.getYearLevel());
+            // Update user fields
+            updateUserFields(user, updateDTO);
+            transaction.set(userRef, user);
 
-            if (updateDTO.getCourseRefId() != null) {
-                DocumentReference courseRef = firestore.document(updateDTO.getCourseRefId());
-                ApiFuture<DocumentSnapshot> courseFuture = courseRef.get();
-                DocumentSnapshot courseSnapshot = courseFuture.get();
+            Students studentInfo = null;
 
-                if (!courseSnapshot.exists()) {
-                    throw new RuntimeException("Course not found with path: " + updateDTO.getCourseRefId());
-                }
+            // Handle student-specific updates
+            if (user.getUserType() == UserType.STUDENT) {
+                ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students")
+                        .whereEqualTo("userRefId", userRef)
+                        .get();
 
-                Courses course = courseSnapshot.toObject(Courses.class);
-                student.setCourseRefId(courseRef);
-                assert course != null;
-                if (course.getClusterRefId() != null) {
-                    student.setClusterRefId(course.getClusterRefId());
-                    log.info("Automatically updated clusterRefId to {} based on course {}",
-                            course.getClusterRefId().getPath(), updateDTO.getCourseRefId());
-                } else {
-                    log.warn("Course {} does not have a clusterRefId", updateDTO.getCourseRefId());
-                    student.setClusterRefId(null);
+                try {
+                    QuerySnapshot studentQuery = studentQueryFuture.get();
+                    if (!studentQuery.isEmpty()) {
+                        DocumentSnapshot studentSnapshot = studentQuery.getDocuments().get(0);
+                        studentInfo = studentSnapshot.toObject(Students.class);
+
+                        if (studentInfo != null) {
+                            updateStudentFields(studentInfo, updateDTO);
+
+                            // Handle course reference update
+                            if (updateDTO.getCourseRefId() != null) {
+                                updateCourseReference(studentInfo, updateDTO.getCourseRefId(), transaction);
+                            }
+
+                            transaction.set(studentSnapshot.getReference(), studentInfo);
+                            log.info("Updated student for user {} with student-specific fields", userId);
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to update student information", e);
                 }
             }
 
-            studentSnapshot.getReference().set(student).get();
-            log.info("Updated student for user {} with student-specific fields", userId);
+            log.info("Updated user {} with general fields", userId);
+            return new UserWithStudentInfo(user, studentInfo);
+        });
 
-            return student;
-        }
-        return user;
+        return transactionFuture.get();
     }
 
-
-    // user deactivation
-    public Users deactivateUser(String userId) throws ExecutionException, InterruptedException {
+    /**
+     * Deactivates a user and returns combined user-student information
+     */
+    public UserWithStudentInfo deactivateUser(String userId) throws ExecutionException, InterruptedException {
         DocumentReference userRef = firestore.collection("users").document(userId);
-        ApiFuture<DocumentSnapshot> userFuture = userRef.get();
-        DocumentSnapshot userSnapshot = userFuture.get();
 
-        if (!userSnapshot.exists()) {
-            throw new RuntimeException("User not found with ID: " + userId);
-        }
-
-        Users user = userSnapshot.toObject(Users.class);
-        assert user != null;
-        user.setAccountStatus(AccountStatus.INACTIVE);
-        userRef.set(user).get();
-        log.info("Deactivated user {}", userId);
-
-        if (user.getUserType() == UserType.STUDENT) {
-            ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students")
-                    .whereEqualTo("userRefId", userRef)
-                    .get();
-            QuerySnapshot studentQuery = studentQueryFuture.get();
-            if (!studentQuery.isEmpty()) {
-                Students student = studentQuery.getDocuments().getFirst().toObject(Students.class);
-                student.logFields();
-                return student;
+        return firestore.runTransaction(transaction -> {
+            DocumentSnapshot userSnapshot = transaction.get(userRef).get();
+            if (!userSnapshot.exists()) {
+                throw new RuntimeException("User not found with ID: " + userId);
             }
-        }
-        return user;
+
+            Users user = userSnapshot.toObject(Users.class);
+            if (user == null) {
+                throw new RuntimeException("User object could not be parsed for ID: " + userId);
+            }
+
+            user.setAccountStatus(AccountStatus.INACTIVE);
+            transaction.set(userRef, user);
+
+            Students studentInfo = null;
+            if (user.getUserType() == UserType.STUDENT) {
+                ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students")
+                        .whereEqualTo("userRefId", userRef)
+                        .get();
+                try {
+                    QuerySnapshot studentQuery = studentQueryFuture.get();
+                    if (!studentQuery.isEmpty()) {
+                        studentInfo = studentQuery.getDocuments().get(0).toObject(Students.class);
+                        if (studentInfo != null) {
+                            studentInfo.logFields();
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not retrieve student information for user {}", userId, e);
+                }
+            }
+
+            log.info("Deactivated user {}", userId);
+            return new UserWithStudentInfo(user, studentInfo);
+        }).get();
     }
 
-    // deactivate multiple users
-    public List<Users> deactivateUsers(List<String> userIds) throws ExecutionException, InterruptedException {
+    /**
+     * Batch deactivate multiple users
+     */
+    public List<UserWithStudentInfo> deactivateUsers(List<String> userIds)
+            throws ExecutionException, InterruptedException {
+
         WriteBatch batch = firestore.batch();
-        List<Users> updatedUsers = new ArrayList<>();
+        List<UserWithStudentInfo> updatedUsers = new ArrayList<>();
 
-        for (String userId : userIds) {
-            DocumentReference userRef = firestore.collection("users").document(userId);
+        // Get all users first
+        List<DocumentReference> userRefs = userIds.stream()
+                .map(userId -> firestore.collection("users").document(userId))
+                .collect(Collectors.toList());
+
+        for (DocumentReference userRef : userRefs) {
             ApiFuture<DocumentSnapshot> userFuture = userRef.get();
             DocumentSnapshot userSnapshot = userFuture.get();
 
             if (!userSnapshot.exists()) {
-                log.warn("User not found with ID: {}, skipping deactivation", userId);
+                log.warn("User not found with ID: {}, skipping deactivation", userRef.getId());
                 continue;
             }
 
             Users user = userSnapshot.toObject(Users.class);
-            assert user != null;
-            user.setAccountStatus(AccountStatus.INACTIVE);
-            batch.set(userRef, user);
-            updatedUsers.add(user);
+            if (user != null) {
+                user.setAccountStatus(AccountStatus.INACTIVE);
+                batch.set(userRef, user);
 
-            log.info("Added user {} to batch for deactivation", userId);
+                // Note: We're not including student info in batch operations for simplicity
+                // In a real-world scenario, you might want to fetch student info separately
+                updatedUsers.add(new UserWithStudentInfo(user, null));
+                log.info("Added user {} to batch for deactivation", user.getUserId());
+            }
         }
 
         batch.commit().get();
@@ -222,45 +223,131 @@ public class UserRepository {
         return updatedUsers;
     }
 
-    // user account reactivate
-    public Users reactivateUser(String userId) throws ExecutionException, InterruptedException {
+    /**
+     * Reactivates a user
+     */
+    public UserWithStudentInfo reactivateUser(String userId) throws ExecutionException, InterruptedException {
         DocumentReference userRef = firestore.collection("users").document(userId);
-        ApiFuture<DocumentSnapshot> userFuture = userRef.get();
-        DocumentSnapshot userSnapshot = userFuture.get();
 
-        if (!userSnapshot.exists()) {
-            throw new RuntimeException("User not found with ID: " + userId);
-        }
-
-        Users user = userSnapshot.toObject(Users.class);
-        assert user != null;
-        user.setAccountStatus(AccountStatus.ACTIVE);
-        userRef.set(user).get();
-        log.info("Reactivated user {}", userId);
-
-        if (user.getUserType() == UserType.STUDENT) {
-            ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students")
-                    .whereEqualTo("userRefId", userRef)
-                    .get();
-            QuerySnapshot studentQuery = studentQueryFuture.get();
-            if (!studentQuery.isEmpty()) {
-                Students student = studentQuery.getDocuments().getFirst().toObject(Students.class);
-                student.logFields();
-                return student;
+        return firestore.runTransaction(transaction -> {
+            DocumentSnapshot userSnapshot = transaction.get(userRef).get();
+            if (!userSnapshot.exists()) {
+                throw new RuntimeException("User not found with ID: " + userId);
             }
-        }
-        return user;
+
+            Users user = userSnapshot.toObject(Users.class);
+            if (user == null) {
+                throw new RuntimeException("User object could not be parsed for ID: " + userId);
+            }
+
+            user.setAccountStatus(AccountStatus.ACTIVE);
+            transaction.set(userRef, user);
+
+            Students studentInfo = null;
+            if (user.getUserType() == UserType.STUDENT) {
+                ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students")
+                        .whereEqualTo("userRefId", userRef)
+                        .get();
+                try {
+                    QuerySnapshot studentQuery = studentQueryFuture.get();
+                    if (!studentQuery.isEmpty()) {
+                        studentInfo = studentQuery.getDocuments().get(0).toObject(Students.class);
+                        if (studentInfo != null) {
+                            studentInfo.logFields();
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not retrieve student information for user {}", userId, e);
+                }
+            }
+
+            log.info("Reactivated user {}", userId);
+            return new UserWithStudentInfo(user, studentInfo);
+        }).get();
     }
 
-    /*
-     * Searches for users based on the provided search criteria in UserSearchDTO.
-     * @param searchDTO The search criteria including search term, user type, account status, and student-specific filters.
-     * @return List of Users matching the search criteria.
-     * @throws ExecutionException if Firestore query execution fails.
-     * @throws InterruptedException if the query is interrupted.
+    /**
+     * Enhanced search with better performance and cleaner logic
      */
-    public List<Users> searchUsers(UserSearchDTO searchDTO) throws ExecutionException, InterruptedException {
-        List<Users> users = new ArrayList<>();
+    public List<UserWithStudentInfo> searchUsers(UserSearchDTO searchDTO)
+            throws ExecutionException, InterruptedException {
+
+        Query userQuery = buildUserQuery(searchDTO);
+
+        // Execute user query
+        ApiFuture<QuerySnapshot> userQueryFuture = userQuery.get();
+        List<QueryDocumentSnapshot> userDocs = userQueryFuture.get().getDocuments();
+        log.info("Found {} user documents after initial query", userDocs.size());
+
+        // Get students if we need student-specific filtering
+        Map<String, Students> studentMap = null;
+        if (needsStudentFiltering(searchDTO)) {
+            studentMap = getStudentMap();
+            log.info("Loaded {} student records for filtering", studentMap.size());
+        }
+
+        List<UserWithStudentInfo> results = new ArrayList<>();
+
+        for (QueryDocumentSnapshot userDoc : userDocs) {
+            Users user = userDoc.toObject(Users.class);
+            Students studentInfo = null;
+
+            if (user.getUserType() == UserType.STUDENT && studentMap != null) {
+                studentInfo = studentMap.get(user.getUserId());
+            }
+
+            if (matchesSearchCriteria(user, studentInfo, searchDTO)) {
+                results.add(new UserWithStudentInfo(user, studentInfo));
+                log.debug("User {} included in results", user.getUserId());
+            }
+        }
+
+        log.info("Found {} users matching search criteria", results.size());
+        return results;
+    }
+
+    // Helper methods
+
+    private void updateUserFields(Users user, UpdateUserInfoDTO updateDTO) {
+        if (updateDTO.getFirstName() != null) user.setFirstName(updateDTO.getFirstName());
+        if (updateDTO.getMiddleName() != null) user.setMiddleName(updateDTO.getMiddleName());
+        if (updateDTO.getLastName() != null) user.setLastName(updateDTO.getLastName());
+        if (updateDTO.getBirthdate() != null) user.setBirthdate(updateDTO.getBirthdate());
+        if (updateDTO.getAddress() != null) user.setAddress(updateDTO.getAddress());
+        if (updateDTO.getContactNumber() != null) user.setContactNumber(updateDTO.getContactNumber());
+        if (updateDTO.getEmail() != null) user.setEmail(updateDTO.getEmail());
+        if (updateDTO.getAccountStatus() != null) user.setAccountStatus(updateDTO.getAccountStatus());
+    }
+
+    private void updateStudentFields(Students student, UpdateUserInfoDTO updateDTO) {
+        if (updateDTO.getStudentNumber() != null) student.setStudentNumber(updateDTO.getStudentNumber());
+        if (updateDTO.getSection() != null) student.setSection(updateDTO.getSection());
+        if (updateDTO.getYearLevel() != null) student.setYearLevel(updateDTO.getYearLevel());
+    }
+
+    private void updateCourseReference(Students student, String courseRefId, Transaction transaction)
+            throws ExecutionException, InterruptedException {
+        DocumentReference courseRef = firestore.document(courseRefId);
+        DocumentSnapshot courseSnapshot = transaction.get(courseRef).get();
+
+        if (!courseSnapshot.exists()) {
+            throw new RuntimeException("Course not found with path: " + courseRefId);
+        }
+
+        Courses course = courseSnapshot.toObject(Courses.class);
+        student.setCourseRefId(courseRef);
+
+        if (course != null && course.getClusterRefId() != null) {
+            student.setClusterRefId(course.getClusterRefId());
+            log.info("Automatically updated clusterRefId to {} based on course {}",
+                    course.getClusterRefId().getPath(), courseRefId);
+        } else {
+            log.warn("Course {} does not have a clusterRefId", courseRefId);
+            student.setClusterRefId(null);
+        }
+    }
+
+    private Query buildUserQuery(UserSearchDTO searchDTO) {
         Query query = firestore.collection("users");
 
         if (searchDTO.getUserType() != null) {
@@ -272,80 +359,73 @@ public class UserRepository {
             log.info("Filtering by accountStatus: {}", searchDTO.getAccountStatus());
         }
 
-        // Fetch user documents
-        ApiFuture<QuerySnapshot> queryFuture = query.get();
-        List<QueryDocumentSnapshot> userDocs = queryFuture.get().getDocuments();
-        log.info("Found {} user documents after initial query", userDocs.size());
+        return query;
+    }
 
-        // Fetch all students for student-specific filtering
+    private boolean needsStudentFiltering(UserSearchDTO searchDTO) {
+        return searchDTO.getSection() != null ||
+                searchDTO.getYearLevel() != null ||
+                searchDTO.getCourseRefId() != null ||
+                (searchDTO.getSearchTerm() != null && !searchDTO.getSearchTerm().isEmpty());
+    }
+
+    private Map<String, Students> getStudentMap() throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> studentQueryFuture = firestore.collection("students").get();
-        List<Students> students = studentQueryFuture.get().getDocuments()
+        return studentQueryFuture.get().getDocuments()
                 .stream()
                 .map(doc -> doc.toObject(Students.class))
-                .toList();
-        log.info("Found {} student documents", students.size());
+                .filter(student -> student.getUserRefId() != null)
+                .collect(Collectors.toMap(
+                        student -> extractUserIdFromPath(student.getUserRefId().getPath()),
+                        student -> student
+                ));
+    }
 
-        for (QueryDocumentSnapshot userDoc : userDocs) {
-            Users user = userDoc.toObject(Users.class);
-            boolean matches = true;
+    private boolean matchesSearchCriteria(Users user, Students studentInfo, UserSearchDTO searchDTO) {
+        // Text search
+        if (searchDTO.getSearchTerm() != null && !searchDTO.getSearchTerm().isEmpty()) {
+            String searchTerm = searchDTO.getSearchTerm().toLowerCase();
+            boolean textMatch = matchesTextSearch(user, studentInfo, searchTerm);
+            if (!textMatch) return false;
+        }
 
-            // Full-text search (case-insensitive)
-            if (searchDTO.getSearchTerm() != null && !searchDTO.getSearchTerm().isEmpty()) {
-                String searchTerm = searchDTO.getSearchTerm().toLowerCase();
-                boolean textMatch = (user.getFirstName() != null && user.getFirstName().toLowerCase().contains(searchTerm)) ||
-                        (user.getLastName() != null && user.getLastName().toLowerCase().contains(searchTerm)) ||
-                        (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm));
-
-                // Check studentNumber for students
-                if (!textMatch && user.getUserType() == UserType.STUDENT) {
-                    Students student = students.stream()
-                            .filter(s -> s.getUserRefId() != null && s.getUserRefId().getPath().endsWith("/users/" + user.getUserId()))
-                            .findFirst()
-                            .orElse(null);
-                    textMatch = student != null && student.getStudentNumber() != null &&
-                            student.getStudentNumber().toLowerCase().contains(searchTerm);
-                }
-                matches = textMatch;
-                log.debug("User {} text search match: {}", user.getUserId(), textMatch);
+        // Student-specific filters
+        if (user.getUserType() == UserType.STUDENT && studentInfo != null) {
+            if (searchDTO.getSection() != null && !searchDTO.getSection().equals(studentInfo.getSection())) {
+                return false;
             }
-
-            // Apply student-specific filters
-            if (user.getUserType() == UserType.STUDENT && matches) {
-                Students student = students.stream()
-                        .filter(s -> s.getUserRefId() != null && s.getUserRefId().getPath().endsWith("/users/" + user.getUserId()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (student != null) {
-                    if (searchDTO.getSection() != null && !searchDTO.getSection().equals(student.getSection())) {
-                        matches = false;
-                        log.debug("User {} excluded: section mismatch (expected: {}, actual: {})",
-                                user.getUserId(), searchDTO.getSection(), student.getSection());
-                    }
-                    if (searchDTO.getYearLevel() != null && !searchDTO.getYearLevel().equals(student.getYearLevel())) {
-                        matches = false;
-                        log.debug("User {} excluded: yearLevel mismatch (expected: {}, actual: {})",
-                                user.getUserId(), searchDTO.getYearLevel(), student.getYearLevel());
-                    }
-                    if (searchDTO.getCourseRefId() != null && (student.getCourseRefId() == null ||
-                            !searchDTO.getCourseRefId().equals(student.getCourseRefId().getPath()))) {
-                        matches = false;
-                        log.debug("User {} excluded: courseRefId mismatch (expected: {}, actual: {})",
-                                user.getUserId(), searchDTO.getCourseRefId(), student.getCourseRefId() != null ? student.getCourseRefId().getPath() : null);
-                    }
-                } else {
-                    matches = false; // No student record found
-                    log.debug("User {} excluded: no matching student record", user.getUserId());
-                }
+            if (searchDTO.getYearLevel() != null && !searchDTO.getYearLevel().equals(studentInfo.getYearLevel())) {
+                return false;
             }
-
-            if (matches) {
-                users.add(user); // Add the Users object, not Students
-                log.debug("User {} included in results", user.getUserId());
+            if (searchDTO.getCourseRefId() != null &&
+                    (studentInfo.getCourseRefId() == null ||
+                            !searchDTO.getCourseRefId().equals(studentInfo.getCourseRefId().getPath()))) {
+                return false;
             }
         }
 
-        log.info("Found {} users matching search criteria", users.size());
-        return users;
+        return true;
     }
+
+    private boolean matchesTextSearch(Users user, Students studentInfo, String searchTerm) {
+        boolean textMatch = (user.getFirstName() != null && user.getFirstName().toLowerCase().contains(searchTerm)) ||
+                (user.getLastName() != null && user.getLastName().toLowerCase().contains(searchTerm)) ||
+                (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm));
+
+        // Check studentNumber for students
+        if (!textMatch && user.getUserType() == UserType.STUDENT && studentInfo != null) {
+            textMatch = studentInfo.getStudentNumber() != null &&
+                    studentInfo.getStudentNumber().toLowerCase().contains(searchTerm);
+        }
+
+        return textMatch;
+    }
+
+    private String extractUserIdFromPath(String path) {
+        // Extract userId from path like "/users/{userId}"
+        String[] parts = path.split("/");
+        return parts.length > 0 ? parts[parts.length - 1] : "";
+    }
+
+    // Note: UserWithStudentInfo is now a separate DTO class in the dto package
 }

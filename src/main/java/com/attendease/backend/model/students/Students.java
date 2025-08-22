@@ -3,20 +3,21 @@ package com.attendease.backend.model.students;
 import com.attendease.backend.model.users.Users;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.annotation.PropertyName;
+import com.google.firebase.database.annotations.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @Slf4j
-public class Students extends Users {
+public class Students {
     @PropertyName("userRefId")
     private DocumentReference userRefId;
 
     @PropertyName("facialRefID")
     private DocumentReference facialRefID;
 
+    @NotNull
     @PropertyName("studentNumber")
     private String studentNumber;
 
@@ -45,8 +46,8 @@ public class Students extends Users {
                 yearLevel,
                 courseRefId != null ?courseRefId.getPath() :null,
                 clusterRefId != null ?clusterRefId.getPath() :null);
-        log.info("Users fields: userId={}, firstName={}, email={}",
-                getUserId(), getFirstName(), getEmail());
+//        log.info("Users fields: userId={}, firstName={}, email={}",
+//                getUserId(), getFirstName(), getEmail());
     }
 
     @Override

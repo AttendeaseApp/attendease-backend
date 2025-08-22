@@ -1,4 +1,4 @@
-package com.attendease.backend.authentication.student.dto;
+package com.attendease.backend.authentication.student.dto.request;
 
 import lombok.Data;
 import java.util.List;

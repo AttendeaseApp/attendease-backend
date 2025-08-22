@@ -1,7 +1,7 @@
 package com.attendease.backend.authentication.student.controller;
 
-import com.attendease.backend.authentication.student.dto.FacialRegistrationRequest;
-import com.attendease.backend.authentication.student.dto.FacialEncodingResponse;
+import com.attendease.backend.authentication.student.dto.request.FacialRegistrationRequest;
+import com.attendease.backend.authentication.student.dto.response.FacialEncodingResponse;
 import com.attendease.backend.model.biometrics.BiometricData;
 import com.attendease.backend.model.students.Students;
 import com.attendease.backend.authentication.student.service.StudentBiometricsService;
@@ -92,9 +92,7 @@ public class StudentBiometricsController {
 
             log.info("Successfully received {} face encoding elements from FACIAL RECOGNITION SERVICE API", faceEncodingDoubles.size());
 
-            List<String> faceEncodingList = faceEncodingDoubles.stream()
-                    .map(String::valueOf)
-                    .collect(Collectors.toList());
+            List<String> faceEncodingList = faceEncodingDoubles.stream().map(String::valueOf).collect(Collectors.toList());
 
             Students student = studentBiometricsService.getStudentByStudentNumber(studentNumber);
             String result = studentBiometricsService.registerNewFacialBiometrics(student, faceEncodingList);
