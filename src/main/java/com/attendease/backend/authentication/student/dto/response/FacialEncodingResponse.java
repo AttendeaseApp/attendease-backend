@@ -1,4 +1,4 @@
-package com.attendease.backend.authentication.student.dto;
+package com.attendease.backend.authentication.student.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

@@ -1,9 +1,8 @@
 package com.attendease.backend.authentication.student.repository;
 
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.enums.UserType;
 import com.attendease.backend.model.students.Students;
 import com.attendease.backend.model.users.Users;
+import com.attendease.backend.userManagement.dto.UserWithStudentInfo;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +10,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
+/**
+ * Refactored StudentAuthenticationRepository that works with separate Users and Students entities.
+ * Uses composition model instead of inheritance.
+ */
 @Slf4j
 @Repository
 public class StudentAuthenticationRepository {
@@ -32,6 +37,22 @@ public class StudentAuthenticationRepository {
     public boolean existsByStudentNumber(String studentNumber) throws ExecutionException, InterruptedException {
         return !firestore.collection("students")
                 .whereEqualTo("studentNumber", studentNumber)
+                .limit(1)
+                .get()
+                .get()
+                .isEmpty();
+    }
+
+    /**
+     * Checks if a user with the given email exists.
+     * @param email The email to check.
+     * @return true if a user with the email exists, false otherwise.
+     */
+    public boolean existsByEmail(String email) throws ExecutionException, InterruptedException {
+        return !firestore.collection("users")
+                .whereEqualTo("email", email)
+                .whereEqualTo("userType", "STUDENT")
+                .limit(1)
                 .get()
                 .get()
                 .isEmpty();
@@ -42,54 +63,149 @@ public class StudentAuthenticationRepository {
      * @param student The student to save.
      */
     public void saveStudent(Students student) throws ExecutionException, InterruptedException {
+        if (student.getStudentNumber() == null || student.getStudentNumber().trim().isEmpty()) {
+            throw new IllegalArgumentException("Student number is required");
+        }
+
         firestore.collection("students")
                 .document(student.getStudentNumber())
                 .set(student)
                 .get();
+
+        log.info("Student saved successfully: {}", student.getStudentNumber());
     }
 
-    public void saveWithTransaction(Students student, Users user) {
+    /**
+     * Saves a user to the users collection.
+     * @param user The user to save.
+     */
+    public void saveUser(Users user) throws ExecutionException, InterruptedException {
+        if (user.getUserId() == null || user.getUserId().trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID is required");
+        }
+
+        firestore.collection("users")
+                .document(user.getUserId())
+                .set(user)
+                .get();
+
+        log.info("User saved successfully: {}", user.getUserId());
+    }
+
+    /**
+     * Updates an existing user.
+     * @param user The user to update.
+     */
+    public void updateUser(Users user) throws ExecutionException, InterruptedException {
+        if (user.getUserId() == null) {
+            throw new IllegalArgumentException("User ID is required for update");
+        }
+
+        firestore.collection("users")
+                .document(user.getUserId())
+                .set(user)
+                .get();
+
+        log.info("User updated successfully: {}", user.getUserId());
+    }
+
+    /**
+     * Saves both student and user entities in a single transaction.
+     * @param student The student entity to save.
+     * @param user The user entity to save.
+     * @return UserWithStudentInfo containing the saved entities.
+     */
+    public UserWithStudentInfo saveWithTransaction(Students student, Users user)
+            throws ExecutionException, InterruptedException {
+
+        ApiFuture<UserWithStudentInfo> transactionFuture = firestore.runTransaction(transaction -> {
+            DocumentReference userRef = firestore.collection("users").document(user.getUserId());
+            DocumentReference studentRef = firestore.collection("students").document(student.getStudentNumber());
+
+            DocumentSnapshot existingStudent = transaction.get(studentRef).get();
+            if (existingStudent.exists()) {
+                throw new IllegalStateException("Student with student number " + student.getStudentNumber() + " already exists");
+            }
+
+            DocumentSnapshot existingUser = transaction.get(userRef).get();
+            if (existingUser.exists()) {
+                throw new IllegalStateException("User with ID " + user.getUserId() + " already exists");
+            }
+
+            // set user reference in student
+            student.setUserRefId(userRef);
+
+            transaction.set(userRef, user);
+            transaction.set(studentRef, student);
+
+            log.info("Transaction completed: Student {} and User {} created successfully", student.getStudentNumber(), user.getUserId());
+            return new UserWithStudentInfo(user, student);
+        });
+
         try {
-            ApiFuture<Students> transaction = firestore.runTransaction(transactionContext -> {
-                DocumentReference studentRef = firestore.collection("students").document(student.getStudentNumber());
-                DocumentReference userRef = firestore.collection("users").document();
-
-                DocumentSnapshot studentSnapshot = transactionContext.get(studentRef).get();
-                if (studentSnapshot.exists()) {
-                    throw new IllegalStateException("Students with students number " + student.getStudentNumber() + " already exists.");
-                }
-
-                student.setUserId(userRef.getId());
-                student.setUserRefId(userRef);
-
-                student.setUserType(UserType.STUDENT);
-                student.setAccountStatus(AccountStatus.ACTIVE);
-                student.setUpdatedBy(UserType.SYSTEM);
-
-                user.setUserId(userRef.getId());
-
-                transactionContext.set(studentRef, student);
-                transactionContext.set(userRef, user);
-
-                log.info("Transaction completed: Students {} and Users {} created successfully", student.getStudentNumber(), userRef.getId());
-
-                return student;
-            });
-
-            transaction.get();
-
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Transaction failed while creating students {}: {}", student.getStudentNumber(), e.getMessage(), e);
+            return transactionFuture.get();
+        } catch (ExecutionException e) {
             if (e.getCause() instanceof IllegalStateException) {
                 throw (IllegalStateException) e.getCause();
             }
-            throw new RuntimeException("Failed to create students: " + e.getMessage(), e);
+            log.error("Transaction failed while creating student {}: {}", student.getStudentNumber(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create student: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            log.error("Transaction interrupted while creating student {}: {}", student.getStudentNumber(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create student: Operation was interrupted", e);
         }
     }
 
+    /**
+     * Retrieves all students with their associated user information.
+     * @return List of UserWithStudentInfo containing all students and their user data.
+     */
+    public List<UserWithStudentInfo> retrieveAllStudentsWithUserInfo() throws ExecutionException, InterruptedException {
+        ApiFuture<QuerySnapshot> studentsFuture = firestore.collection("students").get();
+        List<QueryDocumentSnapshot> studentDocs = studentsFuture.get().getDocuments();
 
-    // data retrievals
+        if (studentDocs.isEmpty()) {
+            log.info("No students found in database");
+            return new ArrayList<>();
+        }
 
+        ApiFuture<QuerySnapshot> usersFuture = firestore.collection("users")
+                .whereEqualTo("userType", "STUDENT")
+                .get();
+        List<QueryDocumentSnapshot> userDocs = usersFuture.get().getDocuments();
+
+        Map<String, Users> userMap = userDocs.stream()
+                .map(doc -> doc.toObject(Users.class))
+                .collect(Collectors.toMap(Users::getUserId, user -> user));
+
+        List<UserWithStudentInfo> results = new ArrayList<>();
+
+        for (QueryDocumentSnapshot studentDoc : studentDocs) {
+            Students student = studentDoc.toObject(Students.class);
+            student.logFields();
+
+            Users user = null;
+            if (student.getUserRefId() != null) {
+                String userId = extractUserIdFromPath(student.getUserRefId().getPath());
+                user = userMap.get(userId);
+            }
+
+            if (user != null) {
+                results.add(new UserWithStudentInfo(user, student));
+                log.debug("Student {} => {} with user info", studentDoc.getId(), student);
+            } else {
+                log.warn("Student {} has no associated user information", student.getStudentNumber());
+            }
+        }
+
+        log.info("Retrieved {} students with user information", results.size());
+        return results;
+    }
+
+    /**
+     * Retrieves all students (without user information for backward compatibility).
+     * @return List of Students.
+     */
     public List<Students> retrieveAllStudents() throws ExecutionException, InterruptedException {
         ApiFuture<QuerySnapshot> studentList = firestore.collection("students").get();
         List<QueryDocumentSnapshot> documents = studentList.get().getDocuments();
@@ -99,25 +215,118 @@ public class StudentAuthenticationRepository {
             Students student = document.toObject(Students.class);
             student.logFields();
             students.add(student);
-            log.info("{} => {}", document.getId(), student);
+            log.debug("Student {} => {}", document.getId(), student);
         }
+
+        log.info("Retrieved {} students", students.size());
         return students;
     }
 
+    /**
+     * Finds a student by student number (without user information).
+     * @param studentNumber The student number to search for.
+     * @return Optional containing the student if found.
+     */
     public Optional<Students> findByStudentNumber(String studentNumber) {
         try {
-            DocumentSnapshot document = firestore.collection("students").document(studentNumber).get().get();
+            DocumentSnapshot document = firestore.collection("students")
+                    .document(studentNumber)
+                    .get()
+                    .get();
 
             if (document.exists()) {
                 Students student = document.toObject(Students.class);
+                log.debug("Found student by number {}: {}", studentNumber, student);
                 assert student != null;
                 return Optional.of(student);
             }
+
+            log.debug("No student found with number: {}", studentNumber);
             return Optional.empty();
 
         } catch (InterruptedException | ExecutionException e) {
-            log.error("Failed to find students by number {}: {}", studentNumber, e.getMessage(), e);
-            throw new RuntimeException("Failed to retrieve students", e);
+            log.error("Failed to find student by number {}: {}", studentNumber, e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve student", e);
         }
     }
+
+    /**
+     * Finds a student by student number with associated user information.
+     * @param studentNumber The student number to search for.
+     * @return Optional containing UserWithStudentInfo if found.
+     */
+    public Optional<UserWithStudentInfo> findByStudentNumberWithUserInfo(String studentNumber) {
+        try {
+            DocumentSnapshot studentDoc = firestore.collection("students")
+                    .document(studentNumber)
+                    .get()
+                    .get();
+
+            if (!studentDoc.exists()) {
+                log.debug("No student found with number: {}", studentNumber);
+                return Optional.empty();
+            }
+
+            Students student = studentDoc.toObject(Students.class);
+            if (student == null || student.getUserRefId() == null) {
+                log.warn("Student {} exists but has no user reference", studentNumber);
+                return Optional.empty();
+            }
+
+            DocumentSnapshot userDoc = student.getUserRefId().get().get();
+            if (!userDoc.exists()) {
+                log.warn("Student {} references non-existent user", studentNumber);
+                return Optional.empty();
+            }
+
+            Users user = userDoc.toObject(Users.class);
+            if (user == null) {
+                log.warn("Failed to deserialize user for student {}", studentNumber);
+                return Optional.empty();
+            }
+
+            log.debug("Found student with user info: {} (User ID: {})", studentNumber, user.getUserId());
+            return Optional.of(new UserWithStudentInfo(user, student));
+
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Failed to find student with user info by number {}: {}", studentNumber, e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve student with user information", e);
+        }
+    }
+
+//    /**
+//     * Finds a user by user ID.
+//     * @param userId The user ID to search for.
+//     * @return Optional containing the user if found.
+//     */
+//    public Optional<Users> findUserById(String userId) throws ExecutionException, InterruptedException {
+//        try {
+//            DocumentSnapshot document = firestore.collection("users")
+//                    .document(userId)
+//                    .get()
+//                    .get();
+//
+//            if (document.exists()) {
+//                Users user = document.toObject(Users.class);
+//                log.debug("Found user by ID {}: {}", userId, user);
+//                assert user != null;
+//                return Optional.of(user);
+//            }
+//
+//            log.debug("No user found with ID: {}", userId);
+//            return Optional.empty();
+//
+//        } catch (InterruptedException | ExecutionException e) {
+//            log.error("Failed to find user by ID {}: {}", userId, e.getMessage(), e);
+//            throw new RuntimeException("Failed to retrieve user", e);
+//        }
+//    }
+
+    // Helper methods
+
+    private String extractUserIdFromPath(String path) {
+        String[] parts = path.split("/");
+        return parts.length > 1 ? parts[parts.length - 1] : "";
+    }
+
 }
