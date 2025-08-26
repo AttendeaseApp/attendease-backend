@@ -2,7 +2,8 @@ package com.attendease.backend.eventLocationManagement.controller;
 
 import com.attendease.backend.eventLocationManagement.dto.*;
 import com.attendease.backend.eventLocationManagement.dto.response.LocationResponseDTO;
-import com.attendease.backend.eventLocationManagement.service.LocationService;
+import com.attendease.backend.eventLocationManagement.service.LocationServiceInterface;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +15,9 @@ import java.util.concurrent.ExecutionException;
 @CrossOrigin(origins = "*")
 public class LocationController {
 
-    private final LocationService locationService;
+    private final LocationServiceInterface locationService;
 
-    public LocationController(LocationService locationService) {
+    public LocationController(LocationServiceInterface locationService) {
         this.locationService = locationService;
     }
 
@@ -79,7 +80,7 @@ public class LocationController {
     }
 
     /**
-     * Get all event sessions.
+     * Delete an event session.
      * Sample endpoint:
      * DELETE v1/api/locations/{locationId}
      */

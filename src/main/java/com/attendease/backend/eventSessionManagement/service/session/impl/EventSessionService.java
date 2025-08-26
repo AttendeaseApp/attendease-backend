@@ -1,9 +1,10 @@
-package com.attendease.backend.eventSessionManagement.service;
+package com.attendease.backend.eventSessionManagement.service.session.impl;
 
-import com.attendease.backend.eventLocationManagement.repository.LocationRepository;
+import com.attendease.backend.eventLocationManagement.repository.LocationRepositoryInterface;
 import com.attendease.backend.eventSessionManagement.dto.EventSessionCreateDTO;
 import com.attendease.backend.eventSessionManagement.dto.response.EventSessionResponseDTO;
-import com.attendease.backend.eventSessionManagement.repository.EventSessionRepository;
+import com.attendease.backend.eventSessionManagement.repository.EventSessionRepositoryInterface;
+import com.attendease.backend.eventSessionManagement.service.session.EventSessionServiceInterface;
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.enums.EventStatus;
 import com.google.cloud.firestore.DocumentReference;
@@ -23,20 +24,20 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class EventSessionService {
+public class EventSessionService implements EventSessionServiceInterface {
 
-    private final EventSessionRepository eventSessionRepository;
+    private final EventSessionRepositoryInterface eventSessionRepository;
     private final Firestore firestore;
-    private final LocationRepository locationRepository;
+    private final LocationRepositoryInterface locationRepository;
 
-    public EventSessionService(EventSessionRepository eventSessionRepository, Firestore firestore, LocationRepository locationRepository) {
+    private static final ZoneId PH_ZONE = ZoneId.of("Asia/Manila");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    public EventSessionService(EventSessionRepositoryInterface eventSessionRepository, Firestore firestore, LocationRepositoryInterface locationRepository) {
         this.eventSessionRepository = eventSessionRepository;
         this.firestore = firestore;
         this.locationRepository = locationRepository;
     }
-
-    private static final ZoneId PH_ZONE = ZoneId.of("Asia/Manila");
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Date parsePhilippineDateTime(String datetimeStr) {
         LocalDateTime localDateTime = LocalDateTime.parse(datetimeStr, FORMATTER);
@@ -47,6 +48,7 @@ public class EventSessionService {
     /**
      * Create new event session
      */
+    @Override
     public EventSessionResponseDTO createEvent(EventSessionCreateDTO createDTO) throws ExecutionException, InterruptedException {
         log.info("Creating new event session: {}", createDTO.getEventName());
 
@@ -79,6 +81,7 @@ public class EventSessionService {
     /**
      * Get event by ID
      */
+    @Override
     public EventSessionResponseDTO getEventById(String eventId) throws ExecutionException, InterruptedException {
         log.info("Retrieving event session with ID: {}", eventId);
         Optional<EventSessions> eventSession = eventSessionRepository.findById(eventId);
@@ -93,6 +96,7 @@ public class EventSessionService {
     /**
      * Get all events
      */
+    @Override
     public List<EventSessionResponseDTO> getAllEvents() throws ExecutionException, InterruptedException {
         List<EventSessions> events = eventSessionRepository.findAll();
         return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
@@ -101,6 +105,7 @@ public class EventSessionService {
     /**
      * Get all events by status e.g. ACTIVE, CONCLUDED, ONGOING, CANCELLED
      */
+    @Override
     public List<EventSessionResponseDTO> getEventsByStatus(EventStatus status) throws ExecutionException, InterruptedException {
         List<EventSessions> events = eventSessionRepository.findByStatus(status);
         return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
@@ -109,6 +114,7 @@ public class EventSessionService {
     /**
      * Get all events with date range parameter
      */
+    @Override
     public List<EventSessionResponseDTO> getEventsByDateRange(Date from, Date to) throws ExecutionException, InterruptedException {
         List<EventSessions> events = eventSessionRepository.findByDateRange(from, to);
         return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
@@ -117,6 +123,7 @@ public class EventSessionService {
     /**
      * Get all events with date range and event status parameter
      */
+    @Override
     public List<EventSessionResponseDTO> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) throws ExecutionException, InterruptedException {
         List<EventSessions> events = eventSessionRepository.findByStatusAndDateRange(status, from, to);
         return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
@@ -125,6 +132,7 @@ public class EventSessionService {
     /**
      * Delete event using eventId
      */
+    @Override
     public void deleteEventById(String eventId) throws ExecutionException, InterruptedException {
         if (!eventSessionRepository.existsById(eventId)) {
             throw new RuntimeException("Event not found with ID: " + eventId);
@@ -136,6 +144,7 @@ public class EventSessionService {
     /**
      * Update existing event using eventId
      */
+    @Override
     public EventSessionResponseDTO updateEvent(String eventId, EventSessionCreateDTO updateDTO) throws ExecutionException, InterruptedException {
         Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(eventId);
         if (existingEventOpt.isEmpty()) {
@@ -170,6 +179,7 @@ public class EventSessionService {
     /**
      * Cancel existing event using eventId
      */
+    @Override
     public EventSessionResponseDTO cancelEvent(String eventId) throws ExecutionException, InterruptedException {
         Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(eventId);
         if (existingEventOpt.isEmpty()) {

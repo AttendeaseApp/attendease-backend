@@ -2,7 +2,7 @@ package com.attendease.backend.eventSessionManagement.controller;
 
 import com.attendease.backend.eventSessionManagement.dto.*;
 import com.attendease.backend.eventSessionManagement.dto.response.EventSessionResponseDTO;
-import com.attendease.backend.eventSessionManagement.service.EventSessionService;
+import com.attendease.backend.eventSessionManagement.service.session.EventSessionServiceInterface;
 import com.attendease.backend.model.enums.EventStatus;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -27,16 +27,17 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class EventSessionController {
 
-    private final EventSessionService eventSessionService;
+    private final EventSessionServiceInterface eventSessionService;
 
-    public EventSessionController(EventSessionService eventSessionService) {
+    public EventSessionController(EventSessionServiceInterface eventSessionService) {
         this.eventSessionService = eventSessionService;
     }
 
+    //TODO: ELIGIBLE STUDENTS
     /**
      * Create new event session.
      * Sample endpoint:
-     * POST v1/api/events
+     * POST v1/api/events/create-event
      */
     @PostMapping("create-event")
     public ResponseEntity<?> createEvent(@Valid @RequestBody EventSessionCreateDTO createDTO) {
@@ -145,7 +146,7 @@ public class EventSessionController {
     }
 
     /**
-     * Get all event sessions by date range
+     * Get all event sessions by status and date range
      *
      * Sample endpoint on getting active event with date range:
      * GET /v1/api/events/by-status-and-date-range?status=ACTIVE&from=2025-08-26&to=2025-08-28
@@ -197,6 +198,12 @@ public class EventSessionController {
         }
     }
 
+    /**
+     * Set event status to CANCELLED
+     *
+     * Sample endpoint on updating event by id:
+     * PUT /v1/api/events/cancel/{eventId}
+     */
     @PutMapping("/cancel/{eventId}")
     public ResponseEntity<?> cancelEvent(@PathVariable String eventId) {
         try {

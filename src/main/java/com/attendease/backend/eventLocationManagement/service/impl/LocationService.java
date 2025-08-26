@@ -1,9 +1,10 @@
-package com.attendease.backend.eventLocationManagement.service;
+package com.attendease.backend.eventLocationManagement.service.impl;
 
 import com.attendease.backend.eventLocationManagement.dto.*;
 import com.attendease.backend.eventLocationManagement.dto.request.GeoJsonRequestDTO;
 import com.attendease.backend.eventLocationManagement.dto.response.LocationResponseDTO;
-import com.attendease.backend.eventLocationManagement.repository.LocationRepository;
+import com.attendease.backend.eventLocationManagement.repository.LocationRepositoryInterface;
+import com.attendease.backend.eventLocationManagement.service.LocationServiceInterface;
 import com.attendease.backend.model.locations.EventLocations;
 import com.attendease.backend.model.locations.GeofenceData;
 import com.google.cloud.firestore.GeoPoint;
@@ -16,14 +17,18 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Service
-public class LocationService {
+public class LocationService implements LocationServiceInterface {
 
-    private final LocationRepository locationRepository;
+    private final LocationRepositoryInterface locationRepository;
 
-    public LocationService(LocationRepository locationRepository) {
+    public LocationService(LocationRepositoryInterface locationRepository) {
         this.locationRepository = locationRepository;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public LocationResponseDTO createLocationFromGeoJson(LocationCreateGeoJsonDTO createRequest)
             throws ExecutionException, InterruptedException {
 
@@ -92,7 +97,10 @@ public class LocationService {
         return convertToResponseDTO(location);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<LocationResponseDTO> getAllLocations() throws ExecutionException, InterruptedException {
         List<EventLocations> locations = locationRepository.findAll();
         return locations.stream()
@@ -100,6 +108,10 @@ public class LocationService {
                 .toList();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void deleteLocationById(String locationId) throws ExecutionException, InterruptedException {
         boolean exists = locationRepository.existsById(locationId);
         if (!exists) {

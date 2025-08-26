@@ -1,5 +1,6 @@
-package com.attendease.backend.eventLocationManagement.repository;
+package com.attendease.backend.eventLocationManagement.repository.impl;
 
+import com.attendease.backend.eventLocationManagement.repository.LocationRepositoryInterface;
 import com.attendease.backend.model.locations.EventLocations;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
@@ -12,18 +13,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Repository
-public class LocationRepository {
+public class LocationRepository implements LocationRepositoryInterface {
 
     private final Firestore firestore;
-    private static final String COLLECTION_NAME = "eventLocations";
+    private static final String EVENT_LOCATION_COLLECTION = "eventLocations";
 
-    @Autowired
     public LocationRepository(Firestore firestore) {
         this.firestore = firestore;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String save(EventLocations location) throws ExecutionException, InterruptedException {
-        CollectionReference locations = firestore.collection(COLLECTION_NAME);
+        CollectionReference locations = firestore.collection(EVENT_LOCATION_COLLECTION);
 
         DocumentReference docRef;
         if (location.getLocationId() == null || location.getLocationId().isEmpty()) {
@@ -39,8 +43,12 @@ public class LocationRepository {
         return location.getLocationId();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Optional<EventLocations> findById(String locationId) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(locationId);
+        DocumentReference docRef = firestore.collection(EVENT_LOCATION_COLLECTION).document(locationId);
         ApiFuture<DocumentSnapshot> future = docRef.get();
         DocumentSnapshot document = future.get();
 
@@ -54,8 +62,12 @@ public class LocationRepository {
         return Optional.empty();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public List<EventLocations> findAll() throws ExecutionException, InterruptedException {
-        ApiFuture<QuerySnapshot> future = firestore.collection(COLLECTION_NAME).get();
+        ApiFuture<QuerySnapshot> future = firestore.collection(EVENT_LOCATION_COLLECTION).get();
         List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
         return documents.stream()
@@ -67,13 +79,21 @@ public class LocationRepository {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void deleteById(String locationId) throws ExecutionException, InterruptedException {
-        ApiFuture<WriteResult> result = firestore.collection(COLLECTION_NAME).document(locationId).delete();
+        ApiFuture<WriteResult> result = firestore.collection(EVENT_LOCATION_COLLECTION).document(locationId).delete();
         result.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean existsById(String locationId) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(locationId);
+        DocumentReference docRef = firestore.collection(EVENT_LOCATION_COLLECTION).document(locationId);
         ApiFuture<DocumentSnapshot> future = docRef.get();
         DocumentSnapshot document = future.get();
         return document.exists();

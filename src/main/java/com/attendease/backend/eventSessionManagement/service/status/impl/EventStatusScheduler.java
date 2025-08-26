@@ -1,6 +1,6 @@
-package com.attendease.backend.eventSessionManagement.service;
+package com.attendease.backend.eventSessionManagement.service.status.impl;
 
-import com.attendease.backend.eventSessionManagement.repository.EventSessionRepository;
+import com.attendease.backend.eventSessionManagement.repository.EventSessionRepositoryInterface;
 import com.attendease.backend.model.enums.EventStatus;
 import com.attendease.backend.model.events.EventSessions;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +14,9 @@ import java.util.List;
 @Slf4j
 public class EventStatusScheduler {
 
-    private final EventSessionRepository eventSessionRepository;
+    private final EventSessionRepositoryInterface eventSessionRepository;
 
-    public EventStatusScheduler(EventSessionRepository eventSessionRepository) {
+    public EventStatusScheduler(EventSessionRepositoryInterface eventSessionRepository) {
         this.eventSessionRepository = eventSessionRepository;
     }
 
