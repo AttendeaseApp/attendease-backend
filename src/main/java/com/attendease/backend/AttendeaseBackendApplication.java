@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Main application class for Attendease Backend.
+ */
 @EnableScheduling
 @SpringBootApplication
 public class AttendeaseBackendApplication {

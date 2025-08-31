@@ -5,13 +5,14 @@ import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.PropertyName;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Date;
 
-@EqualsAndHashCode(callSuper = true)
+/**
+ * Class representing a course.
+ */
 @Data
-public class Courses extends Students {
+public class Courses {
     @DocumentId
     @PropertyName("courseId")
     private String courseId;

@@ -8,6 +8,9 @@ import lombok.Data;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Class representing biometric data for a user.
+ */
 @Data
 public class BiometricData {
 

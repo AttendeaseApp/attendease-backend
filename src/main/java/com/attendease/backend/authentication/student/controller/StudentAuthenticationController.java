@@ -9,12 +9,9 @@ import com.attendease.backend.authentication.student.dto.response.StudentRegistr
 import com.attendease.backend.authentication.student.service.StudentAuthenticationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("v1/api/auth/student")
@@ -60,7 +57,7 @@ public class StudentAuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<StudentAuthenticationResponse> loginStudent(@RequestBody StudentLoginRequest loginRequest) {
-        try{
+        try {
             if (!loginRequest.isValid()) {
                 log.warn("Invalid login request: missing required fields");
                 return ResponseEntity.badRequest().body(StudentAuthenticationResponse.error("All fields are required"));
@@ -89,6 +86,7 @@ public class StudentAuthenticationController {
 
     /**
      * Changes a student's password
+     *
      * @param passwordChangeRequest The password change request containing student number, old password, and new password
      * @return ResponseEntity with success message or error details
      */

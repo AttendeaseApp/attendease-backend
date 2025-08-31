@@ -4,7 +4,6 @@ import com.attendease.backend.eventLocationManagement.repository.LocationReposit
 import com.attendease.backend.model.locations.EventLocations;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

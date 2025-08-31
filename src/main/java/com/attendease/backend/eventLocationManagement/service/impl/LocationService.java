@@ -1,6 +1,9 @@
 package com.attendease.backend.eventLocationManagement.service.impl;
 
-import com.attendease.backend.eventLocationManagement.dto.*;
+import com.attendease.backend.eventLocationManagement.dto.GeofenceParametersDTO;
+import com.attendease.backend.eventLocationManagement.dto.GeometryDTO;
+import com.attendease.backend.eventLocationManagement.dto.LocationCreateGeoJsonDTO;
+import com.attendease.backend.eventLocationManagement.dto.PolygonCoordinateDTO;
 import com.attendease.backend.eventLocationManagement.dto.request.GeoJsonRequestDTO;
 import com.attendease.backend.eventLocationManagement.dto.response.LocationResponseDTO;
 import com.attendease.backend.eventLocationManagement.repository.LocationRepositoryInterface;
@@ -85,10 +88,10 @@ public class LocationService implements LocationServiceInterface {
             GeofenceParametersDTO params = createRequest.getGeofenceParameters();
             GeofenceData geofenceData = new GeofenceData(
                     params.getRadiusMeters(),
-                    params.getAlertType(),
-                    params.isActive()
+                    centroid.getLatitude(),
+                    centroid.getLongitude()
             );
-            location.setGeofenceData(geofenceData);
+            location.setGeofenceParameters(geofenceData);
         }
 
         String locationId = locationRepository.save(location);
@@ -173,15 +176,13 @@ public class LocationService implements LocationServiceInterface {
             response.setLongitude(location.getGeomPoints().getLongitude());
         }
 
-        if (location.getGeofenceData() != null) {
-            GeofenceData data = location.getGeofenceData();
+        if (location.getGeofenceParameters() != null) {
+            GeofenceData data = location.getGeofenceParameters();
             assert location.getGeomPoints() != null;
             GeofenceParametersDTO params = new GeofenceParametersDTO(
                     data.getRadiusMeters(),
                     location.getGeomPoints().getLatitude(),
-                    location.getGeomPoints().getLongitude(),
-                    data.getAlertType(),
-                    data.isActive()
+                    location.getGeomPoints().getLongitude()
             );
             response.setGeofenceParameters(params);
         }

@@ -1,13 +1,14 @@
 package com.attendease.backend.model.students;
 
-import com.attendease.backend.model.users.Users;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.annotation.PropertyName;
 import com.google.firebase.database.annotations.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Class representing a student.
+ */
 @Data
 @Slf4j
 public class Students {
@@ -46,8 +47,6 @@ public class Students {
                 yearLevel,
                 courseRefId != null ?courseRefId.getPath() :null,
                 clusterRefId != null ?clusterRefId.getPath() :null);
-//        log.info("Users fields: userId={}, firstName={}, email={}",
-//                getUserId(), getFirstName(), getEmail());
     }
 
     @Override

@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Class representing event locations with geospatial data.
+ */
 @Data
 public class EventLocations {
 
@@ -18,5 +21,5 @@ public class EventLocations {
 
     private List<GeoPoint> polygonCoordinates;
     private List<Integer> ringBreaks;
-    private GeofenceData geofenceData;
+    private GeofenceData geofenceParameters;
 }

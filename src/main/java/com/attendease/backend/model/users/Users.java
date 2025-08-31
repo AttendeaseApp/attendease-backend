@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * Class representing a user.
+ */
 @Data
 public class Users {
 
