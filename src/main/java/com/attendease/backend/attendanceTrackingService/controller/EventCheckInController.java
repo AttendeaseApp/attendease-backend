@@ -1,7 +1,30 @@
-package com.attendease.backend.eventCheckInDiscovery.controller;
+/**
+ * REST Controller for Event Check-In operations.
+ *
+ * <b>Base Path:</b> <code>/checkin</code>
+ *
+ * <b>Endpoints:</b>
+ * <ul>
+ *   <li><b>GET /checkin/events/ongoing</b> - List all ongoing events.</li>
+ *   <li><b>POST /checkin/{studentNumber}/checkedin</b> - Log student check-in.<br>
+ *     <b>Sample Request Body:</b>
+ *     <pre>
+ *     {
+ *       "eventId": "{eventId}",
+ *       "studentNumber": "CT00-0000",
+ *       "checkInTime": "2025-08-31T10:00:00",
+ *       "locationId": "{locationId}",
+ *       "latitude": 14.1498,
+ *       "longitude": 120.9555
+ *     }
+ *     </pre>
+ *   </li>
+ * </ul>
+ * <b>Responses:</b> JSON objects with event/session/check-in details or error messages.
+ */
+package com.attendease.backend.attendanceTrackingService.controller;
 
-import com.attendease.backend.eventCheckInDiscovery.service.EventCheckInService;
-import com.attendease.backend.eventCheckInDiscovery.service.EventCheckInServiceInterface;
+import com.attendease.backend.attendanceTrackingService.service.EventCheckInServiceInterface;
 import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
 import com.attendease.backend.eventMonitoring.dto.EventSessionsDto;
 import com.attendease.backend.eventMonitoring.service.EventService;
@@ -15,6 +38,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/checkin")
+@CrossOrigin(origins = "*")
 public class EventCheckInController {
     private final EventService eventService;
     private final EventCheckInServiceInterface checkInServiceInterface;
@@ -25,9 +49,10 @@ public class EventCheckInController {
     }
 
     // Get all ongoing events
+
     /**
      * Log the student check-in after verifying eligibility and geofence.
-     * 
+     * <p>
      * GET /checkin/events/ongoing
      */
     @GetMapping("/events/ongoing")
@@ -39,19 +64,19 @@ public class EventCheckInController {
 
     /**
      * Log the student check-in after verifying eligibility and geofence.
-     * 
+     * <p>
      * sample body:
-     * 
+     * <p>
      * {
-        "eventId": "{eventId}",
-        "studentNumber": "CT00-0000",
-        "checkInTime": "2025-08-31T10:00:00",
-        "locationId": "{locationId}",
-        "latitude": 14.1498,
-        "longitude": 120.9555
-        }
-
-     *  POST /checkin/{studentNumber}/checkedin
+     * "eventId": "{eventId}",
+     * "studentNumber": "CT00-0000",
+     * "checkInTime": "2025-08-31T10:00:00",
+     * "locationId": "{locationId}",
+     * "latitude": 14.1498,
+     * "longitude": 120.9555
+     * }
+     * <p>
+     * POST /checkin/{studentNumber}/checkedin
      */
     @PostMapping("/{studentNumber}/checkedin")
     public ResponseEntity<?> checkInStudent(@PathVariable String studentNumber, @RequestBody EventCheckInDto checkInDTO) {

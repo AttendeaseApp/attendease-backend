@@ -1,5 +1,6 @@
-package com.attendease.backend.eventCheckInDiscovery.service;
+package com.attendease.backend.attendanceTrackingService.service.impl;
 
+import com.attendease.backend.attendanceTrackingService.service.EventCheckInServiceInterface;
 import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
 import com.attendease.backend.eventMonitoring.repository.EventRepositoryInterface;
 import com.attendease.backend.model.events.EventSessions;
@@ -47,7 +48,7 @@ public class EventCheckInService implements EventCheckInServiceInterface {
         }
 
         EventLocations location = firestore.collection(EVENT_LOCATIONS_COLLECTIONS)
-            .document(checkInDTO.getLocationId()).get().get().toObject(EventLocations.class);
+                .document(checkInDTO.getLocationId()).get().get().toObject(EventLocations.class);
         if (location == null) {
             throw new IllegalStateException("Event location not found");
         }
@@ -63,16 +64,6 @@ public class EventCheckInService implements EventCheckInServiceInterface {
             throw new IllegalStateException("Student is outside the event geofence");
         }
 
-        //if already checked in
-        // List<AttendanceRecords> existingRecords = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
-        //     .whereEqualTo("studentNumberRefId", firestore.collection("students").document(studentNumber))
-        //     .whereEqualTo("eventRefId", firestore.collection(EVENT_SESSION_COLLECTIONS).document(checkInDTO.getEventId()))
-        //     .whereEqualTo("locationRefId", firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(checkInDTO.getLocationId()))
-        //     .whereEqualTo("attendanceStatus", com.attendease.backend.model.enums.AttendanceStatus.PRESENT)
-        //     .get().get().toObjects(AttendanceRecords.class);
-        // if (!existingRecords.isEmpty()) {
-        //     throw new IllegalStateException("Student is already checked in for this event/location.");
-        // }
         isAlreadyCheckedIn(studentNumber, studentNumber, studentNumber);
 
         AttendanceRecords record = new AttendanceRecords();
@@ -98,11 +89,11 @@ public class EventCheckInService implements EventCheckInServiceInterface {
         List<AttendanceRecords> existingRecords = null;
         try {
             existingRecords = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
-                .whereEqualTo("studentNumberRefId", firestore.collection("students").document(studentNumber))
-                .whereEqualTo("eventRefId", firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId))
-                .whereEqualTo("locationRefId", firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(locationId))
-                .whereEqualTo("attendanceStatus", com.attendease.backend.model.enums.AttendanceStatus.PRESENT)
-                .get().get().toObjects(AttendanceRecords.class);
+                    .whereEqualTo("studentNumberRefId", firestore.collection("students").document(studentNumber))
+                    .whereEqualTo("eventRefId", firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId))
+                    .whereEqualTo("locationRefId", firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(locationId))
+                    .whereEqualTo("attendanceStatus", com.attendease.backend.model.enums.AttendanceStatus.PRESENT)
+                    .get().get().toObjects(AttendanceRecords.class);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -29,7 +30,8 @@ public class EventRepository implements EventRepositoryInterface {
     @Override
     public List<EventSessions> findOngoingEvents() {
         try {
-            return firestore.collection(EVENT_SESSION_COLLECTIONS).whereEqualTo(EVENT_STATUS_DOCUMENT_NAME, "ONGOING")
+            return firestore.collection(EVENT_SESSION_COLLECTIONS)
+                    .whereIn(EVENT_STATUS_DOCUMENT_NAME, Arrays.asList("ONGOING", "ACTIVE"))
                     .get().get().toObjects(EventSessions.class);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error fetching ongoing events", e);

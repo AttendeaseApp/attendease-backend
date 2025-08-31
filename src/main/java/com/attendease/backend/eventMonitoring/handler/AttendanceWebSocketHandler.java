@@ -1,3 +1,16 @@
+/**
+ * WebSocket Handler for Event Attendance Monitoring.
+ *
+ * <b>Endpoint:</b> <code>/ws/events/{eventId}/monitoring</code>
+ *
+ * <b>How to use:</b>
+ * <ul>
+ *   <li>Connect via WebSocket client (e.g., Postman, browser, etc.)</li>
+ *   <li>Send messages (e.g., "REFRESH") to request attendance updates.</li>
+ *   <li>Receive attendance status and updates in real-time.</li>
+ * </ul>
+ * <b>Responses:</b> Attendance status and updates as JSON or text messages.
+ */
 package com.attendease.backend.eventMonitoring.handler;
 
 import com.attendease.backend.eventMonitoring.service.EventService;
