@@ -1,14 +1,17 @@
 package com.attendease.backend.model.locations;
 
-import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Class representing geofence data for a location.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class GeofenceData {
-    private double radiusMeters;
-    private String alertType;
-    private boolean isActive;
+    private Double radiusMeters;
+    private Double centerLatitude;
+    private Double centerLongitude;
 }

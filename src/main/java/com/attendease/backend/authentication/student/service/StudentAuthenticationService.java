@@ -1,12 +1,12 @@
 package com.attendease.backend.authentication.student.service;
 
+import com.attendease.backend.authentication.student.dto.request.StudentLoginRequest;
+import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
+import com.attendease.backend.authentication.student.repository.StudentAuthenticationRepository;
 import com.attendease.backend.model.enums.AccountStatus;
 import com.attendease.backend.model.enums.UserType;
 import com.attendease.backend.model.students.Students;
 import com.attendease.backend.model.users.Users;
-import com.attendease.backend.authentication.student.repository.StudentAuthenticationRepository;
-import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.authentication.student.dto.request.StudentLoginRequest;
 import com.attendease.backend.userManagement.dto.UserWithStudentInfo;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.FirebaseAuth;
@@ -24,16 +24,12 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class StudentAuthenticationService {
-
     private final Firestore firestore;
     private final FirebaseAuth firebaseAuth;
     private final PasswordEncoder passwordEncoder;
     private final StudentAuthenticationRepository studentRepository;
 
-    public StudentAuthenticationService(Firestore firestore,
-                                        FirebaseAuth firebaseAuth,
-                                        PasswordEncoder passwordEncoder,
-                                        StudentAuthenticationRepository studentRepository) {
+    public StudentAuthenticationService(Firestore firestore, FirebaseAuth firebaseAuth, PasswordEncoder passwordEncoder, StudentAuthenticationRepository studentRepository) {
         this.firestore = firestore;
         this.firebaseAuth = firebaseAuth;
         this.passwordEncoder = passwordEncoder;
@@ -42,6 +38,7 @@ public class StudentAuthenticationService {
 
     /**
      * Registers a new student account using separate request DTO
+     *
      * @param registrationRequest Contains all student registration data
      * @return Success message
      * @throws Exception if registration fails
@@ -74,14 +71,15 @@ public class StudentAuthenticationService {
 
     /**
      * Authenticates a student using student number and password
+     *
      * @param loginRequest Contains student number and password
      * @return Firebase custom token for authentication
      */
     public String loginStudent(StudentLoginRequest loginRequest) {
         try {
             UserWithStudentInfo studentInfo = studentRepository.findByStudentNumberWithUserInfo(loginRequest.getStudentNumber()).orElseThrow(() -> {
-                        log.warn("Login failed: Student with number {} not found", loginRequest.getStudentNumber());
-                        return new IllegalArgumentException("Invalid student number or password");
+                log.warn("Login failed: Student with number {} not found", loginRequest.getStudentNumber());
+                return new IllegalArgumentException("Invalid student number or password");
             });
 
             Users user = studentInfo.getUser();
@@ -115,9 +113,10 @@ public class StudentAuthenticationService {
 
     /**
      * Updates student password
+     *
      * @param studentNumber The student number
-     * @param oldPassword Current password for verification
-     * @param newPassword New password to set
+     * @param oldPassword   Current password for verification
+     * @param newPassword   New password to set
      * @return Success message
      */
     public String updatePassword(String studentNumber, String oldPassword, String newPassword) {

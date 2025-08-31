@@ -8,6 +8,9 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * Class representing attendance records for students at events.
+ */
 @Data
 public class AttendanceRecords {
 

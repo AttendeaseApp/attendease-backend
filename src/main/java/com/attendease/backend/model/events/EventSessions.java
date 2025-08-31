@@ -4,11 +4,18 @@ import com.attendease.backend.model.enums.EventStatus;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.annotation.DocumentId;
 import com.google.cloud.firestore.annotation.ServerTimestamp;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
+/**
+ * Class representing an event session.
+ */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class EventSessions {
 
     @DocumentId
