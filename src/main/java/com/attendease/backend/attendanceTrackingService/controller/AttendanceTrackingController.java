@@ -24,7 +24,7 @@
  */
 package com.attendease.backend.attendanceTrackingService.controller;
 
-import com.attendease.backend.attendanceTrackingService.service.EventCheckInServiceInterface;
+import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingServiceInterface;
 import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
 import com.attendease.backend.eventMonitoring.dto.EventSessionsDto;
 import com.attendease.backend.eventMonitoring.service.EventService;
@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/checkin")
 @CrossOrigin(origins = "*")
-public class EventCheckInController {
+public class AttendanceTrackingController {
     private final EventService eventService;
-    private final EventCheckInServiceInterface checkInServiceInterface;
+    private final AttendanceTrackingServiceInterface checkInServiceInterface;
 
-    public EventCheckInController(EventService eventService, EventCheckInServiceInterface checkInServiceInterface) {
+    public AttendanceTrackingController(EventService eventService, AttendanceTrackingServiceInterface checkInServiceInterface) {
         this.eventService = eventService;
         this.checkInServiceInterface = checkInServiceInterface;
     }

@@ -7,6 +7,6 @@ import java.util.concurrent.ExecutionException;
 /**
  * Abstraction for event check-in operations.
  */
-public interface EventCheckInServiceInterface {
+public interface AttendanceTrackingServiceInterface {
     EventCheckInDto checkInStudent(String studentNumber, EventCheckInDto checkInDTO) throws ExecutionException, InterruptedException;
 }

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class LocationMonitorDto {
     private String studentNumber;
     private String eventId;
+    private String locationId;
     private double latitude;
     private double longitude;
     private boolean presentAtLocation;

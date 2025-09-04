@@ -12,17 +12,13 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final AttendanceWebSocketHandler attendanceWebSocketHandler;
-    private final AttendanceTrackingWebSocketController attendanceTrackingWebSocketController;
 
-    public WebSocketConfig(AttendanceWebSocketHandler attendanceWebSocketHandler,
-                           AttendanceTrackingWebSocketController attendanceTrackingWebSocketController) {
+    public WebSocketConfig(AttendanceWebSocketHandler attendanceWebSocketHandler) {
         this.attendanceWebSocketHandler = attendanceWebSocketHandler;
-        this.attendanceTrackingWebSocketController = attendanceTrackingWebSocketController;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(attendanceWebSocketHandler, "/ws/events/{eventId}/monitoring").setAllowedOrigins("*");
-        registry.addHandler(attendanceTrackingWebSocketController, "/ws/checkout/{studentNumber}/ongoing/attendance/monitorLocation").setAllowedOrigins("*");
     }
 }
