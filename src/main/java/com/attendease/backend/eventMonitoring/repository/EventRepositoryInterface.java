@@ -2,6 +2,7 @@ package com.attendease.backend.eventMonitoring.repository;
 
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.records.AttendanceRecords;
+
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -10,8 +11,14 @@ import java.util.concurrent.ExecutionException;
  */
 public interface EventRepositoryInterface {
     List<EventSessions> findOngoingEvents();
+
     List<EventSessions> findAll() throws ExecutionException, InterruptedException;
+
+    List<EventSessions> findAllEndedEvents();
+
     EventSessions findById(String eventId);
+
     void saveAttendanceRecord(AttendanceRecords record);
+
     List<AttendanceRecords> getAttendanceRecords(String eventId);
 }

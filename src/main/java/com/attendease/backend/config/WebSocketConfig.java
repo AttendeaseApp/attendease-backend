@@ -18,6 +18,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(attendanceWebSocketHandler, "/ws/events/{eventId}/monitoring").setAllowedOrigins("*"); // Configure CORS as needed
+        registry.addHandler(attendanceWebSocketHandler, "/ws/events/{eventId}/monitoring").setAllowedOrigins("*");
     }
 }

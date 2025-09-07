@@ -1,5 +1,6 @@
 package com.attendease.backend.eventMonitoring.repository;
 
+import com.attendease.backend.model.enums.EventStatus;
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.records.AttendanceRecords;
 import com.google.api.core.ApiFuture;
@@ -8,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -29,7 +32,8 @@ public class EventRepository implements EventRepositoryInterface {
     @Override
     public List<EventSessions> findOngoingEvents() {
         try {
-            return firestore.collection(EVENT_SESSION_COLLECTIONS).whereEqualTo(EVENT_STATUS_DOCUMENT_NAME, "ONGOING")
+            return firestore.collection(EVENT_SESSION_COLLECTIONS)
+                    .whereIn(EVENT_STATUS_DOCUMENT_NAME, Arrays.asList("ONGOING", "ACTIVE"))
                     .get().get().toObjects(EventSessions.class);
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error fetching ongoing events", e);
@@ -51,6 +55,18 @@ public class EventRepository implements EventRepositoryInterface {
     }
 
     @Override
+    public List<EventSessions> findAllEndedEvents() {
+        try {
+            return firestore.collection(EVENT_SESSION_COLLECTIONS)
+                    .whereLessThan("endDateTime", new Date())
+                    .whereEqualTo("eventStatus", EventStatus.ONGOING)
+                    .get().get().toObjects(EventSessions.class);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Error fetching ended events ", e);
+        }
+    }
+
+    @Override
     public EventSessions findById(String eventId) {
         try {
             return firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId).get().get().toObject(EventSessions.class);
@@ -59,18 +75,37 @@ public class EventRepository implements EventRepositoryInterface {
         }
     }
 
+    // attendance related
+    @Override
     public void saveAttendanceRecord(AttendanceRecords record) {
         try {
-            firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS).document().set(record).get();
+            if (record.getRecordId() != null && !record.getRecordId().isEmpty()) {
+                firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS).document(record.getRecordId()).set(record).get();
+            } else {
+                firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS).add(record).get();
+            }
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error saving attendance record", e);
         }
     }
 
+    @Override
     public List<AttendanceRecords> getAttendanceRecords(String eventId) {
         try {
-            return firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS).whereEqualTo(EVENT_SESSION_COLLECTION_REFERENCE_ID, firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId))
-                .get().get().toObjects(AttendanceRecords.class);
+            List<AttendanceRecords> records = new ArrayList<>();
+            List<QueryDocumentSnapshot> snapshots = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
+                    .whereEqualTo(EVENT_SESSION_COLLECTION_REFERENCE_ID, firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId))
+                    .get()
+                    .get()
+                    .getDocuments();
+
+            for (QueryDocumentSnapshot snapshot : snapshots) {
+                AttendanceRecords record = snapshot.toObject(AttendanceRecords.class);
+                record.setRecordId(snapshot.getId());
+                records.add(record);
+            }
+
+            return records;
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error fetching attendance records", e);
         }

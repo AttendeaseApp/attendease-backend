@@ -1,7 +1,9 @@
-package com.attendease.backend.eventCheckInDiscovery.service;
+package com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService;
 
+import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingServiceInterface;
 import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
 import com.attendease.backend.eventMonitoring.repository.EventRepositoryInterface;
+import com.attendease.backend.model.enums.AttendanceStatus;
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.locations.EventLocations;
 import com.attendease.backend.model.locations.GeofenceData;
@@ -10,6 +12,7 @@ import com.google.cloud.firestore.Firestore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -18,7 +21,7 @@ import java.util.concurrent.ExecutionException;
  */
 @Slf4j
 @Service
-public class EventCheckInService implements EventCheckInServiceInterface {
+public class AttendanceTrackingService implements AttendanceTrackingServiceInterface {
 
     private static final String EVENT_SESSION_COLLECTIONS = "eventSessions";
     private static final String EVENT_LOCATIONS_COLLECTIONS = "eventLocations";
@@ -27,14 +30,14 @@ public class EventCheckInService implements EventCheckInServiceInterface {
     private final Firestore firestore;
 
     /*
-     * Constructor for EventCheckInService.
+     * Constructor for AttendanceTrackingService.
      */
-    public EventCheckInService(EventRepositoryInterface eventRepository, Firestore firestore) {
+    public AttendanceTrackingService(EventRepositoryInterface eventRepository, Firestore firestore) {
         this.eventRepository = eventRepository;
         this.firestore = firestore;
     }
 
-    /*
+    /**
      * Validates and processes student check-in for an event at a specific location.
      * Ensures the student is within geofence, and not already checked in.
      */
@@ -46,8 +49,26 @@ public class EventCheckInService implements EventCheckInServiceInterface {
             throw new IllegalStateException("Student is not eligible for this event");
         }
 
-        EventLocations location = firestore.collection(EVENT_LOCATIONS_COLLECTIONS)
-            .document(checkInDTO.getLocationId()).get().get().toObject(EventLocations.class);
+        Date now = new Date();
+        Date startTime = event.getStartDateTime();
+        Date endTime = event.getEndDateTime();
+        Date registrationStartTime = new Date(startTime.getTime() - 30 * 60 * 1000);
+
+        if (now.before(registrationStartTime)) {
+            throw new IllegalStateException(String.format(
+                    "Cannot check in yet. Registration opens at %s. Event starts at %s.",
+                    registrationStartTime,
+                    startTime
+            ));
+        }
+
+        if (now.after(endTime)) {
+            throw new IllegalStateException("Event has already ended. You can no longer check in.");
+        }
+
+        log.info("Student {} is checking in within a valid time window ({} to {})", studentNumber, registrationStartTime, endTime);
+
+        EventLocations location = firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(checkInDTO.getLocationId()).get().get().toObject(EventLocations.class);
         if (location == null) {
             throw new IllegalStateException("Event location not found");
         }
@@ -63,24 +84,15 @@ public class EventCheckInService implements EventCheckInServiceInterface {
             throw new IllegalStateException("Student is outside the event geofence");
         }
 
-        //if already checked in
-        // List<AttendanceRecords> existingRecords = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
-        //     .whereEqualTo("studentNumberRefId", firestore.collection("students").document(studentNumber))
-        //     .whereEqualTo("eventRefId", firestore.collection(EVENT_SESSION_COLLECTIONS).document(checkInDTO.getEventId()))
-        //     .whereEqualTo("locationRefId", firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(checkInDTO.getLocationId()))
-        //     .whereEqualTo("attendanceStatus", com.attendease.backend.model.enums.AttendanceStatus.PRESENT)
-        //     .get().get().toObjects(AttendanceRecords.class);
-        // if (!existingRecords.isEmpty()) {
-        //     throw new IllegalStateException("Student is already checked in for this event/location.");
-        // }
-        isAlreadyCheckedIn(studentNumber, studentNumber, studentNumber);
+        isAlreadyCheckedIn(studentNumber, checkInDTO.getEventId(), checkInDTO.getLocationId());
+
 
         AttendanceRecords record = new AttendanceRecords();
         record.setStudentNumberRefId(firestore.collection("students").document(studentNumber));
         record.setEventRefId(firestore.collection(EVENT_SESSION_COLLECTIONS).document(checkInDTO.getEventId()));
         record.setLocationRefId(firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(checkInDTO.getLocationId()));
         record.setTimeIn(null);
-        record.setAttendanceStatus(com.attendease.backend.model.enums.AttendanceStatus.PRESENT);
+        record.setAttendanceStatus(AttendanceStatus.CHECKED_IN);
 
         eventRepository.saveAttendanceRecord(record);
 
@@ -90,23 +102,18 @@ public class EventCheckInService implements EventCheckInServiceInterface {
         response.setLocationId(checkInDTO.getLocationId());
         response.setLatitude(studentLat);
         response.setLongitude(studentLon);
-        response.setCheckInTime(null);
+        response.setCheckInTime(checkInDTO.getCheckInTime());
         return response;
     }
 
-    private void isAlreadyCheckedIn(String studentNumber, String eventId, String locationId) {
-        List<AttendanceRecords> existingRecords = null;
-        try {
-            existingRecords = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
+    private void isAlreadyCheckedIn(String studentNumber, String eventId, String locationId) throws ExecutionException, InterruptedException {
+        List<AttendanceRecords> existingRecords = firestore.collection(ATTENDANCE_RECORDS_COLLECTIONS)
                 .whereEqualTo("studentNumberRefId", firestore.collection("students").document(studentNumber))
                 .whereEqualTo("eventRefId", firestore.collection(EVENT_SESSION_COLLECTIONS).document(eventId))
                 .whereEqualTo("locationRefId", firestore.collection(EVENT_LOCATIONS_COLLECTIONS).document(locationId))
-                .whereEqualTo("attendanceStatus", com.attendease.backend.model.enums.AttendanceStatus.PRESENT)
+                .whereEqualTo("attendanceStatus", AttendanceStatus.CHECKED_IN)
                 .get().get().toObjects(AttendanceRecords.class);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-        if (existingRecords != null && !existingRecords.isEmpty()) {
+        if (!existingRecords.isEmpty()) {
             throw new IllegalStateException("Student is already checked in for this event/location.");
         }
     }
@@ -118,7 +125,7 @@ public class EventCheckInService implements EventCheckInServiceInterface {
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double distance = earthRadius * c;
-        log.info("Calculated distance: {} meters (allowed radius: {})", distance, radiusMeters);
+        log.info("Calculated distance: {} meters (allowed radius: {}, student: [{}, {}], geofence center: [{}, {}])", distance, radiusMeters, lat1, lon1, lat2, lon2);
         return distance <= radiusMeters;
     }
 }

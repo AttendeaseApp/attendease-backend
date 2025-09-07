@@ -19,8 +19,10 @@ public class AttendanceRecords {
     private DocumentReference studentNumberRefId;
     private DocumentReference eventRefId;
     private DocumentReference locationRefId;
+    @ServerTimestamp
     private Date timeIn;
     private Date timeOut;
+    private String reason;
     private AttendanceStatus attendanceStatus;
     private DocumentReference updatedByUserRefId;
     @ServerTimestamp

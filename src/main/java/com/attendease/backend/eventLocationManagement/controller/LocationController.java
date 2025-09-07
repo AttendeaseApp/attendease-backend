@@ -3,7 +3,6 @@ package com.attendease.backend.eventLocationManagement.controller;
 import com.attendease.backend.eventLocationManagement.dto.*;
 import com.attendease.backend.eventLocationManagement.dto.response.LocationResponseDTO;
 import com.attendease.backend.eventLocationManagement.service.LocationServiceInterface;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

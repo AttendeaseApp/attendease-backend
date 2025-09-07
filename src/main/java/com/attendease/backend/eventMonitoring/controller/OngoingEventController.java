@@ -1,10 +1,24 @@
+/**
+ * REST Controller for Event Monitoring operations.
+ *
+ * <b>Base Path:</b> <code>/event-monitoring</code>
+ *
+ * <b>Endpoints:</b>
+ * <ul>
+ *   <li><b>GET /event-monitoring/ongoing</b> - List all ongoing events.</li>
+ *   <li><b>GET /event-monitoring/{eventId}</b> - Get details of a specific event.</li>
+ *   <li><b>WebSocket: /ws/events/{eventId}/monitoring</b> - Real-time attendance monitoring.<br>
+ *     <b>How to use:</b> Connect via WebSocket client and send/receive attendance updates.</li>
+ * </ul>
+ * <b>Responses:</b> JSON objects with event/session details or attendance updates.
+ */
 package com.attendease.backend.eventMonitoring.controller;
 
 import com.attendease.backend.eventMonitoring.dto.EventSessionsDto;
 import com.attendease.backend.eventMonitoring.service.EventService;
 import com.attendease.backend.model.events.EventSessions;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +31,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/event-monitoring")
+@CrossOrigin(origins = "*")
 public class OngoingEventController {
 
     private final EventService eventService;

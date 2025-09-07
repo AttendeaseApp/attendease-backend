@@ -1,3 +1,16 @@
+/**
+ * WebSocket Handler for Event Attendance Monitoring.
+ *
+ * <b>Endpoint:</b> <code>/ws/events/{eventId}/monitoring</code>
+ *
+ * <b>How to use:</b>
+ * <ul>
+ *   <li>Connect via WebSocket client (e.g., Postman, browser, etc.)</li>
+ *   <li>Send messages (e.g., "REFRESH") to request attendance updates.</li>
+ *   <li>Receive attendance status and updates in real-time.</li>
+ * </ul>
+ * <b>Responses:</b> Attendance status and updates as JSON or text messages.
+ */
 package com.attendease.backend.eventMonitoring.handler;
 
 import com.attendease.backend.eventMonitoring.service.EventService;
@@ -31,10 +44,8 @@ public class AttendanceWebSocketHandler implements WebSocketHandler {
             sessionEventMap.put(session.getId(), eventId);
             log.info("WebSocket connection established for event: {} with session: {}", eventId, session.getId());
 
-            // Send initial attendance data
             eventService.monitorAttendance(eventId, sessions);
 
-            // Send welcome message
             session.sendMessage(new TextMessage("Connected to event: " + eventId));
         } else {
             session.close(CloseStatus.BAD_DATA.withReason("Invalid event ID"));
@@ -46,11 +57,9 @@ public class AttendanceWebSocketHandler implements WebSocketHandler {
         String eventId = sessionEventMap.get(session.getId());
         log.info("Received message from session {}: {}", session.getId(), message.getPayload());
 
-        // Handle different message types if needed
         if (message instanceof TextMessage) {
             String payload = ((TextMessage) message).getPayload();
 
-            // You can add custom message handling here
             if ("REFRESH".equals(payload)) {
                 eventService.monitorAttendance(eventId, sessions);
             }
