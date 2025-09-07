@@ -1,4 +1,4 @@
-package com.attendease.backend.eventMonitoring.dto;
+package com.attendease.backend.eventAttendanceMonitoringService.dto;
 
 import com.attendease.backend.model.enums.EventStatus;
 import com.attendease.backend.model.events.EventSessions;

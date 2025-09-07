@@ -1,6 +1,6 @@
-package com.attendease.backend.attendanceTrackingService.service;
+package com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService;
 
-import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventCheckInDto;
 
 import java.util.concurrent.ExecutionException;
 

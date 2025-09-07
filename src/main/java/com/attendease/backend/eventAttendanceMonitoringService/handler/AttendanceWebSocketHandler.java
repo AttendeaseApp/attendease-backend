@@ -11,9 +11,9 @@
  * </ul>
  * <b>Responses:</b> Attendance status and updates as JSON or text messages.
  */
-package com.attendease.backend.eventMonitoring.handler;
+package com.attendease.backend.eventAttendanceMonitoringService.handler;
 
-import com.attendease.backend.eventMonitoring.service.EventService;
+import com.attendease.backend.eventAttendanceMonitoringService.service.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

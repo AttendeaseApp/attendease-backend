@@ -1,8 +1,8 @@
-package com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService;
+package com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService.impl;
 
-import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingServiceInterface;
-import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
-import com.attendease.backend.eventMonitoring.repository.EventRepositoryInterface;
+import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService.AttendanceTrackingServiceInterface;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventCheckInDto;
+import com.attendease.backend.eventAttendanceMonitoringService.repository.EventRepositoryInterface;
 import com.attendease.backend.model.enums.AttendanceStatus;
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.locations.EventLocations;
@@ -102,7 +102,6 @@ public class AttendanceTrackingService implements AttendanceTrackingServiceInter
         response.setLocationId(checkInDTO.getLocationId());
         response.setLatitude(studentLat);
         response.setLongitude(studentLon);
-        response.setCheckInTime(checkInDTO.getCheckInTime());
         return response;
     }
 

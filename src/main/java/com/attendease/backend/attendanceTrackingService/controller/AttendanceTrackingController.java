@@ -6,10 +6,10 @@
 package com.attendease.backend.attendanceTrackingService.controller;
 
 import com.attendease.backend.attendanceTrackingService.dto.CheckInResponse;
-import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingServiceInterface;
-import com.attendease.backend.eventMonitoring.dto.EventCheckInDto;
-import com.attendease.backend.eventMonitoring.dto.EventSessionsDto;
-import com.attendease.backend.eventMonitoring.service.EventService;
+import com.attendease.backend.attendanceTrackingService.service.AttendanceTrackingService.AttendanceTrackingServiceInterface;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventCheckInDto;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventSessionsDto;
+import com.attendease.backend.eventAttendanceMonitoringService.service.EventService;
 import com.attendease.backend.model.events.EventSessions;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +31,7 @@ public class AttendanceTrackingController {
     }
 
     /**
-     * Fetch all ACTIVE(UPCOMING) and ONGOING events for student to attend.
+     * Fetch all upcoming(ACTIVE) and (ONGOING) events for student to attend.
      * This will return a list of available events including its details.
      * <p>
      * sample return body:
@@ -69,7 +69,6 @@ public class AttendanceTrackingController {
      * {
      * "eventId": "{eventId}",
      * "studentNumber": "CT00-0000",
-     * "checkInTime": "2025-08-31T10:00:00",
      * "locationId": "{locationId}",
      * "latitude": 14.1498,
      * "longitude": 120.9555

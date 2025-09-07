@@ -1,11 +1,9 @@
-package com.attendease.backend.eventMonitoring.service;
+package com.attendease.backend.eventAttendanceMonitoringService.service;
 
-import com.attendease.backend.eventMonitoring.dto.EventAttendanceDto;
-import com.attendease.backend.eventMonitoring.repository.EventRepository;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventAttendanceDto;
+import com.attendease.backend.eventAttendanceMonitoringService.repository.EventRepository;
 import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.records.AttendanceRecords;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.firestore.Firestore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
