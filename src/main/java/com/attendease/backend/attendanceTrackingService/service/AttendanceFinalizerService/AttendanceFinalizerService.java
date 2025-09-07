@@ -1,6 +1,6 @@
 package com.attendease.backend.attendanceTrackingService.service.AttendanceFinalizerService;
 
-import com.attendease.backend.eventMonitoring.repository.EventRepositoryInterface;
+import com.attendease.backend.eventAttendanceMonitoringService.repository.EventRepositoryInterface;
 import com.attendease.backend.eventSessionManagement.repository.EventSessionRepositoryInterface;
 import com.attendease.backend.model.enums.AttendanceStatus;
 import com.attendease.backend.model.enums.EventStatus;

@@ -1,4 +1,4 @@
-package com.attendease.backend.config;
+package com.attendease.backend.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

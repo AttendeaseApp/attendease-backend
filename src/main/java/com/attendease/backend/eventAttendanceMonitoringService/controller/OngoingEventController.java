@@ -12,17 +12,13 @@
  * </ul>
  * <b>Responses:</b> JSON objects with event/session details or attendance updates.
  */
-package com.attendease.backend.eventMonitoring.controller;
+package com.attendease.backend.eventAttendanceMonitoringService.controller;
 
-import com.attendease.backend.eventMonitoring.dto.EventSessionsDto;
-import com.attendease.backend.eventMonitoring.service.EventService;
+import com.attendease.backend.eventAttendanceMonitoringService.dto.EventSessionsDto;
+import com.attendease.backend.eventAttendanceMonitoringService.service.EventService;
 import com.attendease.backend.model.events.EventSessions;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.List;
@@ -70,7 +66,7 @@ public class OngoingEventController {
 
     /*
      * Used for monitoring attendance in real-time via WebSocket.
-     *  
+     *
      *  Sample WebSocket endpoint:
      *  ws/event-monitoring/ws/{eventId}/monitoring
      */

@@ -1,4 +1,4 @@
-package com.attendease.backend.config;
+package com.attendease.backend.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
