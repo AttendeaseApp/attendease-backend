@@ -12,10 +12,10 @@ public class EventCheckInDto {
     private String studentNumber;
     private LocalDateTime checkInTime;
     private String locationId;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
 
-    public EventCheckInDto(String eventId, String studentNumber, LocalDateTime checkInTime, String locationId, double latitude, double longitude) {
+    public EventCheckInDto(String eventId, String studentNumber, LocalDateTime checkInTime, String locationId, Double latitude, Double longitude) {
         this.eventId = eventId;
         this.studentNumber = studentNumber;
         this.checkInTime = checkInTime;

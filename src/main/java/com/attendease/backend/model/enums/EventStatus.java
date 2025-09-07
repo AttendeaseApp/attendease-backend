@@ -5,6 +5,7 @@ package com.attendease.backend.model.enums;
  */
 public enum EventStatus {
     ACTIVE,
+    REGISTRATION,
     ONGOING,
     CONCLUDED,
     CANCELLED

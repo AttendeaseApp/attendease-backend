@@ -20,13 +20,15 @@ public class EventStatusScheduler {
         this.eventSessionRepository = eventSessionRepository;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 60000)
     public void updateEventStatuses() {
         try {
             Date now = new Date();
             List<EventSessions> activeEvents = eventSessionRepository.findByStatus(EventStatus.ACTIVE);
+            List<EventSessions> registrationEvents = eventSessionRepository.findByStatus(EventStatus.REGISTRATION);
             List<EventSessions> ongoingEvents = eventSessionRepository.findByStatus(EventStatus.ONGOING);
 
+            activeEvents.addAll(registrationEvents);
             activeEvents.addAll(ongoingEvents);
 
             for (EventSessions event : activeEvents) {
@@ -34,15 +36,26 @@ public class EventStatusScheduler {
                 Date end = event.getEndDateTime();
 
                 if (start != null && end != null) {
-                    if (now.after(start) && now.before(end)) {
-                        // should be ONGOING
+                    long startTimeMillis = start.getTime();
+                    long nowMillis = now.getTime();
+                    // 30 minutes before start
+                    long registrationStartMillis = startTimeMillis - (30 * 60 * 1000);
+                    if (nowMillis >= registrationStartMillis && nowMillis < startTimeMillis) {
+                        // REGISTRATION
+                        if (event.getEventStatus() != EventStatus.REGISTRATION) {
+                            event.setEventStatus(EventStatus.REGISTRATION);
+                            eventSessionRepository.save(event);
+                            log.info("Event {} status updated to REGISTRATION", event.getEventId());
+                        }
+                    } else if (nowMillis >= startTimeMillis && nowMillis < end.getTime()) {
+                        // ONGOING
                         if (event.getEventStatus() != EventStatus.ONGOING) {
                             event.setEventStatus(EventStatus.ONGOING);
                             eventSessionRepository.save(event);
                             log.info("Event {} status updated to ONGOING", event.getEventId());
                         }
-                    } else if (now.after(end)) {
-                        // should be CONCLUDED
+                    } else if (nowMillis >= end.getTime()) {
+                        // CONCLUDED
                         if (event.getEventStatus() != EventStatus.CONCLUDED) {
                             event.setEventStatus(EventStatus.CONCLUDED);
                             eventSessionRepository.save(event);
@@ -55,6 +68,7 @@ public class EventStatusScheduler {
             log.error("Error updating event statuses: {}", e.getMessage(), e);
         }
     }
+
 
 }
 

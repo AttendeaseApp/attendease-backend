@@ -1,6 +1,5 @@
 package com.attendease.backend.config;
 
-import com.attendease.backend.attendanceTrackingService.controller.AttendanceTrackingWebSocketController;
 import com.attendease.backend.eventMonitoring.handler.AttendanceWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

@@ -44,10 +44,8 @@ public class AttendanceWebSocketHandler implements WebSocketHandler {
             sessionEventMap.put(session.getId(), eventId);
             log.info("WebSocket connection established for event: {} with session: {}", eventId, session.getId());
 
-            // Send initial attendance data
             eventService.monitorAttendance(eventId, sessions);
 
-            // Send welcome message
             session.sendMessage(new TextMessage("Connected to event: " + eventId));
         } else {
             session.close(CloseStatus.BAD_DATA.withReason("Invalid event ID"));
@@ -59,11 +57,9 @@ public class AttendanceWebSocketHandler implements WebSocketHandler {
         String eventId = sessionEventMap.get(session.getId());
         log.info("Received message from session {}: {}", session.getId(), message.getPayload());
 
-        // Handle different message types if needed
         if (message instanceof TextMessage) {
             String payload = ((TextMessage) message).getPayload();
 
-            // You can add custom message handling here
             if ("REFRESH".equals(payload)) {
                 eventService.monitorAttendance(eventId, sessions);
             }
