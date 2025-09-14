@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.concurrent.ExecutionException;
 
 @RestController
-@RequestMapping("v1/api/auth/osa")
+@RequestMapping("/api/auth/osa")
 @Slf4j
 public class OsaAuthenticationController {
 
@@ -34,21 +34,11 @@ public class OsaAuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<String> loginOsa(@Valid @RequestBody OsaLoginRequest loginRequest) {
         try {
-            Users tempStudent = new Users();
-            tempStudent.setEmail(loginRequest.getEmail());
-            tempStudent.setPassword(loginRequest.getPassword());
-
-            String customToken = osaAuthenticationService.loginOsa(tempStudent);
-            return new ResponseEntity<>(customToken, HttpStatus.OK);
+            String jwt = osaAuthenticationService.loginOsa(loginRequest.getEmail(), loginRequest.getPassword());
+            return ResponseEntity.ok(jwt);
         } catch (IllegalArgumentException e) {
-            log.warn("Login attempt failed: {}", e.getMessage());
+            log.warn("Login failed: {}", e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        } catch (ExecutionException | InterruptedException e) {
-            log.error("Internal server error during students login service: {}", e.getMessage());
-            return new ResponseEntity<>("Authentication failed due to server error.", HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (RuntimeException e) {
-            log.error("Unexpected error during OSA login service: {}", e.getMessage());
-            return new ResponseEntity<>("An unexpected error occurred during OSA login service.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

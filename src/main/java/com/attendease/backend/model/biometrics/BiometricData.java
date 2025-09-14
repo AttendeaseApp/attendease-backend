@@ -1,39 +1,45 @@
 package com.attendease.backend.model.biometrics;
 
 import com.attendease.backend.model.enums.BiometricStatus;
-import com.google.cloud.firestore.annotation.DocumentId;
-import com.google.cloud.firestore.annotation.ServerTimestamp;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Class representing biometric data for a user.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Document(collection = "biometric_data")
 public class BiometricData {
 
-    @DocumentId
+    @Id
     private String facialId;
+
+    @NotNull(message = "Facial encoding is required")
+    @Size(min = 128, max = 128, message = "Facial encoding must have exactly 128 elements")
     private List<String> facialEncoding;
-    @ServerTimestamp
-    private Date createdAt;
-    @ServerTimestamp
-    private Date lastUpdated;
-    private BiometricStatus biometricsStatus;
 
-    public void setFacialEncoding(List<String> facialEncoding) {
-        if (facialEncoding == null || facialEncoding.isEmpty()) {
-            throw new IllegalArgumentException("Facial encoding cannot be null or empty");
-        }
-        if (facialEncoding.size() != 128) {
-            throw new IllegalArgumentException("Facial encoding must have exactly 128 elements");
-        }
-        this.facialEncoding = facialEncoding;
-    }
+    private String studentNumber;
 
-    public BiometricStatus getBiometricsStatus() {
-        return biometricsStatus != null ? biometricsStatus : BiometricStatus.PENDING;
-    }
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime lastUpdated;
+
+    @Builder.Default
+    private BiometricStatus biometricsStatus = BiometricStatus.PENDING;
 }

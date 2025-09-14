@@ -1,65 +1,61 @@
 package com.attendease.backend.model.students;
 
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.annotation.PropertyName;
-import com.google.firebase.database.annotations.NotNull;
+import com.attendease.backend.model.biometrics.BiometricData;
+import com.attendease.backend.model.users.Users;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.LocalDateTime;
 
 /**
  * Class representing a student.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Slf4j
+@Document(collection = "students")
 public class Students {
-    @PropertyName("userRefId")
-    private DocumentReference userRefId;
 
-    @PropertyName("facialRefID")
-    private DocumentReference facialRefID;
+    @Id
+    private String id;
 
-    @NotNull
-    @PropertyName("studentNumber")
+    @DBRef
+    @NotNull(message = "User reference is required")
+    private Users user;
+
+    @DBRef
+    private BiometricData facialData;
+
+    @NotBlank(message = "Student number is required")
+    @Indexed(unique = true)
     private String studentNumber;
 
-    @PropertyName("section")
     private String section;
 
-    @PropertyName("yearLevel")
     private String yearLevel;
 
-    @PropertyName("courseRefId")
-    private DocumentReference courseRefId;
+    @DBRef
+    private Courses course;
 
-    @PropertyName("clusterRefId")
-    private DocumentReference clusterRefId;
+    @DBRef
+    private Clusters cluster;
 
-    public Students() {
-        super();
-    }
+    @CreatedDate
+    private LocalDateTime createdAt;
 
-    public void logFields() {
-        log.info("Students fields: userRefId={}, facialRefID={}, studentNumber={}, section={}, yearLevel={}, courseRefId={}, clusterRefId={}",
-                userRefId!= null ? userRefId.getPath() :null,
-                facialRefID != null ? facialRefID.getPath() : null,
-                studentNumber,
-                section ,
-                yearLevel,
-                courseRefId != null ?courseRefId.getPath() :null,
-                clusterRefId != null ?clusterRefId.getPath() :null);
-    }
-
-    @Override
-    public String toString() {
-        return "Students{" +
-                "userRefId=" + (userRefId != null ? userRefId.getPath() : null) +
-                ", facialRefID=" + (facialRefID != null ? facialRefID.getPath() : null) +
-                ", studentNumber='" + studentNumber + '\'' +
-                ", section='" + section + '\'' +
-                ", yearLevel='" + yearLevel + '\'' +
-                ", courseRefId=" + (courseRefId != null ? courseRefId.getPath() : null) +
-                ", clusterRefId=" + (clusterRefId != null ? clusterRefId.getPath() : null) +
-                ", parent=" + super.toString() +
-                '}';
-    }
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }

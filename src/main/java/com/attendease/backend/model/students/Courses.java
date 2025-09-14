@@ -1,43 +1,46 @@
 package com.attendease.backend.model.students;
 
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.annotation.DocumentId;
-import com.google.cloud.firestore.annotation.PropertyName;
-import com.google.cloud.firestore.annotation.ServerTimestamp;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
  * Class representing a course.
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Document(collection = "courses")
 public class Courses {
-    @DocumentId
-    @PropertyName("courseId")
+
+    @Id
     private String courseId;
 
-    @PropertyName("courseName")
+    @NotBlank(message = "Course name is required")
+    @Indexed
     private String courseName;
 
-    @PropertyName("clusterRefId")
-    private DocumentReference clusterRefId;
+    @DBRef
+    private Clusters cluster;
 
-    @PropertyName("createdByUserRefId")
-    private DocumentReference createdByUserRefId;
+    private String createdByUserId;
+    private String updatedByUserId;
 
-    @PropertyName("updatedByUserRefId")
-    private DocumentReference updatedByUserRefId;
+    @CreatedDate
+    private LocalDateTime createdAt;
 
-    @ServerTimestamp
-    @PropertyName("createdAt")
-    private Date createdAt;
-
-    @ServerTimestamp
-    @PropertyName("updatedAt")
-    private Date updatedAt;
-
-    public Courses() {
-        super();
-    }
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }

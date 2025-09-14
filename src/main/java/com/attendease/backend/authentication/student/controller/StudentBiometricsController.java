@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("v1/api/auth/biometrics")
+@RequestMapping("/api/auth/biometrics")
 @Slf4j
 public class StudentBiometricsController {
 
@@ -28,7 +28,6 @@ public class StudentBiometricsController {
 
     private static final String FACIAL_RECOGNITION_SERVICE_API_BASE_URL = "http://127.0.0.1:8001/v1";
     private static final String FACIAL_RECOGNITION_SERVICE_API_VALIDATE_FACIAL_ENCODING_ENDPOINT = "/validate-facial-encoding";
-    private static final String FACIAL_RECOGNITION_SERVICE_API_VERIFY_FACIAL_ENCODING_ENDPOINT = "/authenticate-face";
 
     public StudentBiometricsController(StudentBiometricsService studentBiometricsService, HttpHeaders httpHeaders, RestTemplate restTemplate) {
         this.studentBiometricsService = studentBiometricsService;
@@ -37,68 +36,71 @@ public class StudentBiometricsController {
     }
 
     @PostMapping("/register-face/{studentNumber}")
-    public ResponseEntity<String> registerFacialData(@PathVariable String studentNumber,@Valid @RequestBody FacialRegistrationRequest request) {
+    public ResponseEntity<String> registerFacialData(@PathVariable String studentNumber, @Valid @RequestBody FacialRegistrationRequest request) {
+        if (request.getFacialEncoding() == null || request.getFacialEncoding().isEmpty()) {
+            return ResponseEntity.badRequest().body("Face encoding cannot be null or empty");
+        }
+
+        log.info("Received face encoding for student {}: {} elements", studentNumber, request.getFacialEncoding().size());
+
+        List<Double> doubleEncodings;
         try {
-            if (request.getFacialEncoding() == null || request.getFacialEncoding().isEmpty()) {
-                return ResponseEntity.badRequest().body("Face encoding cannot be null or empty");
-            }
+            doubleEncodings = request.getFacialEncoding().stream()
+                    .map(Double::parseDouble)
+                    .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("Face encoding contains invalid numeric values");
+        }
 
-            log.info("Received face encoding for student {}: {} elements", studentNumber, request.getFacialEncoding().size());
+        Map<String, Object> body = new HashMap<>();
+        body.put("facialEncoding", doubleEncodings);
 
-            List<Double> doubleEncodings;
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
 
-            try {
-                doubleEncodings = request.getFacialEncoding().stream().map(Double::parseDouble).collect(Collectors.toList());
-            } catch (NumberFormatException e) {
-                return ResponseEntity.badRequest().body("Face encoding contains invalid numeric values");
-            }
+        log.debug("Sending request to facial recognition service API with {} face encoding elements", doubleEncodings.size());
 
-            Map<String, Object> body = new HashMap<>();
-            body.put("facialEncoding", doubleEncodings);
+        FacialEncodingResponse responseBody;
+        try {
+            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(
+                    FACIAL_RECOGNITION_SERVICE_API_BASE_URL + FACIAL_RECOGNITION_SERVICE_API_VALIDATE_FACIAL_ENCODING_ENDPOINT,
+                    requestEntity,
+                    FacialEncodingResponse.class
+            );
+            responseBody = response.getBody();
+        } catch (Exception e) {
+            log.error("Failed to communicate with facial recognition service API: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service is unavailable");
+        }
 
-            httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
+        if (responseBody == null) {
+            log.error("Facial recognition service returned null response body");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service returned invalid response");
+        }
 
-            log.debug("Sending request to FACIAL RECOGNITION SERVICE API with {} face encoding elements", doubleEncodings.size());
+        if (!responseBody.isSuccess()) {
+            String errorMsg = responseBody.getMessage() != null ? responseBody.getMessage()
+                    : (responseBody.getError() != null ? responseBody.getError() : "Unknown error from facial recognition service API");
+            log.error("Facial recognition service API returned error: {}", errorMsg);
+            return ResponseEntity.badRequest().body("Face processing failed: " + errorMsg);
+        }
 
-            ResponseEntity<FacialEncodingResponse> response;
+        List<Double> faceEncodingDoubles = responseBody.getFacialEncoding();
+        if (faceEncodingDoubles == null || faceEncodingDoubles.isEmpty()) {
+            log.error("Facial recognition service API returned null or empty face encoding data");
+            return ResponseEntity.badRequest().body("Face processing failed: No face encoding data received");
+        }
 
-            try {
-                response = restTemplate.postForEntity(FACIAL_RECOGNITION_SERVICE_API_BASE_URL + FACIAL_RECOGNITION_SERVICE_API_VALIDATE_FACIAL_ENCODING_ENDPOINT, requestEntity, FacialEncodingResponse.class);
-            } catch (Exception e) {
-                log.error("Failed to communicate with FACIAL RECOGNITION SERVICE API: {}", e.getMessage(), e);
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service is unavailable");
-            }
+        log.info("Successfully received {} face encoding elements from facial recognition service API", faceEncodingDoubles.size());
 
-            if (response.getBody() == null) {
-                log.error("FACIAL RECOGNITION SERVICE returned null response body");
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service returned invalid response");
-            }
+        List<String> faceEncodingList = faceEncodingDoubles.stream()
+                .map(String::valueOf)
+                .collect(Collectors.toList());
 
-            FacialEncodingResponse responseBody = response.getBody();
-
-            if (!responseBody.isSuccess()) {
-                String errorMsg = responseBody.getMessage() != null ? responseBody.getMessage() :
-                        (responseBody.getError() != null ? responseBody.getError() : "Unknown error from FACIAL RECOGNITION SERVICE API");
-                log.error("FACIAL RECOGNITION SERVICE API returned error: {}", errorMsg);
-                return ResponseEntity.badRequest().body("Face processing failed: " + errorMsg);
-            }
-
-            List<Double> faceEncodingDoubles = responseBody.getFacialEncoding();
-            if (faceEncodingDoubles == null || faceEncodingDoubles.isEmpty()) {
-                log.error("FACIAL RECOGNITION SERVICE API returned null or empty face encoding data");
-                return ResponseEntity.badRequest().body("Face processing failed: No face encoding data received");
-            }
-
-            log.info("Successfully received {} face encoding elements from FACIAL RECOGNITION SERVICE API", faceEncodingDoubles.size());
-
-            List<String> faceEncodingList = faceEncodingDoubles.stream().map(String::valueOf).collect(Collectors.toList());
-
+        try {
             Students student = studentBiometricsService.getStudentByStudentNumber(studentNumber);
             String result = studentBiometricsService.registerNewFacialBiometrics(student, faceEncodingList);
-
             return ResponseEntity.ok(result);
-
         } catch (IllegalStateException e) {
             log.warn("Facial registration conflict for student {}: {}", studentNumber, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
@@ -116,9 +118,12 @@ public class StudentBiometricsController {
     public ResponseEntity<String> getFacialStatus(@PathVariable String studentNumber) {
         try {
             Optional<BiometricData> biometricData = studentBiometricsService.getFacialStatus(studentNumber);
-            return biometricData.map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus())).orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
+            return biometricData
+                    .map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()))
+                    .orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.error("Error fetching biometric status for student {}: {}", studentNumber, e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Failed to retrieve biometric status");
         }
     }
 
@@ -128,7 +133,8 @@ public class StudentBiometricsController {
             studentBiometricsService.recalibrateFacialBiometrics(studentNumber);
             return ResponseEntity.ok("Facial data recalibrated successfully");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.error("Error recalibrating facial data for student {}: {}", studentNumber, e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Failed to recalibrate facial data");
         }
     }
 }
