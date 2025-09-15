@@ -1,8 +1,8 @@
 package com.attendease.backend.locationsManagement.controller;
 
 import com.attendease.backend.locationsManagement.service.LocationsManagementService;
-import com.attendease.backend.model.locations.Request.EventLocationRequest;
-import com.attendease.backend.model.locations.Response.LocationResponse;
+import com.attendease.backend.domain.locations.Request.EventLocationRequest;
+import com.attendease.backend.domain.locations.Response.LocationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;

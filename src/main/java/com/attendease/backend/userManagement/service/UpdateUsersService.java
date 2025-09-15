@@ -1,7 +1,7 @@
 package com.attendease.backend.userManagement.service;
 
-import com.attendease.backend.model.users.Search.SearchKeywords;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.users.Search.SearchKeywords;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.repository.users.UserUpdateRepository;

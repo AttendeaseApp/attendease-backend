@@ -2,8 +2,8 @@ package com.attendease.backend.authentication.student.controller;
 
 import com.attendease.backend.authentication.student.dto.request.FacialRegistrationRequest;
 import com.attendease.backend.authentication.student.dto.response.FacialEncodingResponse;
-import com.attendease.backend.model.biometrics.BiometricData;
-import com.attendease.backend.model.students.Students;
+import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.authentication.student.service.StudentBiometricsService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

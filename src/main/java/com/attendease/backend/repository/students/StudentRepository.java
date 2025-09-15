@@ -1,7 +1,7 @@
 package com.attendease.backend.repository.students;
 
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

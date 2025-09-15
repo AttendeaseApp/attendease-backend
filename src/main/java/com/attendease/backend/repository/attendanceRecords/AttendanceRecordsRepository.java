@@ -1,10 +1,10 @@
 package com.attendease.backend.repository.attendanceRecords;
 
-import com.attendease.backend.model.enums.AttendanceStatus;
-import com.attendease.backend.model.events.EventSessions;
-import com.attendease.backend.model.locations.EventLocations;
-import com.attendease.backend.model.records.AttendanceRecords;
-import com.attendease.backend.model.students.Students;
+import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.records.AttendanceRecords;
+import com.attendease.backend.domain.students.Students;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.attendease.backend.authentication.student.repository;
 
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import lombok.extern.slf4j.Slf4j;

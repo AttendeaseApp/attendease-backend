@@ -1,7 +1,7 @@
 package com.attendease.backend.eventSessionsManagement.service;
 
-import com.attendease.backend.model.enums.EventStatus;
-import com.attendease.backend.model.events.EventSessions;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

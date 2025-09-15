@@ -2,10 +2,10 @@ package com.attendease.backend.authentication.student.service;
 
 import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
 import com.attendease.backend.authentication.student.repository.AuthenticationRepository;
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.enums.UserType;
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 /**
  * Refactored StudentAuthenticationService that works with separate users and Students entities.
- * Uses composition model instead of inheritance.
+ * Uses composition domain instead of inheritance.
  */
 @Service
 @Slf4j

@@ -1,6 +1,6 @@
 package com.attendease.backend.repository.users;
 
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.users.Users;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

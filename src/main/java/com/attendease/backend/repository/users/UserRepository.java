@@ -1,6 +1,6 @@
 package com.attendease.backend.repository.users;
 
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.users.Users;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

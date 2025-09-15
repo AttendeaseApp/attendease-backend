@@ -1,7 +1,7 @@
 package com.attendease.backend.userManagement.controller;
 
-import com.attendease.backend.model.users.Search.SearchKeywords;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.users.Search.SearchKeywords;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.userManagement.service.UpdateUsersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

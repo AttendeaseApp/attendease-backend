@@ -1,11 +1,10 @@
 package com.attendease.backend.eventSessionMonitoringService.service;
 
-import com.attendease.backend.model.enums.AttendanceStatus;
-import com.attendease.backend.model.enums.EventStatus;
-import com.attendease.backend.model.events.EventSessions;
-import com.attendease.backend.model.records.AttendanceRecords;
-import com.attendease.backend.model.records.AttendanceStatus.AttendanceStatusReport;
-import com.attendease.backend.model.students.Students;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.records.AttendanceRecords;
+import com.attendease.backend.domain.records.AttendanceStatus.AttendanceStatusReport;
+import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;

@@ -1,6 +1,6 @@
 package com.attendease.backend.authentication.osa.service;
 
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.extern.slf4j.Slf4j;

@@ -1,18 +1,15 @@
 package com.attendease.backend.authentication.osa.controller;
 
-import com.attendease.backend.model.users.Users;
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.enums.UserType;
+import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.authentication.osa.dto.OsaLoginRequest;
 import com.attendease.backend.authentication.osa.service.OsaAuthenticationService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
-
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/auth/osa")

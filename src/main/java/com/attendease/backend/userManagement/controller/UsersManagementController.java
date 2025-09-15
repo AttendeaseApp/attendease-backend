@@ -1,8 +1,8 @@
 package com.attendease.backend.userManagement.controller;
 
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.students.UserStudent.UserStudentResponse;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.userManagement.service.UsersManagementService;
 import com.opencsv.exceptions.CsvValidationException;

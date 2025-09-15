@@ -1,8 +1,7 @@
 package com.attendease.backend.userManagement.repository;
 
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.students.UserStudent.UserStudent;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserUpdateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

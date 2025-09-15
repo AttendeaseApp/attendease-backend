@@ -1,6 +1,6 @@
 package com.attendease.backend.repository.biometrics;
 
-import com.attendease.backend.model.biometrics.BiometricData;
+import com.attendease.backend.domain.biometrics.BiometricData;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;

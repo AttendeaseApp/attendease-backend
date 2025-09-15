@@ -1,10 +1,10 @@
 package com.attendease.backend.locationsManagement.service;
 
-import com.attendease.backend.model.locations.EventLocations;
-import com.attendease.backend.model.locations.Geofencing.GeofenceData;
-import com.attendease.backend.model.locations.Geofencing.Geometry;
-import com.attendease.backend.model.locations.Request.EventLocationRequest;
-import com.attendease.backend.model.locations.Response.LocationResponse;
+import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.locations.Geofencing.GeofenceData;
+import com.attendease.backend.domain.locations.Geofencing.Geometry;
+import com.attendease.backend.domain.locations.Request.EventLocationRequest;
+import com.attendease.backend.domain.locations.Response.LocationResponse;
 import com.attendease.backend.repository.locations.LocationRepository;
 
 import lombok.RequiredArgsConstructor;

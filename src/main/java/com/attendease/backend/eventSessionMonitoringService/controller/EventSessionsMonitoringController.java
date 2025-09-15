@@ -1,8 +1,8 @@
 package com.attendease.backend.eventSessionMonitoringService.controller;
 
 import com.attendease.backend.eventSessionMonitoringService.service.EventSessionMonitoringService;
-import com.attendease.backend.model.events.EventSessions;
-import com.attendease.backend.model.students.Students;
+import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.students.Students;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

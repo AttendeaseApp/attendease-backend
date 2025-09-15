@@ -1,8 +1,8 @@
 package com.attendease.backend.authentication.student.service;
 
-import com.attendease.backend.model.biometrics.BiometricData;
-import com.attendease.backend.model.enums.BiometricStatus;
-import com.attendease.backend.model.students.Students;
+import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.enums.BiometricStatus;
+import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import lombok.RequiredArgsConstructor;

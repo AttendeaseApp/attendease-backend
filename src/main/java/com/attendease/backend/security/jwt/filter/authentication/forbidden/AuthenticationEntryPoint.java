@@ -1,6 +1,6 @@
 package com.attendease.backend.security.jwt.filter.authentication.forbidden;
 
-import com.attendease.backend.model.http.HttpResponse;
+import com.attendease.backend.domain.http.HttpResponse;
 import com.attendease.backend.security.constants.SecurityConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

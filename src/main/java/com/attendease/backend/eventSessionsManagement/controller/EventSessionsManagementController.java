@@ -1,8 +1,8 @@
 package com.attendease.backend.eventSessionsManagement.controller;
 
 import com.attendease.backend.eventSessionsManagement.service.EventSessionManagementService;
-import com.attendease.backend.model.enums.EventStatus;
-import com.attendease.backend.model.events.Response.EventCreationResponse;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.Response.EventCreationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;

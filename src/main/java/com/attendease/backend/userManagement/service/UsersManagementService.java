@@ -1,14 +1,14 @@
 package com.attendease.backend.userManagement.service;
 
 
-import com.attendease.backend.model.students.CSV.CSVRowData;
-import com.attendease.backend.model.students.UserStudent.UserStudentResponse;
+import com.attendease.backend.domain.students.CSV.CSVRowData;
+import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.enums.UserType;
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.users.Users;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;

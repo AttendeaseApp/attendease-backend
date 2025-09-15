@@ -1,9 +1,9 @@
 package com.attendease.backend.eventSessionsManagement.service;
 
-import com.attendease.backend.model.events.EventSessions;
-import com.attendease.backend.model.enums.EventStatus;
-import com.attendease.backend.model.events.Response.EventCreationResponse;
-import com.attendease.backend.model.locations.EventLocations;
+import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.Response.EventCreationResponse;
+import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import lombok.RequiredArgsConstructor;

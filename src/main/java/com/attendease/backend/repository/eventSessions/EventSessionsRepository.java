@@ -1,7 +1,7 @@
 package com.attendease.backend.repository.eventSessions;
 
-import com.attendease.backend.model.enums.EventStatus;
-import com.attendease.backend.model.events.EventSessions;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
