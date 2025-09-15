@@ -3,7 +3,6 @@ package com.attendease.backend.userManagement.controller;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.userManagement.service.UsersManagementService;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import java.util.List;
 public class UsersManagementController {
 
     private final UsersManagementService userManagementService;
-    private final UserRepository userRepository;
 
     /**
      * Retrieves all users (OSA and Students).
@@ -45,19 +43,8 @@ public class UsersManagementController {
      */
     @PostMapping("/import")
     public ResponseEntity<?> importStudents(@RequestParam("file") MultipartFile file) {
-        try {
-            List<Users> importedUsers = userManagementService.importStudentsViaCSV(file);
-            return ResponseEntity.ok(importedUsers);
-        } catch (IllegalArgumentException e) {
-            log.warn("Validation error during import: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", e.getMessage()));
-        } catch (CsvValidationException | IOException e) {
-            log.error("CSV parsing failed", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Failed to parse CSV file."));
-        } catch (Exception e) {
-            log.error("Unexpected error during CSV import", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Unexpected error occurred."));
-        }
+        List<Users> importedUsers = userManagementService.importStudentsViaCSV(file);
+        return ResponseEntity.ok(importedUsers);
     }
 
     /**

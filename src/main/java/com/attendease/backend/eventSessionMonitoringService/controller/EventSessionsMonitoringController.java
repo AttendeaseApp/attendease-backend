@@ -20,12 +20,8 @@ public class EventSessionsMonitoringController {
 
     @GetMapping("/{eventId}/attendance-report")
     public ResponseEntity<?> getAttendanceStatusReport(@PathVariable String eventId) {
-        try {
-            var report = service.getAttendanceStatusReport(eventId);
-            return ResponseEntity.ok(report);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        var report = service.getAttendanceStatusReport(eventId);
+        return ResponseEntity.ok(report);
     }
 
     @GetMapping("/attendees/event/{eventId}")

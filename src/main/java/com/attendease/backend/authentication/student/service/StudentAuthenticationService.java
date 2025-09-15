@@ -37,7 +37,7 @@ public class StudentAuthenticationService {
      * @return Success message
      * @throws Exception if registration fails
      */
-    public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) throws Exception {
+    public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) {
         validateRegistrationRequest(registrationRequest);
 
         if (studentRepository.existsByStudentNumber(registrationRequest.getStudentNumber())) {

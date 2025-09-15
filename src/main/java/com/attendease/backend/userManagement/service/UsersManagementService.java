@@ -35,50 +35,59 @@ public class UsersManagementService {
     /**
      * Imports students from CSV with improved validation and error handling
      */
-    public List<Users> importStudentsViaCSV(MultipartFile file) throws IOException, CsvValidationException {
-        validateCSVFile(file);
-        List<Users> importedUsers = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int rowNumber = 0;
+    public List<Users> importStudentsViaCSV(MultipartFile file) {
+        try {
+            validateCSVFile(file);
+            List<Users> importedUsers = new ArrayList<>();
+            List<String> errors = new ArrayList<>();
+            int rowNumber = 0;
 
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
-            String[] header = csvReader.readNext();
-            validateCSVHeader(header);
+            try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+                String[] header = csvReader.readNext();
+                validateCSVHeader(header);
 
-            String[] row;
-            while ((row = csvReader.readNext()) != null) {
-                rowNumber++;
-                try {
-                    CSVRowData rowData = parseCSVRow(header, row);
-                    if (!isValidRowData(rowData)) {
-                        log.warn("Skipping row {} due to missing required fields", rowNumber);
-                        errors.add("Row " + rowNumber + ": Missing required fields");
-                        continue;
+                String[] row;
+                while ((row = csvReader.readNext()) != null) {
+                    rowNumber++;
+                    try {
+                        CSVRowData rowData = parseCSVRow(header, row);
+                        if (!isValidRowData(rowData)) {
+                            log.warn("Skipping row {} due to missing required fields", rowNumber);
+                            errors.add("Row " + rowNumber + ": Missing required fields");
+                            continue;
+                        }
+
+                        if (studentRepository.existsByStudentNumber(rowData.getStudentNumber())) {
+                            log.warn("Skipping row {} due to duplicate studentNumber: {}", rowNumber, rowData.getStudentNumber());
+                            errors.add("Row " + rowNumber + ": Duplicate student number " + rowData.getStudentNumber());
+                            continue;
+                        }
+
+                        Users imported = createUserAndStudent(rowData);
+                        importedUsers.add(imported);
+                        log.info("Successfully imported student: {}", rowData.getStudentNumber());
+
+                    } catch (IllegalArgumentException e) {
+                        log.error("Validation error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
+                        errors.add("Row " + rowNumber + ": " + e.getMessage());
+                    } catch (Exception e) {
+                        log.error("Unexpected error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
+                        errors.add("Row " + rowNumber + ": Unexpected error: " + e.getMessage());
                     }
-
-                    if (studentRepository.existsByStudentNumber(rowData.getStudentNumber())) {
-                        log.warn("Skipping row {} due to duplicate studentNumber: {}", rowNumber, rowData.getStudentNumber());
-                        errors.add("Row " + rowNumber + ": Duplicate student number " + rowData.getStudentNumber());
-                        continue;
-                    }
-
-                    Users imported = createUserAndStudent(rowData);
-                    importedUsers.add(imported);
-                    log.info("Successfully imported student: {}", rowData.getStudentNumber());
-
-                } catch (Exception e) {
-                    log.error("Error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
-                    errors.add("Row " + rowNumber + ": " + e.getMessage());
                 }
             }
-        }
 
-        if (!errors.isEmpty()) {
-            log.warn("CSV import completed with {} errors: {}", errors.size(), errors);
-        }
+            if (!errors.isEmpty()) {
+                log.warn("CSV import completed with {} errors: {}", errors.size(), errors);
+                throw new IllegalArgumentException("CSV import completed with errors: " + String.join("; ", errors));
+            }
 
-        log.info("Successfully imported {} out of {} rows from CSV", importedUsers.size(), rowNumber);
-        return importedUsers;
+            log.info("Successfully imported {} out of {} rows from CSV", importedUsers.size(), rowNumber);
+            return importedUsers;
+        } catch (IOException | CsvValidationException e) {
+            log.error("File or CSV parsing error", e);
+            throw new IllegalArgumentException("File or CSV parsing error: " + e.getMessage(), e);
+        }
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.attendease.backend.configurations;
 
-import com.attendease.backend.security.JwtAuthenticationFilter;
 import com.attendease.backend.security.jwt.filter.authentication.access.denied.JwtAccessDeniedHandler;
 import com.attendease.backend.security.jwt.filter.authentication.forbidden.AuthenticationEntryPoint;
 import com.attendease.backend.security.jwt.filter.authorization.JwtAuthorizationFilter;
@@ -23,7 +22,6 @@ import static com.attendease.backend.security.constants.SecurityConstants.PUBLIC
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtAuthorizationFilter jwtAuthorizationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;

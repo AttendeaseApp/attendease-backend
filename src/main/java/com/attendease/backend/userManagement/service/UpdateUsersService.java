@@ -2,12 +2,9 @@ package com.attendease.backend.userManagement.service;
 
 import com.attendease.backend.domain.users.Search.SearchKeywords;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.repository.students.StudentRepository;
-import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.repository.users.UserUpdateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,10 +15,7 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 public class UpdateUsersService {
 
-    private final StudentRepository studentRepository;
-    private final UserRepository userRepository;
     private final UserUpdateRepository userUpdateRepository;
-    private final PasswordEncoder passwordEncoder;
 
     /**
      * Deactivates a single user

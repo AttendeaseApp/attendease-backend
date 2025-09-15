@@ -45,11 +45,9 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
         String connectionString;
 
         if (username != null && password != null) {
-            connectionString = String.format("mongodb://%s:%s@%s:%d/%s",
-                    username, password, mongoHost, mongoPort, databaseName);
+            connectionString = String.format("mongodb://%s:%s@%s:%d/%s", username, password, mongoHost, mongoPort, databaseName);
         } else {
-            connectionString = String.format("mongodb://%s:%d/%s",
-                    mongoHost, mongoPort, databaseName);
+            connectionString = String.format("mongodb://%s:%d/%s", mongoHost, mongoPort, databaseName);
         }
 
         log.info("Connecting to MongoDB at: {}", connectionString.replaceAll("://.*@", "://***:***@"));

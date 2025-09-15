@@ -26,16 +26,9 @@ public class EventCheckInController {
      * @return EventCheckInDto with confirmation details
      */
     @PostMapping("/{studentNumber}")
-    public ResponseEntity<EventCheckIn> checkInStudent(
-            @PathVariable String studentNumber,
-            @RequestBody EventCheckIn eventCheckIn) {
-        try {
-            EventCheckIn response = checkInService.checkInStudent(studentNumber, eventCheckIn);
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            log.warn("Check-in failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(null);
-        }
+    public ResponseEntity<EventCheckIn> checkInStudent(@PathVariable String studentNumber,@RequestBody EventCheckIn eventCheckIn) {
+        EventCheckIn response = checkInService.checkInStudent(studentNumber, eventCheckIn);
+        return ResponseEntity.ok(response);
     }
 }
 

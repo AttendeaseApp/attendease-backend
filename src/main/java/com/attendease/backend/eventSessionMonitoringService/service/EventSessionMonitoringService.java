@@ -48,10 +48,11 @@ public class EventSessionMonitoringService {
 
     //TODO
     public List<Students> getExpectedStudentsForEvent(String eventId) {
-        EventSessions event = eventSessionsRepository.findById(eventId).orElseThrow();
-        String eligible = event.getEligibleStudents();
-        List<String> studentIds = Arrays.asList(eligible.split(","));
-        return studentRepository.findByIdIn(studentIds);
+    EventSessions event = eventSessionsRepository.findById(eventId)
+        .orElseThrow(() -> new IllegalArgumentException("Event not found for id: " + eventId));
+    String eligible = event.getEligibleStudents();
+    List<String> studentIds = Arrays.asList(eligible.split(","));
+    return studentRepository.findByIdIn(studentIds);
     }
 
 

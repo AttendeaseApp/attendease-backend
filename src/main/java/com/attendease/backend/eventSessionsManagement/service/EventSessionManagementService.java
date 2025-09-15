@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +22,6 @@ public class EventSessionManagementService {
 
     private final LocationRepository locationRepository;
     private final EventSessionsRepository eventSessionRepository;
-
-    private static final ZoneId PH_ZONE = ZoneId.of("Asia/Manila");
-    private static final DateTimeFormatter LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(PH_ZONE);
 
     public EventCreationResponse createEvent(EventCreationResponse eventCreationResponse) {
         log.info("Creating new event session: {}", eventCreationResponse.getEventName());

@@ -31,12 +31,7 @@ public class OsaAuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<String> loginOsa(@Valid @RequestBody OsaLoginRequest loginRequest) {
-        try {
-            String jwt = osaAuthenticationService.loginOsa(loginRequest.getEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(jwt);
-        } catch (IllegalArgumentException e) {
-            log.warn("Login failed: {}", e.getMessage());
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
+        String jwt = osaAuthenticationService.loginOsa(loginRequest.getEmail(), loginRequest.getPassword());
+        return ResponseEntity.ok(jwt);
     }
 }
