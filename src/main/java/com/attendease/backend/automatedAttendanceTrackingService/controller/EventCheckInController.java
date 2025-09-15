@@ -5,14 +5,15 @@ import com.attendease.backend.model.records.EventCheckIn.EventCheckIn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/checkin")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STUDENT')")
 public class EventCheckInController {
 
     private final EventCheckInService checkInService;

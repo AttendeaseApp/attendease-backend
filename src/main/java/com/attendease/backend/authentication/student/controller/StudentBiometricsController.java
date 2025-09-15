@@ -8,6 +8,7 @@ import com.attendease.backend.authentication.student.service.StudentBiometricsSe
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth/biometrics")
 @Slf4j
+@PreAuthorize("hasRole('STUDENT')")
 public class StudentBiometricsController {
 
     private final StudentBiometricsService studentBiometricsService;

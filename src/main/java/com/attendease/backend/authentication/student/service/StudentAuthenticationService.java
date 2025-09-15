@@ -6,7 +6,7 @@ import com.attendease.backend.model.enums.AccountStatus;
 import com.attendease.backend.model.enums.UserType;
 import com.attendease.backend.model.students.Students;
 import com.attendease.backend.model.users.Users;
-import com.attendease.backend.security.JwtUtil;
+import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,12 +22,12 @@ import java.util.UUID;
 public class StudentAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationRepository studentRepository;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenizationUtil jwtTokenizationUtil;
 
-    public StudentAuthenticationService(PasswordEncoder passwordEncoder, AuthenticationRepository studentRepository, JwtUtil jwtUtil) {
+    public StudentAuthenticationService(PasswordEncoder passwordEncoder, AuthenticationRepository studentRepository, JwtTokenizationUtil jwtTokenizationUtil) {
         this.passwordEncoder = passwordEncoder;
         this.studentRepository = studentRepository;
-        this.jwtUtil = jwtUtil;
+        this.jwtTokenizationUtil = jwtTokenizationUtil;
     }
 
     /**
@@ -70,7 +70,7 @@ public class StudentAuthenticationService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        return jwtUtil.generateToken(user.getUserId(), user.getEmail());
+        return jwtTokenizationUtil.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
     }
 
     /**

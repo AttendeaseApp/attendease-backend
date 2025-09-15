@@ -5,6 +5,7 @@ import com.attendease.backend.model.events.EventSessions;
 import com.attendease.backend.model.students.Students;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/events/monitoring")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('OSA')")
 public class EventSessionsMonitoringController {
 
     private final EventSessionMonitoringService service;

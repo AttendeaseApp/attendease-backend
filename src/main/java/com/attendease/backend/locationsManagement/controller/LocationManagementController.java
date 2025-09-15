@@ -5,6 +5,7 @@ import com.attendease.backend.model.locations.Request.EventLocationRequest;
 import com.attendease.backend.model.locations.Response.LocationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('OSA')")
 public class LocationManagementController {
 
     private final LocationsManagementService locationsService;

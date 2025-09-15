@@ -2,7 +2,7 @@ package com.attendease.backend.authentication.osa.service;
 
 import com.attendease.backend.model.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.security.JwtUtil;
+import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,14 +13,14 @@ public class OsaAuthenticationService {
 
     private final UserRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtTokenizationUtil jwtTokenizationUtil;
 
     public OsaAuthenticationService(UserRepository usersRepository,
                                     PasswordEncoder passwordEncoder,
-                                    JwtUtil jwtUtil) {
+                                    JwtTokenizationUtil jwtTokenizationUtil) {
         this.usersRepository = usersRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.jwtTokenizationUtil = jwtTokenizationUtil;
     }
 
     public String registerNewOsaAccount(Users user) {
@@ -44,6 +44,6 @@ public class OsaAuthenticationService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        return jwtUtil.generateToken(user.getUserId(), user.getEmail());
+        return jwtTokenizationUtil.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
     }
 }

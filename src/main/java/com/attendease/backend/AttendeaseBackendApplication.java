@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import java.util.TimeZone;
 
@@ -11,6 +12,7 @@ import java.util.TimeZone;
  * Main application class for Attendease Backend.
  */
 @EnableScheduling
+@EnableMethodSecurity(prePostEnabled = true)
 @SpringBootApplication
 public class AttendeaseBackendApplication {
 
