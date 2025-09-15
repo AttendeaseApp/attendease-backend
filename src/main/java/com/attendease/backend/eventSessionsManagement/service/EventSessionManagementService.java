@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -28,13 +26,7 @@ public class EventSessionManagementService {
     private final EventSessionsRepository eventSessionRepository;
 
     private static final ZoneId PH_ZONE = ZoneId.of("Asia/Manila");
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    public Date parsePhilippineDateTime(String datetimeStr) {
-        LocalDateTime localDateTime = LocalDateTime.parse(datetimeStr, FORMATTER);
-        ZonedDateTime zonedDateTime = localDateTime.atZone(PH_ZONE);
-        return Date.from(zonedDateTime.toInstant());
-    }
+    private static final DateTimeFormatter LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(PH_ZONE);
 
     public EventCreationResponse createEvent(EventCreationResponse eventCreationResponse) {
         log.info("Creating new event session: {}", eventCreationResponse.getEventName());
@@ -50,7 +42,7 @@ public class EventSessionManagementService {
         eventSession.setStartDateTime(startDateTime);
         eventSession.setEndDateTime(endDateTime);
         eventSession.setEventStatus(EventStatus.ACTIVE);
-        
+
         if (eventCreationResponse.getEventLocationRefId() != null && !eventCreationResponse.getEventLocationRefId().isEmpty()) {
             Optional<EventLocations> locationOpt = locationRepository.findById(eventCreationResponse.getEventLocationRefId());
             if (locationOpt.isEmpty()) {
@@ -60,15 +52,15 @@ public class EventSessionManagementService {
         }
 
         EventSessions savedEvent = eventSessionRepository.save(eventSession);
-        log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
+        log.info("Successfully created event session with ID: {}", savedEvent.getId());
         return convertToResponseDTO(savedEvent);
     }
 
-    public EventCreationResponse getEventById(String eventId) {
-        log.info("Retrieving event session with ID: {}", eventId);
-        Optional<EventSessions> eventSession = eventSessionRepository.findById(eventId);
+    public EventCreationResponse getEventById(String id) {
+        log.info("Retrieving event session with ID: {}", id);
+        Optional<EventSessions> eventSession = eventSessionRepository.findById(id);
         if (eventSession.isEmpty()) {
-            throw new RuntimeException("Event not found with ID: " + eventId);
+            throw new RuntimeException("Event not found with ID: " + id);
         }
         return convertToResponseDTO(eventSession.get());
     }
@@ -93,12 +85,12 @@ public class EventSessionManagementService {
         return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
     }
 
-    public void deleteEventById(String eventId) {
-        if (!eventSessionRepository.existsById(eventId)) {
-            throw new RuntimeException("Event not found with ID: " + eventId);
+    public void deleteEventById(String id) {
+        if (!eventSessionRepository.existsById(id)) {
+            throw new RuntimeException("Event not found with ID: " + id);
         }
-        eventSessionRepository.deleteById(eventId);
-        log.info("Deleted event with ID: {}", eventId);
+        eventSessionRepository.deleteById(id);
+        log.info("Deleted event with ID: {}", id);
     }
 
     public EventCreationResponse updateEvent(String eventId, EventCreationResponse updateDTO) {
@@ -108,12 +100,11 @@ public class EventSessionManagementService {
         }
         EventSessions existingEvent = existingEventOpt.get();
 
-        // Update fields
         existingEvent.setEventName(updateDTO.getEventName());
         existingEvent.setDescription(updateDTO.getDescription());
 
-        Date startDateTime = parsePhilippineDateTime(String.valueOf(updateDTO.getStartDateTime()));
-        Date endDateTime = parsePhilippineDateTime(String.valueOf(updateDTO.getEndDateTime()));
+        Date startDateTime = updateDTO.getStartDateTime();
+        Date endDateTime = updateDTO.getEndDateTime();
 
         validateDateRange(startDateTime, endDateTime);
 
@@ -135,10 +126,10 @@ public class EventSessionManagementService {
         return convertToResponseDTO(updatedEvent);
     }
 
-    public EventCreationResponse cancelEvent(String eventId) {
-        Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(eventId);
+    public EventCreationResponse cancelEvent(String id) {
+        Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(id);
         if (existingEventOpt.isEmpty()) {
-            throw new RuntimeException("Event not found with ID: " + eventId);
+            throw new RuntimeException("Event not found with ID: " + id);
         }
         EventSessions existingEvent = existingEventOpt.get();
         existingEvent.setEventStatus(EventStatus.CANCELLED);
@@ -148,7 +139,7 @@ public class EventSessionManagementService {
 
     private EventCreationResponse convertToResponseDTO(EventSessions eventSession) {
         EventCreationResponse dto = new EventCreationResponse();
-        dto.setEventId(eventSession.getEventId());
+        dto.setId(eventSession.getId());
         dto.setEventName(eventSession.getEventName());
         dto.setDescription(eventSession.getDescription());
         dto.setStartDateTime(eventSession.getStartDateTime());

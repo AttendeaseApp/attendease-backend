@@ -29,7 +29,7 @@ import java.util.Date;
 public class EventSessions {
 
     @Id
-    private String eventId;
+    private String id;
 
     @NotBlank(message = "Event name is required")
     @Indexed

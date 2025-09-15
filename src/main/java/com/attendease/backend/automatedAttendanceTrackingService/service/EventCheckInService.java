@@ -29,7 +29,7 @@ public class EventCheckInService {
     private final StudentRepository studentsRepository;
 
     public EventCheckIn checkInStudent(String studentNumber, EventCheckIn eventCheckIn) {
-        Students student = studentsRepository.findById(studentNumber).orElseThrow(() -> new IllegalStateException("Student not found"));
+        Students student = studentsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalStateException("Student not found"));
         EventSessions event = eventSessionsRepository.findById(eventCheckIn.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         Date now = new Date();
@@ -38,11 +38,7 @@ public class EventCheckInService {
         Date registrationStartTime = new Date(startTime.getTime() - 30 * 60 * 1000);
 
         if (now.before(registrationStartTime)) {
-            throw new IllegalStateException(String.format(
-                    "Cannot check in yet. Registration opens at %s. Event starts at %s.",
-                    registrationStartTime,
-                    startTime
-            ));
+            throw new IllegalStateException(String.format("Cannot check in yet. Registration opens at %s. Event starts at %s.", registrationStartTime, startTime));
         }
 
         if (now.after(endTime)) {
@@ -60,8 +56,12 @@ public class EventCheckInService {
         double studentLat = eventCheckIn.getLatitude();
         double studentLon = eventCheckIn.getLongitude();
 
-        if (!isWithinGeofence(studentLat, studentLon, geofence.getCenterLatitude(),
-                geofence.getCenterLongitude(), geofence.getRadiusMeters())) {
+        if (!isWithinGeofence(
+                studentLat,
+                studentLon,
+                geofence.getCenterLatitude(),
+                geofence.getCenterLongitude(),
+                geofence.getRadiusMeters())) {
             throw new IllegalStateException("Student is outside the event geofence");
         }
 

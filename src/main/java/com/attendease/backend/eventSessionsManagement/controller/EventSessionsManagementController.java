@@ -61,21 +61,21 @@ public class EventSessionsManagementController {
 
     @PutMapping("/{id}")
     public ResponseEntity<EventCreationResponse> updateEvent(
-            @PathVariable("id") String eventId,
+            @PathVariable("id") String id,
             @RequestBody EventCreationResponse updateDTO) {
-        EventCreationResponse updatedEvent = eventService.updateEvent(eventId, updateDTO);
+        EventCreationResponse updatedEvent = eventService.updateEvent(id, updateDTO);
         return ResponseEntity.ok(updatedEvent);
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<EventCreationResponse> cancelEvent(@PathVariable("id") String eventId) {
-        EventCreationResponse canceledEvent = eventService.cancelEvent(eventId);
+    public ResponseEntity<EventCreationResponse> cancelEvent(@PathVariable("id") String id) {
+        EventCreationResponse canceledEvent = eventService.cancelEvent(id);
         return ResponseEntity.ok(canceledEvent);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable("id") String eventId) {
-        eventService.deleteEventById(eventId);
+    public ResponseEntity<Void> deleteEvent(@PathVariable("id") String id) {
+        eventService.deleteEventById(id);
         return ResponseEntity.noContent().build();
     }
 }

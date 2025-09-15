@@ -18,4 +18,10 @@ public interface EventSessionsRepository extends MongoRepository<EventSessions, 
 
     @Query("{ 'eventStatus': ?0, 'startDateTime': { $gte: ?1 }, 'endDateTime': { $lte: ?2 } }")
     List<EventSessions> findByStatusAndDateRange(EventStatus status, Date from, Date to);
+
+    // Find events where endDateTime is before now and status is ONGOING
+    List<EventSessions> findByEndDateTimeBeforeAndEventStatus(Date date, EventStatus status);
+
+    List<EventSessions> findAllByOrderByCreatedAtDesc();
+
 }

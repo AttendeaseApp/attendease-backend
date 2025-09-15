@@ -11,4 +11,6 @@ public interface StudentRepository extends MongoRepository<Students, String> {
     Optional<Students> findByStudentNumber(String studentNumber);
     boolean existsByStudentNumber(String studentNumber);
     List<Students> findByUserIn(List<Users> users);
+    List<Students> findByIdIn(List<String> studentIds);
+
 }
