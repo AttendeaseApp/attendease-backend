@@ -118,25 +118,14 @@ public class StudentBiometricsController {
 
     @GetMapping("/status/{studentNumber}")
     public ResponseEntity<String> getFacialStatus(@PathVariable String studentNumber) {
-        try {
-            Optional<BiometricData> biometricData = studentBiometricsService.getFacialStatus(studentNumber);
-            return biometricData
-                    .map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()))
-                    .orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
-        } catch (Exception e) {
-            log.error("Error fetching biometric status for student {}: {}", studentNumber, e.getMessage(), e);
-            return ResponseEntity.badRequest().body("Failed to retrieve biometric status");
-        }
+        Optional<BiometricData> biometricData = studentBiometricsService.getFacialStatus(studentNumber);
+        return biometricData.map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()))
+                .orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
     }
 
     @DeleteMapping("/recalibrate/{studentNumber}")
     public ResponseEntity<String> recalibrateFacialData(@PathVariable String studentNumber) {
-        try {
-            studentBiometricsService.recalibrateFacialBiometrics(studentNumber);
-            return ResponseEntity.ok("Facial data recalibrated successfully");
-        } catch (Exception e) {
-            log.error("Error recalibrating facial data for student {}: {}", studentNumber, e.getMessage(), e);
-            return ResponseEntity.badRequest().body("Failed to recalibrate facial data");
-        }
+        studentBiometricsService.recalibrateFacialBiometrics(studentNumber);
+        return ResponseEntity.ok("Facial data recalibrated successfully");
     }
 }

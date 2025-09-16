@@ -23,8 +23,7 @@ public class StudentBiometricsService {
 
 
     public Students getStudentByStudentNumber(String studentNumber) {
-        return studentsRepository.findByStudentNumber(studentNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with student number: " + studentNumber));
+        return studentsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found with student number: " + studentNumber));
     }
 
     public String registerNewFacialBiometrics(Students student, List<String> facialEncoding) {

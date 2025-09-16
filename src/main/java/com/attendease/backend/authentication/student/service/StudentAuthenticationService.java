@@ -7,6 +7,7 @@ import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.security.JwtTokenizationUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,23 +20,17 @@ import java.util.UUID;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class StudentAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationRepository studentRepository;
     private final JwtTokenizationUtil jwtTokenizationUtil;
-
-    public StudentAuthenticationService(PasswordEncoder passwordEncoder, AuthenticationRepository studentRepository, JwtTokenizationUtil jwtTokenizationUtil) {
-        this.passwordEncoder = passwordEncoder;
-        this.studentRepository = studentRepository;
-        this.jwtTokenizationUtil = jwtTokenizationUtil;
-    }
 
     /**
      * Registers a new student account using separate request DTO
      *
      * @param registrationRequest Contains all student registration data
      * @return Success message
-     * @throws Exception if registration fails
      */
     public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) {
         validateRegistrationRequest(registrationRequest);
