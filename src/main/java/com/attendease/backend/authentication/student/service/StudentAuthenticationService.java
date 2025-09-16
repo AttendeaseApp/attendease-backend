@@ -1,16 +1,13 @@
 package com.attendease.backend.authentication.student.service;
 
-import com.attendease.backend.authentication.student.dto.request.StudentLoginRequest;
 import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.authentication.student.repository.StudentAuthenticationRepository;
-import com.attendease.backend.model.enums.AccountStatus;
-import com.attendease.backend.model.enums.UserType;
-import com.attendease.backend.model.students.Students;
-import com.attendease.backend.model.users.Users;
-import com.attendease.backend.userManagement.dto.UserWithStudentInfo;
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
+import com.attendease.backend.authentication.student.repository.AuthenticationRepository;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.security.JwtTokenizationUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,97 +15,57 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 /**
- * Refactored StudentAuthenticationService that works with separate Users and Students entities.
- * Uses composition model instead of inheritance.
+ * Refactored StudentAuthenticationService that works with separate users and Students entities.
+ * Uses composition domain instead of inheritance.
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class StudentAuthenticationService {
-    private final Firestore firestore;
-    private final FirebaseAuth firebaseAuth;
     private final PasswordEncoder passwordEncoder;
-    private final StudentAuthenticationRepository studentRepository;
-
-    public StudentAuthenticationService(Firestore firestore, FirebaseAuth firebaseAuth, PasswordEncoder passwordEncoder, StudentAuthenticationRepository studentRepository) {
-        this.firestore = firestore;
-        this.firebaseAuth = firebaseAuth;
-        this.passwordEncoder = passwordEncoder;
-        this.studentRepository = studentRepository;
-    }
+    private final AuthenticationRepository studentRepository;
+    private final JwtTokenizationUtil jwtTokenizationUtil;
 
     /**
      * Registers a new student account using separate request DTO
      *
      * @param registrationRequest Contains all student registration data
      * @return Success message
-     * @throws Exception if registration fails
      */
-    public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) throws Exception {
-        try {
-            validateRegistrationRequest(registrationRequest);
+    public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) {
+        validateRegistrationRequest(registrationRequest);
 
-            if (studentRepository.existsByStudentNumber(registrationRequest.getStudentNumber())) {
-                throw new IllegalStateException("Student with number " + registrationRequest.getStudentNumber() + " already exists");
-            }
-
-            Users user = createUserFromRegistrationRequest(registrationRequest);
-            Students student = createStudentFromRegistrationRequest(registrationRequest);
-
-            UserWithStudentInfo savedInfo = studentRepository.saveWithTransaction(student, user);
-
-            log.info("Student registered successfully: {} (User ID: {})",
-                    savedInfo.getStudentNumber(), savedInfo.getUserId());
-            return "Student registered successfully";
-
-        } catch (IllegalStateException | IllegalArgumentException e) {
-            log.warn("Registration failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to register student: {}", e.getMessage(), e);
-            throw new Exception("Failed to register student: " + e.getMessage(), e);
+        if (studentRepository.existsByStudentNumber(registrationRequest.getStudentNumber())) {
+            throw new IllegalArgumentException("Student number already exists.");
         }
+
+        Users user = createUserFromRegistrationRequest(registrationRequest);
+
+        Students student = createStudentFromRegistrationRequest(registrationRequest);
+        student.setUser(user);
+
+        studentRepository.saveUser(user);
+        studentRepository.saveStudent(student);
+
+        log.info("Registered new student account for studentNumber: {}", registrationRequest.getStudentNumber());
+
+        return "Student account registered successfully.";
     }
+
 
     /**
      * Authenticates a student using student number and password
      *
-     * @param loginRequest Contains student number and password
      * @return Firebase custom token for authentication
      */
-    public String loginStudent(StudentLoginRequest loginRequest) {
-        try {
-            UserWithStudentInfo studentInfo = studentRepository.findByStudentNumberWithUserInfo(loginRequest.getStudentNumber()).orElseThrow(() -> {
-                log.warn("Login failed: Student with number {} not found", loginRequest.getStudentNumber());
-                return new IllegalArgumentException("Invalid student number or password");
-            });
+    public String loginStudent(String studentNumber, String password) {
+        Users user = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Invalid email or password")).getUser();
 
-            Users user = studentInfo.getUser();
-            Students student = studentInfo.getStudentInfo();
-
-            if (user.getAccountStatus() != AccountStatus.ACTIVE) {
-                log.warn("Login failed: Account {} is not active (Status: {})", user.getUserId(), user.getAccountStatus());
-                throw new IllegalArgumentException("Account is not active. Please contact administration.");
-            }
-
-            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                log.warn("Login failed: Invalid password for student {}", student.getStudentNumber());
-                throw new IllegalArgumentException("Invalid student number or password");
-            }
-
-            String customToken = firebaseAuth.createCustomToken(user.getUserId());
-            log.info("Login successful: Custom token generated for student {} (User ID: {})", student.getStudentNumber(), user.getUserId());
-            return customToken;
-
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (FirebaseAuthException e) {
-            log.error("Failed to create custom token for student {}: {}",
-                    loginRequest.getStudentNumber(), e.getMessage());
-            throw new RuntimeException("Authentication failed, please try again later.");
-        } catch (Exception e) {
-            log.error("Unexpected error during student login: {}", e.getMessage(), e);
-            throw new RuntimeException("An unexpected error occurred during login.");
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
         }
+
+        return jwtTokenizationUtil.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
     }
 
     /**
@@ -120,30 +77,34 @@ public class StudentAuthenticationService {
      * @return Success message
      */
     public String updatePassword(String studentNumber, String oldPassword, String newPassword) {
-        try {
-            UserWithStudentInfo studentInfo = studentRepository.findByStudentNumberWithUserInfo(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student number not found"));
-            Users user = studentInfo.getUser();
-
-            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-                throw new IllegalArgumentException("Current password is incorrect");
-            }
-
-            validatePassword(newPassword);
-
-            user.setPassword(passwordEncoder.encode(newPassword));
-            studentRepository.updateUser(user);
-
-            log.info("Password updated successfully for student {}", studentNumber);
-            return "Password updated successfully";
-
-        } catch (IllegalArgumentException e) {
-            log.warn("Password update failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to update password for student {}: {}", studentNumber, e.getMessage(), e);
-            throw new RuntimeException("Failed to update password: " + e.getMessage(), e);
+        if (studentNumber == null || studentNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Student number is required.");
         }
+        if (oldPassword == null || oldPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Old password is required.");
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("New password is required.");
+        }
+
+        validatePassword(newPassword);
+
+        Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+        Users user = student.getUser();
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        studentRepository.updateUser(user);
+
+        log.info("Password updated for studentNumber: {}", studentNumber);
+
+        return "Password updated successfully.";
     }
+
 
     // helper methods
 
@@ -183,16 +144,13 @@ public class StudentAuthenticationService {
         Users user = new Users();
         user.setUserId(UUID.randomUUID().toString());
         user.setFirstName(request.getFirstName());
-        user.setMiddleName(request.getMiddleName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
-        user.setBirthdate(request.getBirthdate());
-        user.setAddress(request.getAddress());
         user.setContactNumber(request.getContactNumber());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUserType(UserType.STUDENT);
         user.setAccountStatus(AccountStatus.ACTIVE);
-        user.setUpdatedBy(UserType.SYSTEM);
+        user.setUpdatedBy(String.valueOf(UserType.SYSTEM));
         return user;
     }
 
@@ -201,25 +159,6 @@ public class StudentAuthenticationService {
         student.setStudentNumber(request.getStudentNumber());
         student.setSection(request.getSection());
         student.setYearLevel(request.getYearLevel());
-
-        if (request.getCourseRefId() != null) {
-            try {
-                student.setCourseRefId(firestore.document(request.getCourseRefId()));
-            } catch (Exception e) {
-                log.warn("Invalid courseRefId provided: {}", request.getCourseRefId());
-                throw new IllegalArgumentException("Invalid course reference provided");
-            }
-        }
-
-        if (request.getClusterRefId() != null) {
-            try {
-                student.setClusterRefId(firestore.document(request.getClusterRefId()));
-            } catch (Exception e) {
-                log.warn("Invalid clusterRefId provided: {}", request.getClusterRefId());
-                throw new IllegalArgumentException("Invalid cluster reference provided");
-            }
-        }
-
         return student;
     }
 }
