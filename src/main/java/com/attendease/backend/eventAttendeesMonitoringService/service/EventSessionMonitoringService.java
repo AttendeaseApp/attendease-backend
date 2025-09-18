@@ -1,18 +1,18 @@
-package com.attendease.backend.eventSessionMonitoringService.service;
+package com.attendease.backend.eventAttendeesMonitoringService.service;
 
+import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.AttendanceStatus.AttendanceStatusReport;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,38 +45,5 @@ public class EventSessionMonitoringService {
                 .distinct()
                 .toList();
     }
-
-    //TODO
-    public List<Students> getExpectedStudentsForEvent(String eventId) {
-    EventSessions event = eventSessionsRepository.findById(eventId)
-        .orElseThrow(() -> new IllegalArgumentException("Event not found for id: " + eventId));
-    String eligible = event.getEligibleStudents();
-    List<String> studentIds = Arrays.asList(eligible.split(","));
-    return studentRepository.findByIdIn(studentIds);
-    }
-
-
-    public AttendanceStatusReport getAttendanceStatusReport(String eventId) {
-        List<Students> expectedStudents = getExpectedStudentsForEvent(eventId);
-
-        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEvent_Id(eventId);
-
-        Set<String> checkedInStudentIds = attendanceRecords.stream()
-                .map(record -> record.getStudent().getId())
-                .collect(Collectors.toSet());
-
-        List<Students> checkedInStudents = expectedStudents.stream()
-                .filter(student -> checkedInStudentIds.contains(student.getId()))
-                .collect(Collectors.toList());
-
-        List<Students> missingStudents = expectedStudents.stream()
-                .filter(student -> !checkedInStudentIds.contains(student.getId()))
-                .collect(Collectors.toList());
-
-        return new AttendanceStatusReport(checkedInStudents, missingStudents);
-    }
-
-
-
 }
 

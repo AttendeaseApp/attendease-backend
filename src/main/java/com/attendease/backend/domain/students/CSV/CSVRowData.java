@@ -13,8 +13,7 @@ public class CSVRowData {
     private String studentNumber;
     private String section;
     private String yearLevel;
-    private String courseRefId;
+    private String course;
     private Date birthdate;
-    private String address;
     private String contactNumber;
 }

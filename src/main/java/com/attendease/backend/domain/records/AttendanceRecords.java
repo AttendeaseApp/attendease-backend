@@ -46,15 +46,12 @@ public class AttendanceRecords {
     @DBRef
     private EventLocations location;
 
-    @NotNull(message = "Time in is required")
     private LocalDateTime timeIn;
-
     private LocalDateTime timeOut;
 
     private String reason;
 
-    @Builder.Default
-    private AttendanceStatus attendanceStatus = AttendanceStatus.PRESENT;
+    private AttendanceStatus attendanceStatus;
 
     private String updatedByUserId;
 

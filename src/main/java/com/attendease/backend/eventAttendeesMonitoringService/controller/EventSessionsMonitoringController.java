@@ -1,10 +1,9 @@
-package com.attendease.backend.eventSessionMonitoringService.controller;
+package com.attendease.backend.eventAttendeesMonitoringService.controller;
 
-import com.attendease.backend.eventSessionMonitoringService.service.EventSessionMonitoringService;
+import com.attendease.backend.eventAttendeesMonitoringService.service.EventSessionMonitoringService;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.students.Students;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +17,11 @@ public class EventSessionsMonitoringController {
 
     private final EventSessionMonitoringService service;
 
-    @GetMapping("/{eventId}/attendance-report")
-    public ResponseEntity<?> getAttendanceStatusReport(@PathVariable String eventId) {
-        var report = service.getAttendanceStatusReport(eventId);
-        return ResponseEntity.ok(report);
-    }
+//    @GetMapping("/{eventId}/attendance-report")
+//    public ResponseEntity<?> getAttendanceStatusReport(@PathVariable String eventId) {
+//        var report = service.getAttendanceStatusReport(eventId);
+//        return ResponseEntity.ok(report);
+//    }
 
     @GetMapping("/attendees/event/{eventId}")
     public List<Students> getAttendeesByEvent(@PathVariable String eventId) {

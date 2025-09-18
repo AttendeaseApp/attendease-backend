@@ -4,8 +4,10 @@ import com.attendease.backend.authentication.student.dto.request.StudentRegistra
 import com.attendease.backend.authentication.student.repository.AuthenticationRepository;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.students.Sections;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class StudentAuthenticationService {
+    private final SectionsRepository sectionsRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationRepository studentRepository;
     private final JwtTokenizationUtil jwtTokenizationUtil;
@@ -154,11 +157,10 @@ public class StudentAuthenticationService {
         return user;
     }
 
-    private Students createStudentFromRegistrationRequest(StudentRegistrationRequest request) {
+    public Students createStudentFromRegistrationRequest(StudentRegistrationRequest request) {
         Students student = new Students();
         student.setStudentNumber(request.getStudentNumber());
-        student.setSection(request.getSection());
-        student.setYearLevel(request.getYearLevel());
+        student.setSectionId(request.getSection());
         return student;
     }
 }

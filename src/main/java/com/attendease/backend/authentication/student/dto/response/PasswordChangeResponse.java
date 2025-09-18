@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Response DTO for password change operations
+ * EventCreation DTO for password change operations
  */
 @Data
 @AllArgsConstructor

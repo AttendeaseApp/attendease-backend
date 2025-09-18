@@ -2,7 +2,11 @@ package com.attendease.backend.userManagement.service;
 
 
 import com.attendease.backend.domain.students.CSV.CSVRowData;
+import com.attendease.backend.domain.students.Courses;
+import com.attendease.backend.domain.students.Sections;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
+import com.attendease.backend.repository.course.CourseRepository;
+import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.domain.enums.AccountStatus;
@@ -19,6 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,6 +35,8 @@ import java.util.stream.Collectors;
 public class UsersManagementService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
+    private final SectionsRepository sectionRepository;
+    private final CourseRepository courseRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
@@ -172,11 +181,8 @@ public class UsersManagementService {
                 case "section":
                     data.setSection(value);
                     break;
-                case "yearlevel":
-                    data.setYearLevel(value);
-                    break;
-                case "courserefid":
-                    data.setCourseRefId(value);
+                case "course":
+                    data.setCourse(value);
                     break;
                 case "contactnumber":
                     data.setContactNumber(value);
@@ -221,6 +227,10 @@ public class UsersManagementService {
         user.setEmail(data.getEmail());
         user.setContactNumber(data.getContactNumber());
 
+        LocalDateTime now = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+
         if (data.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(data.getPassword()));
         }
@@ -232,11 +242,34 @@ public class UsersManagementService {
         Students student = new Students();
         student.setUser(user);
         student.setStudentNumber(data.getStudentNumber());
-        student.setSection(data.getSection());
-        student.setYearLevel(data.getYearLevel());
-        // student.setCourse(courseRepository.findById(data.getCourseRefId()).orElse(null));
+
+        if (data.getCourse() == null || data.getCourse().isBlank()) {
+            throw new IllegalArgumentException("Course is required");
+        }
+
+        if (data.getSection() == null || data.getSection().isBlank()) {
+            throw new IllegalArgumentException("Section is required");
+        }
+
+        Courses course = courseRepository.findByCourseName(data.getCourse())
+                .orElseGet(() -> {
+                    Courses newCourse = new Courses();
+                    newCourse.setCourseName(data.getCourse());
+                    return courseRepository.save(newCourse);
+                });
+
+        Sections section = sectionRepository.findByNameAndCourseId(data.getSection(), course.getId())
+                .orElseGet(() -> {
+                    Sections newSection = new Sections();
+                    newSection.setName(data.getSection());
+                    newSection.setId(course.getId());
+                    return sectionRepository.save(newSection);
+                });
+
         return student;
     }
+
+
 
     public UserStudentResponse mapToResponseDTO(Users user, Students student) {
         return UserStudentResponse.builder()
@@ -251,8 +284,8 @@ public class UsersManagementService {
                 .updatedAt(user.getUpdatedAt())
                 .studentId(student != null ? student.getId() : null)
                 .studentNumber(student != null ? student.getStudentNumber() : null)
-                .section(student != null ? student.getSection() : null)
-                .yearLevel(student != null ? student.getYearLevel() : null)
+                .section(student != null && student.getSectionId() != null ? student.getSectionId() : null)
+                .course(student != null && student.getCourseId() != null ? student.getCourseId() : null)
                 .build();
     }
 }

@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 public class Courses {
 
     @Id
-    private String courseId;
+    private String id;
 
     @NotBlank(message = "Course name is required")
     @Indexed

@@ -8,5 +8,6 @@ public enum EventStatus {
     REGISTRATION,
     ONGOING,
     CONCLUDED,
-    CANCELLED
+    CANCELLED,
+    FINALIZED
 }
