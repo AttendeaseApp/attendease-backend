@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/users/management")
@@ -52,5 +53,11 @@ public class UpdateUsersController {
     public ResponseEntity<List<Users>> searchUsers(@RequestBody SearchKeywords searchDTO) {
         List<Users> users = updateUsersService.searchUsers(searchDTO);
         return ResponseEntity.ok(users);
+    }
+
+    @DeleteMapping("/students")
+    public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
+        long deletedCount = updateUsersService.deleteAllStudentsAndAssociatedUserAndFacialData();
+        return ResponseEntity.ok("Successfully deleted " + deletedCount + " students.");
     }
 }

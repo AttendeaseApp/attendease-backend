@@ -68,4 +68,8 @@ public class UpdateUsersService {
         log.info("Found {} users for keyword '{}'", results.size(), keyword);
         return results;
     }
+
+    public long deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
+        return userUpdateRepository.deleteAllStudentsAndAssociatedUserAndFacialData();
+    }
 }

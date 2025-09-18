@@ -1,8 +1,9 @@
 package com.attendease.backend.eventSessionsManagement.service;
 
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.Response.EventCreationResponse;
+import com.attendease.backend.domain.events.EventCreation.EventCreationResponse;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
@@ -37,6 +38,14 @@ public class EventSessionManagementService {
         eventSession.setStartDateTime(startDateTime);
         eventSession.setEndDateTime(endDateTime);
         eventSession.setEventStatus(EventStatus.ACTIVE);
+
+        EligibilityCriteria criteria = EligibilityCriteria.builder()
+                .allStudents(eventCreationResponse.isAllStudents())
+                .course(eventCreationResponse.getCourse())
+                .sections(eventCreationResponse.getSections())
+                .build();
+
+        eventSession.setEligibleStudents(criteria);
 
         if (eventCreationResponse.getEventLocationRefId() != null && !eventCreationResponse.getEventLocationRefId().isEmpty()) {
             Optional<EventLocations> locationOpt = locationRepository.findById(eventCreationResponse.getEventLocationRefId());

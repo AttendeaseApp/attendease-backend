@@ -1,6 +1,7 @@
 package com.attendease.backend.domain.events;
 
 import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.locations.EventLocations;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.Date;
 
@@ -39,10 +41,8 @@ public class EventSessions {
 
     private String description;
 
-    private String eligibleStudents;
-
-//    @Indexed
-//    private String academicTerm;
+    @Field("eligibleStudents")
+    private EligibilityCriteria eligibleStudents;
 
     @NotNull(message = "Start date time is required")
     @Indexed

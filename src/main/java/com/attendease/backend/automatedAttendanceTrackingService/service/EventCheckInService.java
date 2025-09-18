@@ -1,6 +1,7 @@
 package com.attendease.backend.automatedAttendanceTrackingService.service;
 
 import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Geofencing.GeofenceData;
@@ -43,6 +44,9 @@ public class EventCheckInService {
 
         if (now.after(endTime)) {
             throw new IllegalStateException("Event has already ended. You can no longer check in.");
+        }
+        if (!isStudentEligibleForEvent(event, student)) {
+            throw new IllegalStateException("Student is not eligible to check in for this event.");
         }
 
         EventLocations location = eventLocationsRepository.findById(eventCheckIn.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
@@ -87,6 +91,22 @@ public class EventCheckInService {
             throw new IllegalStateException("Student is already checked in for this event/location.");
         }
     }
+
+    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
+        EligibilityCriteria criteria = event.getEligibleStudents();
+        if (criteria == null) return false;
+
+        if (criteria.isAllStudents()) return true;
+
+        String studentCourseId = student.getCourseId();
+        String studentSectionId = student.getSectionId();
+
+        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
+        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
+
+        return courseMatch || sectionMatch;
+    }
+
 
     private boolean isWithinGeofence(double lat1, double lon1, double lat2, double lon2, double radiusMeters) {
         double earthRadius = 6371000;

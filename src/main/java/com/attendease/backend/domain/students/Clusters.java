@@ -30,9 +30,6 @@ public class Clusters {
     @Indexed(unique = true)
     private String clusterName;
 
-    private String createdByUserId;
-    private String updatedByUserId;
-
     @CreatedDate
     private LocalDateTime createdAt;
 

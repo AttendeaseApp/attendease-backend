@@ -23,6 +23,5 @@ public class UserStudentResponse {
     private String studentId;
     private String studentNumber;
     private String section;
-    private String yearLevel;
-    private boolean active;
+    private String course;
 }
