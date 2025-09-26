@@ -1,6 +1,5 @@
 package com.attendease.backend.domain.locations;
 
-import com.attendease.backend.domain.locations.Geofencing.GeofenceData;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,8 +43,6 @@ public class EventLocations {
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     @Field("geometry")
     private GeoJsonPolygon geometry;
-
-    private GeofenceData geofenceParameters;
 
     @CreatedDate
     private LocalDateTime createdAt;

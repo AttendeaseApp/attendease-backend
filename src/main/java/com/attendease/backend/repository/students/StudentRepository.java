@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface StudentRepository extends MongoRepository<Students, String> {
     Optional<Students> findByStudentNumber(String studentNumber);
+    Optional<Students> findByUser(Users user);
     boolean existsByStudentNumber(String studentNumber);
     List<Students> findByUserIn(List<Users> users);
     List<Students> findByCourseIdIn(List<String> courseIds);
