@@ -1,15 +1,15 @@
 package com.attendease.backend.authentication.student.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FacialRegistrationRequest {
-    @NotNull(message = "Face encoding is required")
-    @NotEmpty(message = "Face encoding cannot be empty")
-    @JsonProperty("facialEncoding")
+    private String studentNumber;
     private List<String> facialEncoding;
 }

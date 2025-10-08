@@ -6,21 +6,25 @@ import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.authentication.student.service.StudentBiometricsService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth/biometrics")
 @Slf4j
+@RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
 public class StudentBiometricsController {
 
@@ -30,15 +34,13 @@ public class StudentBiometricsController {
 
     private static final String FACIAL_RECOGNITION_SERVICE_API_BASE_URL = "http://127.0.0.1:8001/v1";
     private static final String FACIAL_RECOGNITION_SERVICE_API_VALIDATE_FACIAL_ENCODING_ENDPOINT = "/validate-facial-encoding";
+    private static final String FACIAL_RECOGNITION_SERVICE_API_EXTRACT_FACIAL_ENCODING_ENDPOINT = "/extract-face-encoding";
 
-    public StudentBiometricsController(StudentBiometricsService studentBiometricsService, HttpHeaders httpHeaders, RestTemplate restTemplate) {
-        this.studentBiometricsService = studentBiometricsService;
-        this.httpHeaders = httpHeaders;
-        this.restTemplate = restTemplate;
-    }
+    @PostMapping("/register-face")
+    public ResponseEntity<String> registerFacialData(Authentication authentication, @Valid @RequestBody FacialRegistrationRequest request) {
+        String authenticatedUserId = authentication.getName();
+        String studentNumber = extractStudentNumberFromUserId(authenticatedUserId);
 
-    @PostMapping("/register-face/{studentNumber}")
-    public ResponseEntity<String> registerFacialData(@PathVariable String studentNumber, @Valid @RequestBody FacialRegistrationRequest request) {
         if (request.getFacialEncoding() == null || request.getFacialEncoding().isEmpty()) {
             return ResponseEntity.badRequest().body("Face encoding cannot be null or empty");
         }
@@ -116,16 +118,111 @@ public class StudentBiometricsController {
         }
     }
 
-    @GetMapping("/status/{studentNumber}")
-    public ResponseEntity<String> getFacialStatus(@PathVariable String studentNumber) {
+    @PostMapping(value = "/register-face-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> registerFacialDataFromImage(Authentication authentication, @RequestParam("image") MultipartFile imageFile) {
+        String authenticatedUserId = authentication.getName();
+        String studentNumber = extractStudentNumberFromUserId(authenticatedUserId);
+
+        if (imageFile == null || imageFile.isEmpty()) {
+            return ResponseEntity.badRequest().body("Image file cannot be null or empty");
+        }
+
+        log.info("Received image file for student {}: {} bytes", studentNumber, imageFile.getSize());
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        try {
+            byte[] imageBytes = imageFile.getBytes();
+            ByteArrayResource contentsAsResource = new ByteArrayResource(imageBytes) {
+                @Override
+                public String getFilename() {
+                    return imageFile.getOriginalFilename();
+                }
+            };
+            body.add("file", contentsAsResource);
+        } catch (Exception e) {
+            log.error("Failed to read image file: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Failed to process image file");
+        }
+
+        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
+
+        log.debug("Sending image to facial recognition service API for extraction");
+
+        FacialEncodingResponse responseBody;
+        try {
+            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(
+                    FACIAL_RECOGNITION_SERVICE_API_BASE_URL + FACIAL_RECOGNITION_SERVICE_API_EXTRACT_FACIAL_ENCODING_ENDPOINT,
+                    requestEntity,
+                    FacialEncodingResponse.class
+            );
+            responseBody = response.getBody();
+        } catch (Exception e) {
+            log.error("Failed to communicate with facial recognition service API: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service is unavailable");
+        }
+
+        if (responseBody == null) {
+            log.error("Facial recognition service returned null response body");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Face processing service returned invalid response");
+        }
+
+        if (!responseBody.isSuccess()) {
+            String errorMsg = responseBody.getMessage() != null ? responseBody.getMessage()
+                    : (responseBody.getError() != null ? responseBody.getError() : "Unknown error from facial recognition service API");
+            log.error("Facial recognition service API returned error: {}", errorMsg);
+            return ResponseEntity.badRequest().body("Face processing failed: " + errorMsg);
+        }
+
+        List<Double> faceEncodingDoubles = responseBody.getFacialEncoding();
+        if (faceEncodingDoubles == null || faceEncodingDoubles.isEmpty()) {
+            log.error("Facial recognition service API returned null or empty face encoding data");
+            return ResponseEntity.badRequest().body("Face processing failed: No face encoding data received");
+        }
+
+        log.info("Successfully received {} face encoding elements from facial recognition service API", faceEncodingDoubles.size());
+
+        List<String> faceEncodingList = faceEncodingDoubles.stream()
+                .map(String::valueOf)
+                .collect(Collectors.toList());
+
+        try {
+            Students student = studentBiometricsService.getStudentByStudentNumber(studentNumber);
+            String result = studentBiometricsService.registerNewFacialBiometrics(student, faceEncodingList);
+            return ResponseEntity.ok(result);
+        } catch (IllegalStateException e) {
+            log.warn("Facial registration conflict for student {}: {}", studentNumber, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid facial registration request for student {}: {}", studentNumber, e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error registering facial data for student {}: {}", studentNumber, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error occurred during facial registration");
+        }
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<String> getFacialStatus(Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        String studentNumber = extractStudentNumberFromUserId(authenticatedUserId);
+
         Optional<BiometricData> biometricData = studentBiometricsService.getFacialStatus(studentNumber);
         return biometricData.map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()))
                 .orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
     }
 
-    @DeleteMapping("/recalibrate/{studentNumber}")
-    public ResponseEntity<String> recalibrateFacialData(@PathVariable String studentNumber) {
+    @DeleteMapping("/recalibrate")
+    public ResponseEntity<String> recalibrateFacialData(Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        String studentNumber = extractStudentNumberFromUserId(authenticatedUserId);
+
         studentBiometricsService.recalibrateFacialBiometrics(studentNumber);
         return ResponseEntity.ok("Facial data recalibrated successfully");
+    }
+
+    private String extractStudentNumberFromUserId(String userId) {
+        return studentBiometricsService.getStudentNumberByUserId(userId).orElseThrow(() -> new IllegalArgumentException("No student profile found for authenticated user"));
     }
 }
