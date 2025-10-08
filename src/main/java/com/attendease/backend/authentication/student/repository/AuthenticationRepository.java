@@ -4,22 +4,21 @@ import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Getter
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class AuthenticationRepository {
 
     private final StudentRepository studentsRepository;
     private final UserRepository usersRepository;
-
-    public AuthenticationRepository(StudentRepository studentsRepository, UserRepository usersRepository) {
-        this.studentsRepository = studentsRepository;
-        this.usersRepository = usersRepository;
-    }
 
     public boolean existsByStudentNumber(String studentNumber) {
         return studentsRepository.existsByStudentNumber(studentNumber);

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -21,13 +22,13 @@ public class EventCheckInController {
     /**
      * Endpoint for student event check-in.
      *
-     * @param studentNumber Student identifier (e.g. student number)
      * @param eventCheckIn  Event check-in details (contains eventId, locationId, latitude, longitude)
      * @return EventCheckInDto with confirmation details
      */
-    @PostMapping("/{studentNumber}")
-    public ResponseEntity<EventCheckIn> checkInStudent(@PathVariable String studentNumber,@RequestBody EventCheckIn eventCheckIn) {
-        EventCheckIn response = checkInService.checkInStudent(studentNumber, eventCheckIn);
+    @PostMapping
+    public ResponseEntity<EventCheckIn> checkInStudent(@RequestBody EventCheckIn eventCheckIn, Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        EventCheckIn response = checkInService.checkInStudent(authenticatedUserId, eventCheckIn);
         return ResponseEntity.ok(response);
     }
 }

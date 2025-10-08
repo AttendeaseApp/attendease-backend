@@ -1,7 +1,6 @@
 package com.attendease.backend.locationsManagement.service;
 
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.locations.Geofencing.GeofenceData;
 import com.attendease.backend.domain.locations.Geofencing.Geometry;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
@@ -33,7 +32,6 @@ public class LocationsManagementService {
                 .locationType(request.getLocationType())
                 .geometryType("Polygon")
                 .geometry(polygon)
-                .geofenceParameters(request.getGeofenceParameters())
                 .build();
 
         location = locationRepository.save(location);
@@ -54,12 +52,10 @@ public class LocationsManagementService {
         return new GeoJsonPolygon(points);
     }
 
-
     public List<LocationResponse> getAllLocations() throws ExecutionException, InterruptedException {
         List<EventLocations> locations = locationRepository.findAll();
         return locations.stream().map(this::convertToResponseDTO).toList();
     }
-
 
     public void deleteLocationById(String locationId) throws ExecutionException, InterruptedException {
         boolean exists = locationRepository.existsById(locationId);
@@ -111,16 +107,6 @@ public class LocationsManagementService {
 
                         response.setLatitude(centroidLat);
                         response.setLongitude(centroidLng);
-
-                        if (location.getGeofenceParameters() != null) {
-                            GeofenceData data = location.getGeofenceParameters();
-                            GeofenceData params = new GeofenceData(
-                                    data.getRadiusMeters(),
-                                    centroidLat,
-                                    centroidLng
-                            );
-                            response.setGeofenceParameters(params);
-                        }
                     }
                 }
             }
@@ -128,7 +114,4 @@ public class LocationsManagementService {
 
         return response;
     }
-
-
 }
-

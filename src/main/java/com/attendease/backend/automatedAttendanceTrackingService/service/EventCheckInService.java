@@ -4,16 +4,20 @@ import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.locations.Geofencing.GeofenceData;
 import com.attendease.backend.domain.records.AttendanceRecords;
 import com.attendease.backend.domain.records.EventCheckIn.EventCheckIn;
 import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -28,9 +32,12 @@ public class EventCheckInService {
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
     private final StudentRepository studentsRepository;
+    private final UserRepository userRepository;
 
-    public EventCheckIn checkInStudent(String studentNumber, EventCheckIn eventCheckIn) {
-        Students student = studentsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalStateException("Student not found"));
+    public EventCheckIn checkInStudent(String authenticatedUserId, EventCheckIn eventCheckIn) {
+        Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
+        Students student = studentsRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(eventCheckIn.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         Date now = new Date();
@@ -45,28 +52,18 @@ public class EventCheckInService {
         if (now.after(endTime)) {
             throw new IllegalStateException("Event has already ended. You can no longer check in.");
         }
+      
         if (!isStudentEligibleForEvent(event, student)) {
-            throw new IllegalStateException("Student is not eligible to check in for this event.");
+           throw new IllegalStateException("Student is not eligible to check in for this event.");
         }
 
         EventLocations location = eventLocationsRepository.findById(eventCheckIn.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
-        //check geofence
-        GeofenceData geofence = location.getGeofenceParameters();
-        if (geofence == null) {
-            throw new IllegalStateException("Geofence parameters not found for location");
-        }
-
         double studentLat = eventCheckIn.getLatitude();
         double studentLon = eventCheckIn.getLongitude();
 
-        if (!isWithinGeofence(
-                studentLat,
-                studentLon,
-                geofence.getCenterLatitude(),
-                geofence.getCenterLongitude(),
-                geofence.getRadiusMeters())) {
-            throw new IllegalStateException("Student is outside the event geofence");
+        if (!isWithinLocationBoundary(location, studentLat, studentLon)) {
+            throw new IllegalStateException("Student is outside the event location boundary");
         }
 
         isAlreadyCheckedIn(student, event, location);
@@ -107,19 +104,52 @@ public class EventCheckInService {
         return courseMatch || sectionMatch;
     }
 
+    private boolean isWithinLocationBoundary(EventLocations location, double latitude, double longitude) {
+        GeoJsonPolygon polygon = location.getGeometry();
+        if (polygon == null) {
+            log.warn("No polygon geometry found for location: {}", location.getLocationId());
+            return false;
+        }
 
-    private boolean isWithinGeofence(double lat1, double lon1, double lat2, double lon2, double radiusMeters) {
-        double earthRadius = 6371000;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = earthRadius * c;
-        log.info("Calculated distance: {} meters (allowed radius: {}, student: [{}, {}], geofence center: [{}, {}])",
-                distance, radiusMeters, lat1, lon1, lat2, lon2);
-        return distance <= radiusMeters;
+        List<GeoJsonLineString> lineStrings = polygon.getCoordinates();
+        if (lineStrings.isEmpty()) {
+            log.warn("No coordinates found in polygon for location: {}", location.getLocationId());
+            return false;
+        }
+
+        GeoJsonLineString outerRing = lineStrings.getFirst();
+        if (outerRing == null) {
+            log.warn("No outer ring found in polygon for location: {}", location.getLocationId());
+            return false;
+        }
+
+        List<Point> points = outerRing.getCoordinates();
+        boolean isInside = isPointInPolygon(latitude, longitude, points);
+
+        log.info("Student location check: [{}, {}] is {} the polygon boundary for location: {}",
+                latitude, longitude, isInside ? "INSIDE" : "OUTSIDE", location.getLocationId());
+
+        return isInside;
+    }
+
+    private boolean isPointInPolygon(double latitude, double longitude, List<Point> polygonPoints) {
+        int n = polygonPoints.size();
+        boolean inside = false;
+
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            Point pi = polygonPoints.get(i);
+            Point pj = polygonPoints.get(j);
+
+            double xi = pi.getX(); //longitude
+            double yi = pi.getY(); //latitude
+            double xj = pj.getX(); //longitude
+            double yj = pj.getY(); //latitude
+
+            if (((yi > latitude) != (yj > latitude)) && (longitude < (xj - xi) * (latitude - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+        return inside;
     }
 }
 
