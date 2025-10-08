@@ -1,14 +1,11 @@
 package com.attendease.backend.automatedAttendanceTrackingService.controller;
 
 import com.attendease.backend.automatedAttendanceTrackingService.service.RetrieveOngoingEventsService;
-import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventCreation.EventCreationResponse;
 import com.attendease.backend.domain.events.EventSessions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
