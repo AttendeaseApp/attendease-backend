@@ -39,7 +39,7 @@ public class EventSessionMonitoringService {
     }
 
     public List<Students> getAttendeesByEvent(String eventId) {
-        List<AttendanceRecords> records = attendanceRecordsRepository.findByEvent_Id(eventId);
+        List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
         return records.stream()
                 .map(AttendanceRecords::getStudent)
                 .distinct()

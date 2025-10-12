@@ -1,4 +1,4 @@
-package com.attendease.backend.authentication.student.repository;
+package com.attendease.backend.studentModule.repository;
 
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;

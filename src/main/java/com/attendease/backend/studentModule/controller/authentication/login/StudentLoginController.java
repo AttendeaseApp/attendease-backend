@@ -1,10 +1,10 @@
-package com.attendease.backend.authentication.student.controller;
+package com.attendease.backend.studentModule.controller.authentication.login;
 
-import com.attendease.backend.authentication.student.dto.request.LoginRequest;
-import com.attendease.backend.authentication.student.dto.request.PasswordUpdateRequest;
-import com.attendease.backend.authentication.student.dto.response.LoginResponse;
-import com.attendease.backend.authentication.student.service.StudentAuthenticationService;
-import com.attendease.backend.authentication.student.service.StudentBiometricsService;
+import com.attendease.backend.studentModule.dto.request.LoginRequest;
+import com.attendease.backend.studentModule.dto.request.PasswordUpdateRequest;
+import com.attendease.backend.studentModule.dto.response.LoginResponse;
+import com.attendease.backend.studentModule.service.StudentAuthenticationService;
+import com.attendease.backend.studentModule.service.StudentBiometricsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

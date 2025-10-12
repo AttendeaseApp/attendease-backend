@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface BiometricsRepository extends MongoRepository<BiometricData, String> {
-    Optional<BiometricData> findByFacialId(String facialId);
 
     void deleteByFacialId(String facialId);
 

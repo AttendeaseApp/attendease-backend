@@ -1,4 +1,4 @@
-package com.attendease.backend.authentication.student.service;
+package com.attendease.backend.studentModule.service;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.BiometricStatus;

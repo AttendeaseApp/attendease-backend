@@ -52,7 +52,7 @@ public class AutomatedEventStatusScheduler {
                     if (newStatus != null && currentStatus != newStatus) {
                         event.setEventStatus(newStatus);
                         updated = true;
-                        log.info("Event {} status updated to {}", event.getId(), newStatus);
+                        log.info("Event {} status updated to {}", event.getEventId(), newStatus);
                     }
                     log.info("Found {} events with ACTIVE, REGISTRATION, or ONGOING status", events.size());
                 }

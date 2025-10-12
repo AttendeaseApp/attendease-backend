@@ -1,12 +1,9 @@
-package com.attendease.backend.authentication.student.controller;
+package com.attendease.backend.studentModule.controller.profile;
 
-import com.attendease.backend.authentication.student.service.UserProfileService;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.studentModule.service.UserProfileService;
 import com.attendease.backend.domain.students.UserStudent.UserStudent;
-import com.attendease.backend.domain.users.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

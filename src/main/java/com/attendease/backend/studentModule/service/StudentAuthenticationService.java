@@ -1,8 +1,8 @@
-package com.attendease.backend.authentication.student.service;
+package com.attendease.backend.studentModule.service;
 
-import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.authentication.student.dto.response.LoginResponse;
-import com.attendease.backend.authentication.student.repository.AuthenticationRepository;
+import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
+import com.attendease.backend.studentModule.dto.response.LoginResponse;
+import com.attendease.backend.studentModule.repository.AuthenticationRepository;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;

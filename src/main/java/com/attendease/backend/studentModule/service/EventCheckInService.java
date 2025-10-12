@@ -1,7 +1,6 @@
-package com.attendease.backend.automatedAttendanceTrackingService.service;
+package com.attendease.backend.studentModule.service;
 
 import com.attendease.backend.domain.enums.AttendanceStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.records.AttendanceRecords;
@@ -36,8 +35,7 @@ public class EventCheckInService {
 
     public EventCheckIn checkInStudent(String authenticatedUserId, EventCheckIn eventCheckIn) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
-        Students student = studentsRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
+        Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(eventCheckIn.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         Date now = new Date();
@@ -53,9 +51,9 @@ public class EventCheckInService {
             throw new IllegalStateException("Event has already ended. You can no longer check in.");
         }
       
-        if (!isStudentEligibleForEvent(event, student)) {
-           throw new IllegalStateException("Student is not eligible to check in for this event.");
-        }
+//        if (!isStudentEligibleForEvent(event, student)) {
+//           throw new IllegalStateException("Student is not eligible to check in for this event.");
+//        }
 
         EventLocations location = eventLocationsRepository.findById(eventCheckIn.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -89,20 +87,20 @@ public class EventCheckInService {
         }
     }
 
-    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
-        EligibilityCriteria criteria = event.getEligibleStudents();
-        if (criteria == null) return false;
-
-        if (criteria.isAllStudents()) return true;
-
-        String studentCourseId = student.getCourseId();
-        String studentSectionId = student.getSectionId();
-
-        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
-        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
-
-        return courseMatch || sectionMatch;
-    }
+//    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
+//        EligibilityCriteria criteria = event.getEligibleStudents();
+//        if (criteria == null) return false;
+//
+//        if (criteria.isAllStudents()) return true;
+//
+//        String studentCourseId = student.getCourseId();
+//        String studentSectionId = student.getSectionId();
+//
+//        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
+//        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
+//
+//        return courseMatch || sectionMatch;
+//    }
 
     private boolean isWithinLocationBoundary(EventLocations location, double latitude, double longitude) {
         GeoJsonPolygon polygon = location.getGeometry();

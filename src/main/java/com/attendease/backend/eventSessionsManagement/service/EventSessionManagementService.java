@@ -39,13 +39,13 @@ public class EventSessionManagementService {
         eventSession.setEndDateTime(endDateTime);
         eventSession.setEventStatus(EventStatus.ACTIVE);
 
-        EligibilityCriteria criteria = EligibilityCriteria.builder()
-                .allStudents(eventCreationResponse.isAllStudents())
-                .course(eventCreationResponse.getCourse())
-                .sections(eventCreationResponse.getSections())
-                .build();
-
-        eventSession.setEligibleStudents(criteria);
+//        EligibilityCriteria criteria = EligibilityCriteria.builder()
+//                .allStudents(eventCreationResponse.isAllStudents())
+//                .course(eventCreationResponse.getCourse())
+//                .sections(eventCreationResponse.getSections())
+//                .build();
+//
+//        eventSession.setEligibleStudents(criteria);
 
         if (eventCreationResponse.getEventLocationRefId() != null && !eventCreationResponse.getEventLocationRefId().isEmpty()) {
             Optional<EventLocations> locationOpt = locationRepository.findById(eventCreationResponse.getEventLocationRefId());
@@ -56,7 +56,7 @@ public class EventSessionManagementService {
         }
 
         EventSessions savedEvent = eventSessionRepository.save(eventSession);
-        log.info("Successfully created event session with ID: {}", savedEvent.getId());
+        log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
         return convertToResponseDTO(savedEvent);
     }
 
@@ -143,7 +143,7 @@ public class EventSessionManagementService {
 
     private EventCreationResponse convertToResponseDTO(EventSessions eventSession) {
         EventCreationResponse dto = new EventCreationResponse();
-        dto.setId(eventSession.getId());
+        dto.setId(eventSession.getEventId());
         dto.setEventName(eventSession.getEventName());
         dto.setDescription(eventSession.getDescription());
         dto.setStartDateTime(eventSession.getStartDateTime());
