@@ -1,12 +1,14 @@
-package com.attendease.backend.authentication.student.service;
+package com.attendease.backend.studentModule.service;
 
-import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.authentication.student.repository.AuthenticationRepository;
+import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
+import com.attendease.backend.studentModule.dto.response.LoginResponse;
+import com.attendease.backend.studentModule.repository.AuthenticationRepository;
+import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.students.Sections;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.security.JwtTokenizationUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -28,6 +31,7 @@ public class StudentAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationRepository studentRepository;
     private final JwtTokenizationUtil jwtTokenizationUtil;
+    private final BiometricsRepository biometricsRepository;
 
     /**
      * Registers a new student account using separate request DTO
@@ -43,7 +47,6 @@ public class StudentAuthenticationService {
         }
 
         Users user = createUserFromRegistrationRequest(registrationRequest);
-
         Students student = createStudentFromRegistrationRequest(registrationRequest);
         student.setUser(user);
 
@@ -56,19 +59,27 @@ public class StudentAuthenticationService {
     }
 
 
-    /**
-     * Authenticates a student using student number and password
-     *
-     * @return Firebase custom token for authentication
-     */
-    public String loginStudent(String studentNumber, String password) {
-        Users user = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Invalid email or password")).getUser();
+    public LoginResponse loginStudent(String studentNumber, String password) {
+        Students student = studentRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid student number or password"));
+
+        Users user = student.getUser();
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new IllegalArgumentException("Invalid student number or password");
         }
 
-        return jwtTokenizationUtil.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
+        Optional<BiometricData> biometricData = biometricsRepository.findByStudentNumber(studentNumber);
+        boolean requiresFacialRegistration = biometricData.isEmpty();
+
+        String token = jwtTokenizationUtil.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
+
+        log.info("Student login successful. StudentNumber: {}, Requires Facial Registration: {}", studentNumber, requiresFacialRegistration);
+
+        return LoginResponse.builder()
+                .token(token)
+                .requiresFacialRegistration(requiresFacialRegistration)
+                .message(requiresFacialRegistration ? "Login successful. Please complete facial registration." : "Login successful.").studentNumber(studentNumber).build();
     }
 
     /**

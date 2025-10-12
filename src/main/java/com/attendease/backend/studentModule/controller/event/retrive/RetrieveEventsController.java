@@ -1,6 +1,6 @@
-package com.attendease.backend.automatedAttendanceTrackingService.controller;
+package com.attendease.backend.studentModule.controller.event.retrive;
 
-import com.attendease.backend.automatedAttendanceTrackingService.service.RetrieveOngoingEventsService;
+import com.attendease.backend.studentModule.service.RetrieveOngoingEventsService;
 import com.attendease.backend.domain.events.EventSessions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/checkin/events")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class OngoingEventsController {
+public class RetrieveEventsController {
 
     private final RetrieveOngoingEventsService retrieveOngoingEventsService;
 

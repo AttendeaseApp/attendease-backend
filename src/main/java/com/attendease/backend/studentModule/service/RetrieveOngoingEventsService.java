@@ -1,4 +1,4 @@
-package com.attendease.backend.automatedAttendanceTrackingService.service;
+package com.attendease.backend.studentModule.service;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;

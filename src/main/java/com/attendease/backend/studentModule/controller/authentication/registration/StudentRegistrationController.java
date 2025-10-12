@@ -1,7 +1,7 @@
-package com.attendease.backend.authentication.student.controller;
+package com.attendease.backend.studentModule.controller.authentication.registration;
 
-import com.attendease.backend.authentication.student.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.authentication.student.service.StudentAuthenticationService;
+import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
+import com.attendease.backend.studentModule.service.StudentAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

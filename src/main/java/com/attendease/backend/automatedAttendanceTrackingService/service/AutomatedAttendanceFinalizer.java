@@ -24,12 +24,11 @@ public class AutomatedAttendanceFinalizer {
 
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
-    private final EventSessionsRepository eventSessionsRepository;
 
     public void finalizeAttendanceForEvent(EventSessions event) {
-        String eventId = event.getId();
+        String eventId = event.getEventId();
 
-        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEvent_Id(eventId);
+        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventId(eventId);
         List<Students> expectedStudents = getExpectedStudentsForEvent(event);
         Set<String> studentsWithRecords = attendanceRecords.stream().map(record -> record.getStudent().getId()).collect(Collectors.toSet());
 

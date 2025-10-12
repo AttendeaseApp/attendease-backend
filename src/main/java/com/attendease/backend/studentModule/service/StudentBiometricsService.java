@@ -1,10 +1,12 @@
-package com.attendease.backend.authentication.student.service;
+package com.attendease.backend.studentModule.service;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.BiometricStatus;
 import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StudentBiometricsService {
 
+    private final UserRepository userRepository;
     private final StudentRepository studentsRepository;
     private final BiometricsRepository biometricsRepository;
 
@@ -34,12 +37,16 @@ public class StudentBiometricsService {
             throw new IllegalStateException("Facial biometrics already registered for this student.");
         }
 
-        BiometricData biometricData = new BiometricData();
-        biometricData.setFacialId(UUID.randomUUID().toString());
-        biometricData.setStudentNumber(studentNumber);
-        biometricData.setFacialId("face_" + studentNumber);
-        biometricData.setFacialEncoding(facialEncoding);
-        biometricData.setBiometricsStatus(BiometricStatus.ACTIVE);
+        if (facialEncoding == null || facialEncoding.size() != 128) {
+            throw new IllegalArgumentException("Facial encoding must contain exactly 128 elements");
+        }
+
+        BiometricData biometricData = BiometricData.builder()
+                .facialId("face_" + studentNumber + "_" + UUID.randomUUID())
+                .studentNumber(studentNumber)
+                .facialEncoding(facialEncoding)
+                .biometricsStatus(BiometricStatus.ACTIVE)
+                .build();
 
         biometricsRepository.save(biometricData);
 
@@ -63,4 +70,12 @@ public class StudentBiometricsService {
         log.info("Facial biometric data deleted for student: {}", studentNumber);
     }
 
+    public Optional<String> getStudentNumberByUserId(String userId) {
+        Optional<Users> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return studentsRepository.findByUserId(userId).map(Students::getStudentNumber);
+    }
 }

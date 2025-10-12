@@ -23,7 +23,7 @@ public class ScheduledFinalizerService {
         try {
             List<EventSessions> concludedEvents = eventSessionsRepository.findByEventStatus(EventStatus.CONCLUDED);
             for (EventSessions event : concludedEvents) {
-                log.info("Finalizing attendance for event: {}", event.getId());
+                log.info("Finalizing attendance for event: {}", event.getEventId());
                 automatedAttendanceFinalizer.finalizeAttendanceForEvent(event);
                 event.setEventStatus(EventStatus.FINALIZED);
                 eventSessionsRepository.save(event);
