@@ -6,6 +6,7 @@ import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.studentModule.service.StudentBiometricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -103,7 +104,7 @@ public class StudentBiometricsController {
         if (!responseBody.isSuccess()) {
             String errorMsg = responseBody.getMessage() != null ? responseBody.getMessage() : (responseBody.getError() != null ? responseBody.getError() : "Unknown error from facial recognition service API");
             log.error("Facial recognition service API returned error: {}", errorMsg);
-            return ResponseEntity.badRequest().body("Face processing failed: " + errorMsg);
+            return ResponseEntity.badRequest().body("Face processing failed: " + StringEscapeUtils.escapeHtml4(errorMsg));
         }
 
         List<Double> faceEncodingDoubles = responseBody.getFacialEncoding();
@@ -122,10 +123,10 @@ public class StudentBiometricsController {
             return ResponseEntity.ok(result);
         } catch (IllegalStateException e) {
             log.warn("Facial registration conflict for student {}: {}", studentNumber, e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Facial registration conflict for student " + studentNumber);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid facial registration request for student {}: {}", studentNumber, e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Bad request: invalid parameters for facial registration request");
         } catch (Exception e) {
             log.error("Error registering facial data for student {}: {}", studentNumber, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error occurred during facial registration");
