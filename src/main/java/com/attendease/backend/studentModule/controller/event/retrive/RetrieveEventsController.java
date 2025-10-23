@@ -1,6 +1,6 @@
 package com.attendease.backend.studentModule.controller.event.retrive;
 
-import com.attendease.backend.studentModule.service.RetrieveOngoingEventsService;
+import com.attendease.backend.studentModule.service.event.retrieve.EventsRetrievalService;
 import com.attendease.backend.domain.events.EventSessions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +17,11 @@ import java.util.List;
 @PreAuthorize("hasRole('STUDENT')")
 public class RetrieveEventsController {
 
-    private final RetrieveOngoingEventsService retrieveOngoingEventsService;
+    private final EventsRetrievalService eventsRetrievalService;
 
     @GetMapping()
     public ResponseEntity<List<EventSessions>> getEventsByStatus() {
-        List<EventSessions> events = retrieveOngoingEventsService.getOngoingRegistrationAndActiveEvents();
+        List<EventSessions> events = eventsRetrievalService.getOngoingRegistrationAndActiveEvents();
         return ResponseEntity.ok(events);
     }
 }

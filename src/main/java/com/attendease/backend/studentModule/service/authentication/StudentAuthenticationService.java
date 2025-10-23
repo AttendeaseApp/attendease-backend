@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service;
+package com.attendease.backend.studentModule.service.authentication;
 
 import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
 import com.attendease.backend.studentModule.dto.response.LoginResponse;

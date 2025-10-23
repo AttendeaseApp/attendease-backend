@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service;
+package com.attendease.backend.studentModule.service.profile;
 
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserProfileService {
+public class StudentProfileService {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
