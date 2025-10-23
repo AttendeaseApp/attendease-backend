@@ -73,11 +73,11 @@ public class EventCheckInService {
 
         isAlreadyCheckedIn(student, event, location);
 
-        if (eventCheckIn.getFaceImageBase64() == null || eventCheckIn.getFaceImageBase64().isEmpty()) {
-            throw new IllegalStateException("Face image is required for check-in");
-        }
-
-        verifyStudentFace(student.getStudentNumber(), eventCheckIn.getFaceImageBase64());
+//        if (eventCheckIn.getFaceImageBase64() == null || eventCheckIn.getFaceImageBase64().isEmpty()) {
+//            throw new IllegalStateException("Face image is required for check-in");
+//        }
+//
+//        verifyStudentFace(student.getStudentNumber(), eventCheckIn.getFaceImageBase64());
 
         AttendanceRecords record = AttendanceRecords.builder()
                 .student(student)
