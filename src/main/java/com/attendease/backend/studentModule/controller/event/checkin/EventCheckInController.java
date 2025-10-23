@@ -1,6 +1,6 @@
 package com.attendease.backend.studentModule.controller.event.checkin;
 
-import com.attendease.backend.studentModule.service.EventCheckInService;
+import com.attendease.backend.studentModule.service.event.checkin.EventCheckInService;
 import com.attendease.backend.domain.records.EventCheckIn.EventCheckIn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,5 +1,6 @@
-package com.attendease.backend.studentModule.service;
+package com.attendease.backend.studentModule.service.event.checkin;
 
+import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
@@ -8,10 +9,14 @@ import com.attendease.backend.domain.records.EventCheckIn.EventCheckIn;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
+import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
+import com.attendease.backend.studentModule.dto.response.biometrics.FaceEncodingResponse;
+import com.attendease.backend.studentModule.dto.response.biometrics.FaceVerificationResponse;
+import com.attendease.backend.studentModule.service.authentication.biometrics.FacialRecognitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Point;
@@ -30,6 +35,8 @@ public class EventCheckInService {
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
+    private final FacialRecognitionService facialRecognitionService;
+    private final BiometricsRepository biometricsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
 
@@ -66,6 +73,12 @@ public class EventCheckInService {
 
         isAlreadyCheckedIn(student, event, location);
 
+        if (eventCheckIn.getFaceImageBase64() == null || eventCheckIn.getFaceImageBase64().isEmpty()) {
+            throw new IllegalStateException("Face image is required for check-in");
+        }
+
+        verifyStudentFace(student.getStudentNumber(), eventCheckIn.getFaceImageBase64());
+
         AttendanceRecords record = AttendanceRecords.builder()
                 .student(student)
                 .event(event)
@@ -75,8 +88,49 @@ public class EventCheckInService {
                 .build();
 
         attendanceRecordsRepository.save(record);
+        log.info("Student {} successfully checked in to event {} with facial verification", student.getStudentNumber(), event.getEventId());
 
         return eventCheckIn;
+    }
+
+    private void verifyStudentFace(String studentNumber, String faceImageBase64) {
+        try {
+            BiometricData biometricData = biometricsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalStateException("No biometric data found for student. Please register your face first."));
+
+            if (biometricData.getFacialEncoding() == null || biometricData.getFacialEncoding().isEmpty()) {
+                throw new IllegalStateException("Student's facial encoding is not registered");
+            }
+
+            log.info("Extracting facial encoding from uploaded image for student: {}", studentNumber);
+            FaceEncodingResponse encodingResponse = facialRecognitionService.extractFaceEncoding(faceImageBase64);
+
+            if (!encodingResponse.getSuccess() || encodingResponse.getFacialEncoding() == null) {
+                throw new IllegalStateException("Failed to detect face in uploaded image");
+            }
+
+            log.info("Comparing facial encodings for student: {}", studentNumber);
+            FaceVerificationResponse verificationResponse =
+                    facialRecognitionService.verifyFace(
+                            encodingResponse.getFacialEncoding(),
+                            biometricData.getFacialEncoding()
+                    );
+
+            if (!verificationResponse.getSuccess() || !verificationResponse.getIs_face_matched()) {
+                log.warn("Facial verification failed for student: {}. Confidence: {}, Distance: {}",
+                        studentNumber,
+                        verificationResponse.getConfidence(),
+                        verificationResponse.getFace_distance()
+                );
+                throw new IllegalStateException(
+                        String.format("Facial verification failed. Confidence: %.2f%%. Please try again with better lighting.", verificationResponse.getConfidence() * 100)
+                );
+            }
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error during facial verification for student {}: {}", studentNumber, e.getMessage());
+            throw new IllegalStateException("Facial verification error: " + e.getMessage());
+        }
     }
 
     private void isAlreadyCheckedIn(Students student, EventSessions event, EventLocations location) {

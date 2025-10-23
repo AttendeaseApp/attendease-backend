@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service;
+package com.attendease.backend.studentModule.service.event.retrieve;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class RetrieveOngoingEventsService {
+public class EventsRetrievalService {
 
     private final EventSessionsRepository eventSessionRepository;
 

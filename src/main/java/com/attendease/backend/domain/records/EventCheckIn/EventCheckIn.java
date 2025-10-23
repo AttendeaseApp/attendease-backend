@@ -8,4 +8,5 @@ public class EventCheckIn {
     private String locationId;
     private Double latitude;
     private Double longitude;
+    private String faceImageBase64;
 }

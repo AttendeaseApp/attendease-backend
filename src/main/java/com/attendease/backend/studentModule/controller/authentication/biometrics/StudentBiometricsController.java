@@ -3,10 +3,11 @@ package com.attendease.backend.studentModule.controller.authentication.biometric
 import com.attendease.backend.studentModule.dto.response.FacialEncodingResponse;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.studentModule.service.StudentBiometricsService;
+import com.attendease.backend.studentModule.service.authentication.biometrics.StudentBiometricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +33,8 @@ public class StudentBiometricsController {
     private final HttpHeaders httpHeaders;
     private final RestTemplate restTemplate;
 
-    private static final String FACIAL_RECOGNITION_SERVICE_API_BASE_URL = "http://127.0.0.1:8001/v1";
-    private static final String FACIAL_RECOGNITION_SERVICE_API_VALIDATE_FACIAL_ENCODING_ENDPOINT = "/validate-facial-encoding";
-    private static final String FACIAL_RECOGNITION_SERVICE_API_EXTRACT_FACIAL_ENCODING_ENDPOINT = "/extract-multiple-face-encodings";
+    @Value("${extract.multiple.facial.encoding.endpoint}")
+    private String extractMultipleFacialEncoding;
 
     @PostMapping(value = "/register-face-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> registerFacialDataFromImage(Authentication authentication, @RequestParam("images") List<MultipartFile> imageFile) {
@@ -89,7 +89,7 @@ public class StudentBiometricsController {
 
         FacialEncodingResponse responseBody;
         try {
-            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(FACIAL_RECOGNITION_SERVICE_API_BASE_URL + FACIAL_RECOGNITION_SERVICE_API_EXTRACT_FACIAL_ENCODING_ENDPOINT, requestEntity, FacialEncodingResponse.class);
+            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, FacialEncodingResponse.class);
             responseBody = response.getBody();
         } catch (Exception e) {
             log.error("Failed to communicate with facial recognition service API: {}", e.getMessage(), e);
