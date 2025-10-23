@@ -5,6 +5,8 @@ permissions:
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -23,13 +25,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/attendease-backend:latest
           file: ./Dockerfile
 
       - name: Print image details
+        if: github.event_name == 'push'
         run: docker images ${{ secrets.DOCKERHUB_USERNAME }}/attendease-backend:latest
