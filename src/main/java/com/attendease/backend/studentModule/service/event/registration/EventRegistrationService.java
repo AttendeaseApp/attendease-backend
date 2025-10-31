@@ -86,7 +86,7 @@ public class EventRegistrationService {
                 .event(event)
                 .location(location)
                 .timeIn(now)
-                .attendanceStatus(AttendanceStatus.CHECKED_IN)
+                .attendanceStatus(AttendanceStatus.REGISTERED)
                 .build();
 
         attendanceRecordsRepository.save(record);

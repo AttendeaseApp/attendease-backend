@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +35,7 @@ public class AttendanceRecordsFinalizer {
 
         for (AttendanceRecords record : attendanceRecords) {
             AttendanceStatus currentStatus = record.getAttendanceStatus();
-            AttendanceStatus finalStatus = evaluateAttendanceAfterEventEnds(record);
+            AttendanceStatus finalStatus = evaluateAttendanceAfterEventEnds(event, record);
 
             if (finalStatus != null && finalStatus != currentStatus) {
                 record.setAttendanceStatus(finalStatus);
@@ -67,13 +66,17 @@ public class AttendanceRecordsFinalizer {
     private AttendanceStatus evaluateAttendanceAfterEventEnds(EventSessions event, AttendanceRecords record) {
         LocalDateTime eventStart = event.getStartDateTime();
         LocalDateTime timeIn = record.getTimeIn();
+        AttendanceStatus current = record.getAttendanceStatus(); // use current status
 
+        // if the student never checked in
         if (timeIn == null) {
             record.setReason("Did not check in for the event: " + event.getEventName());
             return AttendanceStatus.ABSENT;
         }
-        if (timeIn.isAfter(eventStart) || timeIn.isEqual(eventStart)) {
-            record.setReason("Late check-in for the event: " + event.getEventName());
+
+        // if the student registered late in late
+        if (timeIn.isAfter(eventStart)) {
+            record.setReason("Late registration for the event: " + event.getEventName());
             return AttendanceStatus.ABSENT;
         }
 
@@ -83,15 +86,15 @@ public class AttendanceRecordsFinalizer {
                 return AttendanceStatus.PRESENT;
             }
             case REGISTERED -> {
-                record.setReason("Student only registered on the event");
+                record.setReason("Student only registered for the event");
                 return AttendanceStatus.REGISTERED;
             }
             case IDLE -> {
-                record.setReason("Student was registered on the event but idle/outside for too long");
+                record.setReason("Student was registered but idle/outside for too long");
                 return AttendanceStatus.ABSENT;
             }
             case ABSENT -> {
-                record.setReason("Student did not registered on the event at all");
+                record.setReason("Student did not register for the event at all");
                 return AttendanceStatus.ABSENT;
             }
             default -> {
@@ -99,6 +102,7 @@ public class AttendanceRecordsFinalizer {
             }
         }
     }
+
 
 
 
