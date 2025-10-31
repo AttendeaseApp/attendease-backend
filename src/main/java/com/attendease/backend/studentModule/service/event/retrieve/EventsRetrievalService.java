@@ -18,6 +18,6 @@ public class EventsRetrievalService {
     private final EventSessionsRepository eventSessionRepository;
 
     public List<EventSessions> getOngoingRegistrationAndActiveEvents() {
-        return eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.ONGOING, EventStatus.ACTIVE, EventStatus.REGISTRATION));
+        return eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.ONGOING, EventStatus.UPCOMING, EventStatus.REGISTRATION));
     }
 }

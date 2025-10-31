@@ -1,8 +1,8 @@
 package com.attendease.backend.osaModule.controller.management.event.sessions;
 
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.osaModule.service.management.event.sessions.EventSessionManagementService;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventCreation.EventCreationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -21,57 +21,57 @@ public class EventSessionsManagementController {
     private final EventSessionManagementService eventService;
 
     @PostMapping
-    public ResponseEntity<EventCreationResponse> createEvent(@RequestBody EventCreationResponse eventCreationResponse) {
-        EventCreationResponse createdEvent = eventService.createEvent(eventCreationResponse);
+    public ResponseEntity<EventSessions> createEvent(@RequestBody EventSessions eventCreationResponse) {
+        EventSessions createdEvent = eventService.createEvent(eventCreationResponse);
         return ResponseEntity.ok(createdEvent);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventCreationResponse> getEventById(@PathVariable("id") String eventId) {
-        EventCreationResponse event = eventService.getEventById(eventId);
+    public ResponseEntity<EventSessions> getEventById(@PathVariable("id") String eventId) {
+        EventSessions event = eventService.getEventById(eventId);
         return ResponseEntity.ok(event);
     }
 
     @GetMapping
-    public ResponseEntity<List<EventCreationResponse>> getAllEvents() {
-        List<EventCreationResponse> events = eventService.getAllEvents();
+    public ResponseEntity<List<EventSessions>> getAllEvents() {
+        List<EventSessions> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<EventCreationResponse>> getEventsByStatus(@PathVariable("status") EventStatus status) {
-        List<EventCreationResponse> events = eventService.getEventsByStatus(status);
+    public ResponseEntity<List<EventSessions>> getEventsByStatus(@PathVariable("status") EventStatus status) {
+        List<EventSessions> events = eventService.getEventsByStatus(status);
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<EventCreationResponse>> getEventsByDateRange(
+    public ResponseEntity<List<EventSessions>> getEventsByDateRange(
             @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
             @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to) {
-        List<EventCreationResponse> events = eventService.getEventsByDateRange(from, to);
+        List<EventSessions> events = eventService.getEventsByDateRange(from, to);
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/status-date-range")
-    public ResponseEntity<List<EventCreationResponse>> getEventsByStatusAndDateRange(
+    public ResponseEntity<List<EventSessions>> getEventsByStatusAndDateRange(
             @RequestParam("status") EventStatus status,
             @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
             @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to) {
-        List<EventCreationResponse> events = eventService.getEventsByStatusAndDateRange(status, from, to);
+        List<EventSessions> events = eventService.getEventsByStatusAndDateRange(status, from, to);
         return ResponseEntity.ok(events);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventCreationResponse> updateEvent(
+    public ResponseEntity<EventSessions> updateEvent(
             @PathVariable("id") String id,
-            @RequestBody EventCreationResponse updateDTO) {
-        EventCreationResponse updatedEvent = eventService.updateEvent(id, updateDTO);
+            @RequestBody EventSessions updateDTO) {
+        EventSessions updatedEvent = eventService.updateEvent(id, updateDTO);
         return ResponseEntity.ok(updatedEvent);
     }
 
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<EventCreationResponse> cancelEvent(@PathVariable("id") String id) {
-        EventCreationResponse canceledEvent = eventService.cancelEvent(id);
+    public ResponseEntity<EventSessions> cancelEvent(@PathVariable("id") String id) {
+        EventSessions canceledEvent = eventService.cancelEvent(id);
         return ResponseEntity.ok(canceledEvent);
     }
 

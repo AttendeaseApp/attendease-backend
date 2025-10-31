@@ -2,7 +2,6 @@ package com.attendease.backend.osaModule.service.management.event.sessions;
 
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventCreation.EventCreationResponse;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
@@ -10,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -23,71 +22,78 @@ public class EventSessionManagementService {
     private final LocationRepository locationRepository;
     private final EventSessionsRepository eventSessionRepository;
 
-    public EventCreationResponse createEvent(EventCreationResponse eventCreationResponse) {
-        log.info("Creating new event session: {}", eventCreationResponse.getEventName());
+    /**
+     * Create event
+     *
+     */
+    public EventSessions createEvent(EventSessions eventSession) {
+        log.info("Creating new event session: {}", eventSession.getEventName());
 
-        Date startDateTime = eventCreationResponse.getStartDateTime();
-        Date endDateTime = eventCreationResponse.getEndDateTime();
+        validateDateRange(
+                eventSession.getTimeInRegistrationStartDateTime(),
+                eventSession.getStartDateTime(),
+                eventSession.getEndDateTime()
+        );
 
-        validateDateRange(startDateTime, endDateTime);
+        eventSession.setEventStatus(EventStatus.UPCOMING);
+        eventSession.setCreatedAt(LocalDateTime.now());
+        eventSession.setUpdatedAt(LocalDateTime.now());
 
-        EventSessions eventSession = new EventSessions();
-        eventSession.setEventName(eventCreationResponse.getEventName());
-        eventSession.setDescription(eventCreationResponse.getDescription());
-        eventSession.setStartDateTime(startDateTime);
-        eventSession.setEndDateTime(endDateTime);
-        eventSession.setEventStatus(EventStatus.ACTIVE);
-
-//        EligibilityCriteria criteria = EligibilityCriteria.builder()
-//                .allStudents(eventCreationResponse.isAllStudents())
-//                .course(eventCreationResponse.getCourse())
-//                .sections(eventCreationResponse.getSections())
-//                .build();
-//
-//        eventSession.setEligibleStudents(criteria);
-
-        if (eventCreationResponse.getEventLocationRefId() != null && !eventCreationResponse.getEventLocationRefId().isEmpty()) {
-            Optional<EventLocations> locationOpt = locationRepository.findById(eventCreationResponse.getEventLocationRefId());
-            if (locationOpt.isEmpty()) {
-                throw new IllegalArgumentException("Location ID does not exist: " + eventCreationResponse.getEventLocationRefId());
-            }
-            eventSession.setEventLocation(locationOpt.get());
+        if (eventSession.getEventLocationId() != null) {
+            EventLocations location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
+            eventSession.setEventLocation(location);
         }
 
         EventSessions savedEvent = eventSessionRepository.save(eventSession);
         log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
-        return convertToResponseDTO(savedEvent);
+        return savedEvent;
     }
 
-    public EventCreationResponse getEventById(String id) {
+    /**
+     * Get event by ID
+     *
+     */
+    public EventSessions getEventById(String id) {
         log.info("Retrieving event session with ID: {}", id);
-        Optional<EventSessions> eventSession = eventSessionRepository.findById(id);
-        if (eventSession.isEmpty()) {
-            throw new RuntimeException("Event not found with ID: " + id);
-        }
-        return convertToResponseDTO(eventSession.get());
+        return eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
     }
 
-    public List<EventCreationResponse> getAllEvents() {
-        List<EventSessions> events = eventSessionRepository.findAll();
-        return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    /**
+     * Get all events
+     *
+     */
+    public List<EventSessions> getAllEvents() {
+        return eventSessionRepository.findAll();
     }
 
-    public List<EventCreationResponse> getEventsByStatus(EventStatus status) {
-        List<EventSessions> events = eventSessionRepository.findByEventStatus(status);
-        return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    /**
+     * Get events by status
+     *
+     */
+    public List<EventSessions> getEventsByStatus(EventStatus status) {
+        return eventSessionRepository.findByEventStatus(status);
     }
 
-    public List<EventCreationResponse> getEventsByDateRange(Date from, Date to) {
-        List<EventSessions> events = eventSessionRepository.findByDateRange(from, to);
-        return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    /**
+     * Get events by date range
+     *
+     */
+    public List<EventSessions> getEventsByDateRange(Date from, Date to) {
+        return eventSessionRepository.findByDateRange(from, to);
     }
 
-    public List<EventCreationResponse> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
-        List<EventSessions> events = eventSessionRepository.findByStatusAndDateRange(status, from, to);
-        return events.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    /**
+     * Get events by status and date range
+     *
+     */
+    public List<EventSessions> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
+        return eventSessionRepository.findByStatusAndDateRange(status, from, to);
     }
 
+    /**
+     * Delete event by ID
+     *
+     */
     public void deleteEventById(String id) {
         if (!eventSessionRepository.existsById(id)) {
             throw new RuntimeException("Event not found with ID: " + id);
@@ -96,76 +102,65 @@ public class EventSessionManagementService {
         log.info("Deleted event with ID: {}", id);
     }
 
-    public EventCreationResponse updateEvent(String eventId, EventCreationResponse updateDTO) {
-        Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(eventId);
-        if (existingEventOpt.isEmpty()) {
-            throw new RuntimeException("Event not found with ID: " + eventId);
-        }
-        EventSessions existingEvent = existingEventOpt.get();
+    /**
+     * Update Event
+     */
+    public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
+        EventSessions existingEvent = eventSessionRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
-        existingEvent.setEventName(updateDTO.getEventName());
-        existingEvent.setDescription(updateDTO.getDescription());
+        existingEvent.setEventName(updateEvent.getEventName());
+        existingEvent.setDescription(updateEvent.getDescription());
+        existingEvent.setStartDateTime(updateEvent.getStartDateTime());
+        existingEvent.setEndDateTime(updateEvent.getEndDateTime());
+        existingEvent.setTimeInRegistrationStartDateTime(updateEvent.getTimeInRegistrationStartDateTime());
+        existingEvent.setEventStatus(updateEvent.getEventStatus() != null ? updateEvent.getEventStatus() : existingEvent.getEventStatus());
 
-        Date startDateTime = updateDTO.getStartDateTime();
-        Date endDateTime = updateDTO.getEndDateTime();
-
-        validateDateRange(startDateTime, endDateTime);
-
-        existingEvent.setStartDateTime(startDateTime);
-        existingEvent.setEndDateTime(endDateTime);
-
-        if (updateDTO.getEventLocationRefId() != null && !updateDTO.getEventLocationRefId().isEmpty()) {
-            Optional<EventLocations> locationOpt = locationRepository.findById(updateDTO.getEventLocationRefId());
-            if (locationOpt.isEmpty()) {
-                throw new IllegalArgumentException("Location ID does not exist: " + updateDTO.getEventLocationRefId());
-            }
-            existingEvent.setEventLocation(locationOpt.get());
+        if (updateEvent.getEventLocation() != null) {
+            EventLocations location = locationRepository.findById(updateEvent.getEventLocation().getLocationId())
+                    .orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
+            existingEvent.setEventLocation(location);
         }
 
-        existingEvent.setEventStatus(updateDTO.getEventStatus() != null ? updateDTO.getEventStatus() : existingEvent.getEventStatus());
+        existingEvent.setUpdatedAt(LocalDateTime.now());
 
         EventSessions updatedEvent = eventSessionRepository.save(existingEvent);
         log.info("Successfully updated event session with ID: {}", eventId);
-        return convertToResponseDTO(updatedEvent);
+        return updatedEvent;
     }
 
-    public EventCreationResponse cancelEvent(String id) {
-        Optional<EventSessions> existingEventOpt = eventSessionRepository.findById(id);
-        if (existingEventOpt.isEmpty()) {
-            throw new RuntimeException("Event not found with ID: " + id);
-        }
-        EventSessions existingEvent = existingEventOpt.get();
+    /**
+     * Cancel event
+     *
+     */
+    public EventSessions cancelEvent(String id) {
+        EventSessions existingEvent = eventSessionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+
         existingEvent.setEventStatus(EventStatus.CANCELLED);
-        eventSessionRepository.save(existingEvent);
-        return convertToResponseDTO(existingEvent);
+        existingEvent.setUpdatedAt(LocalDateTime.now());
+        return eventSessionRepository.save(existingEvent);
     }
 
-    private EventCreationResponse convertToResponseDTO(EventSessions eventSession) {
-        EventCreationResponse dto = new EventCreationResponse();
-        dto.setId(eventSession.getEventId());
-        dto.setEventName(eventSession.getEventName());
-        dto.setDescription(eventSession.getDescription());
-        dto.setStartDateTime(eventSession.getStartDateTime());
-        dto.setEndDateTime(eventSession.getEndDateTime());
-        dto.setEventStatus(eventSession.getEventStatus());
-        dto.setCreatedAt(eventSession.getCreatedAt());
-        dto.setUpdatedAt(eventSession.getUpdatedAt());
+    private void validateDateRange(LocalDateTime timeInDateTime, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        LocalDateTime now = LocalDateTime.now();
 
-        if (eventSession.getEventLocation() != null) {
-            dto.setEventLocationRefId(eventSession.getEventLocation().getLocationId());
+        if (timeInDateTime == null || startDateTime == null || endDateTime == null) {
+            throw new IllegalArgumentException("All date fields (time in, start, end) must be provided.");
         }
-        return dto;
-    }
 
-    private void validateDateRange(Date startDateTime, Date endDateTime) {
-        if (startDateTime != null && endDateTime != null) {
-            if (startDateTime.after(endDateTime)) {
-                throw new IllegalArgumentException("Start date time cannot be after end date time");
-            }
-            Date now = new Date();
-            if (startDateTime.before(now)) {
-                throw new IllegalArgumentException("Start date time cannot be in the past");
-            }
+        if (timeInDateTime.isBefore(now)) {
+            throw new IllegalArgumentException("Time-in registration cannot be in the past.");
+        }
+        if (startDateTime.isBefore(now)) {
+            throw new IllegalArgumentException("Event start date/time cannot be in the past.");
+        }
+        if (endDateTime.isBefore(now)) {
+            throw new IllegalArgumentException("Event end date/time cannot be in the past.");
+        }
+
+        if (startDateTime.isAfter(endDateTime)) {
+            throw new IllegalArgumentException("Event start date/time must be before event end date/time.");
         }
     }
 }

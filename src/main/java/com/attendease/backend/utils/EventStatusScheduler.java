@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -19,42 +19,41 @@ public class EventStatusScheduler {
 
     private final EventSessionsRepository eventSessionRepository;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 15000)
     public void updateEventStatuses() {
         try {
-            Date now = new Date();
+            LocalDateTime now = LocalDateTime.now();
+
             List<EventSessions> events = eventSessionRepository.findByEventStatusIn(
-                    Arrays.asList(EventStatus.ACTIVE, EventStatus.REGISTRATION, EventStatus.ONGOING)
+                    Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING)
             );
 
             boolean updated = false;
 
             for (EventSessions event : events) {
-                Date start = event.getStartDateTime();
-                Date end = event.getEndDateTime();
+                LocalDateTime registrationStart = event.getTimeInRegistrationStartDateTime();
+                LocalDateTime start = event.getStartDateTime();
+                LocalDateTime end = event.getEndDateTime();
 
-                if (start != null && end != null) {
-                    long startTimeMillis = start.getTime();
-                    long nowMillis = now.getTime();
-                    long registrationStartMillis = startTimeMillis - (30 * 60 * 1000);
+                if (registrationStart == null || start == null || end == null) continue;
 
-                    EventStatus currentStatus = event.getEventStatus();
-                    EventStatus newStatus = null;
+                EventStatus currentStatus = event.getEventStatus();
+                EventStatus newStatus = null;
 
-                    if (nowMillis >= registrationStartMillis && nowMillis < startTimeMillis) {
-                        newStatus = EventStatus.REGISTRATION;
-                    } else if (nowMillis >= startTimeMillis && nowMillis < end.getTime()) {
-                        newStatus = EventStatus.ONGOING;
-                    } else if (nowMillis >= end.getTime()) {
-                        newStatus = EventStatus.CONCLUDED;
-                    }
+                if (now.isBefore(registrationStart)) {
+                    newStatus = EventStatus.UPCOMING;
+                } else if ((now.isEqual(registrationStart) || now.isAfter(registrationStart)) && now.isBefore(start)) {
+                    newStatus = EventStatus.REGISTRATION;
+                } else if ((now.isEqual(start) || now.isAfter(start)) && now.isBefore(end)) {
+                    newStatus = EventStatus.ONGOING;
+                } else if (now.isEqual(end) || now.isAfter(end)) {
+                    newStatus = EventStatus.CONCLUDED;
+                }
 
-                    if (newStatus != null && currentStatus != newStatus) {
-                        event.setEventStatus(newStatus);
-                        updated = true;
-                        log.info("Event {} status updated to {}", event.getEventId(), newStatus);
-                    }
-                    log.info("Found {} events with ACTIVE, REGISTRATION, or ONGOING status", events.size());
+                if (newStatus != null && currentStatus != newStatus) {
+                    event.setEventStatus(newStatus);
+                    updated = true;
+                    log.info("Event {} status updated from {} to {}", event.getEventId(), currentStatus, newStatus);
                 }
             }
 
@@ -62,10 +61,9 @@ public class EventStatusScheduler {
                 eventSessionRepository.saveAll(events);
             }
 
+            log.info("Checked {} events for status updates", events.size());
         } catch (Exception e) {
             log.error("Error updating event statuses: {}", e.getMessage(), e);
         }
     }
 }
-
-

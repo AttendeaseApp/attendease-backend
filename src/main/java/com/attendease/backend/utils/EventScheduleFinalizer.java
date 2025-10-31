@@ -18,7 +18,7 @@ public class EventScheduleFinalizer {
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsFinalizer attendanceRecordsFinalizer;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 15000)
     public void runScheduledFinalization() {
         try {
             List<EventSessions> concludedEvents = eventSessionsRepository.findByEventStatus(EventStatus.CONCLUDED);
