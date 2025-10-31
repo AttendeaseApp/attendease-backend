@@ -63,12 +63,14 @@ public class AttendanceRecordsFinalizer {
 
 
     private AttendanceStatus evaluateAttendanceAfterEventEnds(EventSessions event, AttendanceRecords record) {
-        if (record.getTimeIn() == null) {
+        LocalDateTime eventStart = event.getStartDateTime();
+        LocalDateTime timeIn = record.getTimeIn();
+
+        if (timeIn == null) {
             record.setReason("Did not check in for the event: " + event.getEventName());
             return AttendanceStatus.ABSENT;
         }
-        LocalDateTime eventStart = event.getStartDateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        if (!record.getTimeIn().isBefore(eventStart)) {
+        if (timeIn.isAfter(eventStart) || timeIn.isEqual(eventStart)) {
             record.setReason("Late check-in for the event: " + event.getEventName());
             return AttendanceStatus.ABSENT;
         }

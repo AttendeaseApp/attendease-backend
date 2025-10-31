@@ -21,7 +21,7 @@ public class EventSessionMonitoringService {
     private final StudentRepository studentRepository;
 
     public List<EventSessions> getOngoingEvents() {
-        return eventSessionsRepository.findByEventStatusIn(Arrays.asList(EventStatus.ONGOING, EventStatus.ACTIVE));
+        return eventSessionsRepository.findByEventStatusIn(Arrays.asList(EventStatus.ONGOING, EventStatus.UPCOMING));
     }
 
     public List<EventSessions> getEndedEvents() {

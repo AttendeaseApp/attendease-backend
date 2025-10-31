@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -45,22 +46,24 @@ public class EventCheckInService {
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(eventCheckIn.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
-        Date now = new Date();
-        Date startTime = event.getStartDateTime();
-        Date endTime = event.getEndDateTime();
-        Date registrationStartTime = new Date(startTime.getTime() - 30 * 60 * 1000);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startTime = event.getStartDateTime();
+        LocalDateTime endTime = event.getEndDateTime();
 
-        if (now.before(registrationStartTime)) {
+
+        LocalDateTime registrationStartTime = startTime.minusMinutes(30);
+
+        if (now.isBefore(registrationStartTime)) {
             throw new IllegalStateException(String.format("Cannot check in yet. Registration opens at %s. Event starts at %s.", registrationStartTime, startTime));
         }
 
-        if (now.after(endTime)) {
+        if (now.isAfter(endTime)) {
             throw new IllegalStateException("Event has already ended. You can no longer check in.");
         }
-      
-//        if (!isStudentEligibleForEvent(event, student)) {
-//           throw new IllegalStateException("Student is not eligible to check in for this event.");
-//        }
+
+//    if (!isStudentEligibleForEvent(event, student)) {
+//        throw new IllegalStateException("Student is not eligible to check in for this event.");
+//    }
 
         EventLocations location = eventLocationsRepository.findById(eventCheckIn.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -83,7 +86,7 @@ public class EventCheckInService {
                 .student(student)
                 .event(event)
                 .location(location)
-                .timeIn(null)
+                .timeIn(now)
                 .attendanceStatus(AttendanceStatus.CHECKED_IN)
                 .build();
 
