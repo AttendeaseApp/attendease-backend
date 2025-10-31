@@ -26,6 +26,7 @@ public class AttendanceRecordsFinalizer {
 
     public void finalizeAttendanceForEvent(EventSessions event) {
         String eventId = event.getEventId();
+        String eventName =  event.getEventName();
 
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventId(eventId);
         List<Students> expectedStudents = getExpectedStudentsForEvent(event);
@@ -35,14 +36,14 @@ public class AttendanceRecordsFinalizer {
 
         for (AttendanceRecords record : attendanceRecords) {
             AttendanceStatus currentStatus = record.getAttendanceStatus();
-            AttendanceStatus evaluatedStatus = evaluateAttendanceAfterEventEnds(event, record);
+            AttendanceStatus finalStatus = evaluateAttendanceAfterEventEnds(record);
 
-            if (evaluatedStatus == null || evaluatedStatus == currentStatus) continue;
-
-            record.setTimeOut(now);
-            record.setAttendanceStatus(evaluatedStatus);
-            attendanceRecordsRepository.save(record);
-            log.info("Finalized attendance for student {} in event {}: {}", record.getStudent().getId(), eventId, evaluatedStatus);
+            if (finalStatus != null && finalStatus != currentStatus) {
+                record.setAttendanceStatus(finalStatus);
+                record.setTimeOut(now);
+                attendanceRecordsRepository.save(record);
+                log.info("Updated student {} -> {} for event {}", record.getStudent().getStudentNumber(), finalStatus, eventId);
+            }
         }
 
         for (Students student : expectedStudents) {
@@ -56,9 +57,10 @@ public class AttendanceRecordsFinalizer {
                         .timeOut(null)
                         .build();
                 attendanceRecordsRepository.save(absentRecord);
-                log.info("Marked ABSENT for missing student {} in event {}", student.getId(), eventId);
+                log.info("Marked ABSENT for missing student {} in event {}, {}", student.getStudentNumber(), eventId, eventName);
             }
         }
+        log.info("Attendance finalization completed for event {}, {}", eventId, eventName);
     }
 
 
@@ -74,8 +76,28 @@ public class AttendanceRecordsFinalizer {
             record.setReason("Late check-in for the event: " + event.getEventName());
             return AttendanceStatus.ABSENT;
         }
-        record.setReason(null);
-        return AttendanceStatus.PRESENT;
+
+        switch (current) {
+            case PRESENT -> {
+                record.setReason(null);
+                return AttendanceStatus.PRESENT;
+            }
+            case REGISTERED -> {
+                record.setReason("Student only registered on the event");
+                return AttendanceStatus.REGISTERED;
+            }
+            case IDLE -> {
+                record.setReason("Student was registered on the event but idle/outside for too long");
+                return AttendanceStatus.ABSENT;
+            }
+            case ABSENT -> {
+                record.setReason("Student did not registered on the event at all");
+                return AttendanceStatus.ABSENT;
+            }
+            default -> {
+                return current;
+            }
+        }
     }
 
 

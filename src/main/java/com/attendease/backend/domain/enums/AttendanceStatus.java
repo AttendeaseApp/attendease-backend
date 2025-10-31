@@ -6,5 +6,6 @@ package com.attendease.backend.domain.enums;
 public enum AttendanceStatus {
     PRESENT,
     ABSENT,
-    CHECKED_IN
+    REGISTERED,
+    IDLE
 }

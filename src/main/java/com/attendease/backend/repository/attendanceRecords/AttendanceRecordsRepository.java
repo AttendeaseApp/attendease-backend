@@ -14,4 +14,5 @@ import java.util.List;
 public interface AttendanceRecordsRepository extends MongoRepository<AttendanceRecords, String> {
     List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, EventSessions event, EventLocations location, AttendanceStatus status);
     List<AttendanceRecords> findByEventEventId(String eventId);
+    AttendanceRecords findByStudentAndEvent(Students student, EventSessions event);
 }
