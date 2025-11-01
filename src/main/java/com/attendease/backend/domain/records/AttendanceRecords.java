@@ -3,6 +3,7 @@ package com.attendease.backend.domain.records;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class representing attendance records for students at events.
@@ -52,6 +55,9 @@ public class AttendanceRecords {
     private String reason;
 
     private AttendanceStatus attendanceStatus;
+
+    @Builder.Default
+    private List<AttendancePingLogs> attendancePingLogs = new ArrayList<>();
 
     private String updatedByUserId;
 

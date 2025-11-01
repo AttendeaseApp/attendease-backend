@@ -63,9 +63,9 @@ public class EventRegistrationService {
             throw new IllegalStateException("Event has already ended. You can no longer check in.");
         }
 
-//    if (!isStudentEligibleForEvent(event, student)) {
-//        throw new IllegalStateException("Student is not eligible to check in for this event.");
-//    }
+//        if (!isStudentEligibleForEvent(event, student)) {
+//            throw new IllegalStateException("Student is not eligible to check in for this event.");
+//        }
 
         EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
