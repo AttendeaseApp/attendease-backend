@@ -29,7 +29,7 @@ public class EventRegistrationController {
      * @param registrationRequest  RegistrationRequest (contains eventId, locationId, latitude, longitude)
      */
     @PostMapping
-    public ResponseEntity<RegistrationRequest> registerStudentToEvent(@RequestBody RegistrationRequest registrationRequest, Authentication authentication) {
+    public ResponseEntity<?> registerStudentToEvent(@RequestBody RegistrationRequest registrationRequest, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
         RegistrationRequest response = registrationService.eventRegistration(authenticatedUserId, registrationRequest);
         return ResponseEntity.ok(response);
@@ -41,14 +41,9 @@ public class EventRegistrationController {
      */
     @PostMapping("/ping")
     public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendancePingLogs attendancePingLogs) {
-        try {
-            String authenticatedUserId = authentication.getName();
-            boolean isInside = attendanceTracking.checkpointLocationPing(authenticatedUserId, attendancePingLogs);
-            return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
-        } catch (Exception ex) {
-            log.error("Failed to record attendance ping: {}", ex.getMessage(), ex);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error recording ping: " + ex.getMessage());
-        }
+        String authenticatedUserId = authentication.getName();
+        boolean isInside = attendanceTracking.checkpointLocationPing(authenticatedUserId, attendancePingLogs);
+        return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
     }
 }
 

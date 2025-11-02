@@ -87,7 +87,7 @@ public class AttendanceRecordsFinalizer {
         long insideTime = computeInsideDuration(pings, eventStart, eventEnd);
 
         double insideRatio = (double) insideTime / eventDuration;
-        log.debug("Student {} inside {:.2f}% of event {}", record.getStudent().getStudentNumber(), insideRatio * 100, event.getEventName());
+        log.info("Student {} inside {}% of event {}", record.getStudent().getStudentNumber(), insideRatio * 100, event.getEventName());
 
         if (insideRatio >= 0.7) {
             record.setReason(null);
