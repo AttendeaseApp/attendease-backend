@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/checkin/events")
+@RequestMapping("/api/registration/events")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
 public class RetrieveEventsController {
