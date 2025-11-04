@@ -2,6 +2,8 @@ package com.attendease.backend.studentModule.service.event.registration;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.records.AttendanceRecords;
@@ -23,9 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -39,9 +39,8 @@ public class EventRegistrationService {
     private final BiometricsRepository biometricsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
+//    private final StudentRepository studentRepository;
     private final LocationValidator locationValidator;
-
-    private final ConcurrentHashMap<String, Long> studentOutsideTimestamps = new ConcurrentHashMap<>();
 
     public RegistrationRequest eventRegistration(String authenticatedUserId, RegistrationRequest registrationRequest) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
@@ -49,23 +48,11 @@ public class EventRegistrationService {
         EventSessions event = eventSessionsRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startTime = event.getStartDateTime();
-        LocalDateTime endTime = event.getEndDateTime();
+        getEventStatus(event, now);
 
-
-        LocalDateTime registrationStartTime = startTime.minusMinutes(30);
-
-        if (now.isBefore(registrationStartTime)) {
-            throw new IllegalStateException(String.format("Cannot check in yet. Registration opens at %s. Event starts at %s.", registrationStartTime, startTime));
-        }
-
-        if (now.isAfter(endTime)) {
-            throw new IllegalStateException("Event has already ended. You can no longer check in.");
-        }
-
-//    if (!isStudentEligibleForEvent(event, student)) {
-//        throw new IllegalStateException("Student is not eligible to check in for this event.");
-//    }
+//        if (!isStudentEligibleForEvent(event, student)) {
+//            throw new IllegalStateException("Student is not eligible to check in for this event.");
+//        }
 
         EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -86,13 +73,33 @@ public class EventRegistrationService {
                 .event(event)
                 .location(location)
                 .timeIn(now)
-                .attendanceStatus(AttendanceStatus.CHECKED_IN)
+                .attendanceStatus(AttendanceStatus.REGISTERED)
                 .build();
 
         attendanceRecordsRepository.save(record);
-        log.info("Student {} successfully checked in to event {} with facial verification", student.getStudentNumber(), event.getEventId());
+        log.info("Student {} successfully registered for event {} with facial verification.", student.getStudentNumber(), event.getEventId());
 
         return registrationRequest;
+    }
+
+    private void getEventStatus(EventSessions event, LocalDateTime now) {
+        EventStatus status = event.getEventStatus();
+
+        if (status == EventStatus.UPCOMING) {
+            throw new IllegalStateException(String.format("Registration not yet open. It starts at %s.", event.getTimeInRegistrationStartDateTime()));
+        }
+
+        if (status == EventStatus.CONCLUDED) {
+            throw new IllegalStateException("This event has already ended and at the stage of finalizing records. You can no longer register.");
+        }
+
+        if (status == EventStatus.ONGOING && now.isAfter(event.getStartDateTime())) {
+            throw new IllegalStateException("The event has already started. You can no longer register.");
+        }
+
+        if (status == EventStatus.FINALIZED) {
+            throw new IllegalStateException("The event has already ended and records were finalized.");
+        }
     }
 
     private void verifyStudentFace(String studentNumber, String faceImageBase64) {
@@ -139,19 +146,19 @@ public class EventRegistrationService {
         }
     }
 
-//    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
-//        EligibilityCriteria criteria = event.getEligibleStudents();
-//        if (criteria == null) return false;
-//
-//        if (criteria.isAllStudents()) return true;
-//
-//        String studentCourseId = student.getCourseId();
-//        String studentSectionId = student.getSectionId();
-//
-//        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
-//        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
-//
-//        return courseMatch || sectionMatch;
-//    }
+    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
+        EligibilityCriteria criteria = event.getEligibleStudents();
+        if (criteria == null) return false;
+
+        if (criteria.isAllStudents()) return true;
+
+        String studentCourseId = student.getCourseId();
+        String studentSectionId = student.getSectionId();
+
+        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
+        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
+
+        return courseMatch || sectionMatch;
+    }
 }
 
