@@ -5,7 +5,7 @@ COPY . .
 RUN chmod +x ./gradlew
 RUN ./gradlew bootjar --no-daemon
 
-FROM openjdk:21-jdk-slim
+FROM openjdk:26-ea-22-jdk-slim
 RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 EXPOSE 8080
 COPY --from=build /build/libs/attendease-backend-0.0.1.jar app.jar
