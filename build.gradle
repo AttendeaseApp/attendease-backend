@@ -27,7 +27,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive:3.5.5'
     // https://mvnrepository.com/artifact/org.springframework.data/spring-data-mongodb
     implementation 'org.springframework.data:spring-data-mongodb:4.5.4'
