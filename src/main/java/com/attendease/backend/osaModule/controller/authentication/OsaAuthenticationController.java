@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth/osa")
 @Slf4j
@@ -29,8 +32,11 @@ public class OsaAuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginOsa(@Valid @RequestBody OsaLoginRequest loginRequest) {
+    public ResponseEntity<Map<String, String>> loginOsa(@Valid @RequestBody OsaLoginRequest loginRequest) {
         String jwt = osaAuthenticationService.loginOsa(loginRequest.getEmail(), loginRequest.getPassword());
-        return ResponseEntity.ok(jwt);
+        Map<String, String> response = new HashMap<>();
+        response.put("token", jwt);
+        response.put("email", loginRequest.getEmail());
+        return ResponseEntity.ok(response);
     }
 }
