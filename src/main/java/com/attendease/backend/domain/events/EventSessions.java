@@ -52,16 +52,16 @@ public class EventSessions {
 
     @NotNull(message = "Time in registration date time is required")
     @Indexed
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss a")
     private LocalDateTime timeInRegistrationStartDateTime;
 
     @NotNull(message = "Start date time is required")
     @Indexed
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss a")
     private LocalDateTime startDateTime;
 
     @NotNull(message = "End date time is required")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss a")
     private LocalDateTime endDateTime;
 
     private EventStatus eventStatus;
