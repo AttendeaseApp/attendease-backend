@@ -61,7 +61,7 @@ public class EventSessionsManagementController {
         return ResponseEntity.ok(events);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<EventSessions> updateEvent(
             @PathVariable("id") String id,
             @RequestBody EventSessions updateDTO) {
