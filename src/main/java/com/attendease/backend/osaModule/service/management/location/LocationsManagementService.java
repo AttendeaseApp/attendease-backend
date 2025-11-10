@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -32,6 +33,8 @@ public class LocationsManagementService {
                 .locationType(request.getLocationType())
                 .geometryType("Polygon")
                 .geometry(polygon)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         location = locationRepository.save(location);
@@ -75,6 +78,8 @@ public class LocationsManagementService {
         response.setLocationId(location.getLocationId());
         response.setLocationName(location.getLocationName());
         response.setLocationType(location.getLocationType());
+        response.setCreatedAt(location.getCreatedAt());
+        response.setUpdatedAt(location.getUpdatedAt());
 
         GeoJsonPolygon polygon = location.getGeometry();
 
