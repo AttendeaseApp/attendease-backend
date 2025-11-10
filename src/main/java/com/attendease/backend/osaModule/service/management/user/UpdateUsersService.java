@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -125,7 +126,7 @@ public class UpdateUsersService {
         if (password.length() > 128) {
             throw new IllegalArgumentException("Password cannot exceed 128 characters");
         }
-        if (!password.matches(".*[A-Za-z].*")) {
+        if (!Pattern.compile("[A-Za-z]").matcher(password).find()) {
             throw new IllegalArgumentException("Password must contain at least one letter");
         }
     }
