@@ -5,6 +5,7 @@ import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +50,9 @@ public class AttendanceRecords {
     @DBRef
     private EventLocations location;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeIn;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeOut;
 
     private String reason;
@@ -62,8 +65,10 @@ public class AttendanceRecords {
     private String updatedByUserId;
 
     @CreatedDate
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 }

@@ -2,6 +2,7 @@ package com.attendease.backend.domain.users;
 
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -53,9 +54,11 @@ public class Users {
     private String updatedBy;
 
     @CreatedDate
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 }
 
