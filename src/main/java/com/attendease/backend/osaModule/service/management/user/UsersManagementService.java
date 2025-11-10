@@ -17,9 +17,11 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +29,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -127,6 +130,16 @@ public class UsersManagementService {
         List<Students> students = studentRepository.findAll();
         log.info("Retrieved {} students from repository", students.size());
         return students;
+    }
+
+
+    public void deleteUserById(String userId) throws ExecutionException, InterruptedException {
+        boolean exists = userRepository.existsById(userId);
+        if (!exists) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found: " + userId);
+        }
+
+        userRepository.deleteById(userId);
     }
 
     // private helper methods
