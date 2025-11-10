@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Refactored StudentAuthenticationService that works with separate users and Students entities.
@@ -149,7 +150,7 @@ public class StudentAuthenticationService {
         if (password.length() > 128) {
             throw new IllegalArgumentException("Password cannot exceed 128 characters");
         }
-        if (!password.matches(".*[A-Za-z].*")) {
+        if (!Pattern.compile("[A-Za-z]").matcher(password).find()) {
             throw new IllegalArgumentException("Password must contain at least one letter");
         }
     }
