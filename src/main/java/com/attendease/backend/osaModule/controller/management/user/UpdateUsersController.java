@@ -1,14 +1,20 @@
 package com.attendease.backend.osaModule.controller.management.user;
 
+import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.users.ResetPassword.OsaResetPasswordRequest;
 import com.attendease.backend.domain.users.Search.SearchKeywords;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.osaModule.service.management.user.UpdateUsersService;
+import com.attendease.backend.osaModule.service.management.user.UsersManagementService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -18,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 public class UpdateUsersController {
 
     private final UpdateUsersService updateUsersService;
+    private final UsersManagementService usersManagementService;
 
     /**
      * Deactivate a user by userId
@@ -59,5 +66,26 @@ public class UpdateUsersController {
     public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
         long deletedCount = updateUsersService.deleteAllStudentsAndAssociatedUserAndFacialData();
         return ResponseEntity.ok("Successfully deleted " + deletedCount + " students.");
+    }
+
+    /**
+     *  Delete any user by id
+     * */
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String userId) throws Exception {
+        usersManagementService.deleteUserById(userId);
+    }
+
+    /**
+     * Resets the password of any users
+     * */
+    @PutMapping("/osa/reset-password/{userId}")
+    public ResponseEntity<Map<String, Object>> osaResetPassword(@PathVariable("userId") String userId, @RequestBody OsaResetPasswordRequest requestBody) {
+        String message = updateUsersService.osaResetUserPassword(userId, requestBody.getNewPassword());
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", message);
+        return ResponseEntity.ok(response);
     }
 }

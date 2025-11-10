@@ -3,9 +3,7 @@ package com.attendease.backend.domain.users;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -29,12 +27,17 @@ public class Users {
     private String userId;
 
     @NotBlank(message = "First name is required")
+    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
+    @Pattern(regexp = "^[A-Za-zÀ-ÖØ-öø-ÿ'\\-\\s]+$", message = "First name contains invalid characters")
     private String firstName;
 
     @NotBlank(message = "Last name is required")
+    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
+    @Pattern(regexp = "^[A-Za-zÀ-ÖØ-öø-ÿ'\\-\\s]+$", message = "Last name contains invalid characters")
     private String lastName;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 6, max = 128, message = "Password must be between 6 and 128 characters")
     private String password;
 
     @Indexed
