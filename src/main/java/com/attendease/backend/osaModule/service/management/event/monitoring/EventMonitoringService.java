@@ -86,6 +86,7 @@ public class EventMonitoringService {
 
                 .attendanceStatus(record.getAttendanceStatus())
                 .reason(record.getReason())
+                .timeIn(record.getTimeIn())
                 .attendanceRecordId(record.getRecordId())
                 .build();
     }

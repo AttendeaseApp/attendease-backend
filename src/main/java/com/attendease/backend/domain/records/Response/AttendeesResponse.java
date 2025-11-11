@@ -20,6 +20,13 @@ public class AttendeesResponse {
     private String userId;
     private String firstName;
     private String lastName;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timeIn;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime timeOut;
+
     private AttendanceStatus attendanceStatus;
     private String email;
     private String contactNumber;
