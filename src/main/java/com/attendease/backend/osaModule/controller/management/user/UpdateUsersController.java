@@ -1,11 +1,11 @@
 package com.attendease.backend.osaModule.controller.management.user;
 
-import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.users.ResetPassword.OsaResetPasswordRequest;
+import com.attendease.backend.domain.users.ResetPassword.OsaResetUsersPasswordRequest;
 import com.attendease.backend.domain.users.Search.SearchKeywords;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.osaModule.service.management.user.UpdateUsersService;
 import com.attendease.backend.osaModule.service.management.user.UsersManagementService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,7 +81,7 @@ public class UpdateUsersController {
      * Resets the password of any users
      * */
     @PutMapping("/osa/reset-password/{userId}")
-    public ResponseEntity<Map<String, Object>> osaResetPassword(@PathVariable("userId") String userId, @RequestBody OsaResetPasswordRequest requestBody) {
+    public ResponseEntity<Map<String, Object>> osaResetUsersPassword(@PathVariable("userId") String userId, @Valid @RequestBody OsaResetUsersPasswordRequest requestBody) {
         String message = updateUsersService.osaResetUserPassword(userId, requestBody.getNewPassword());
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
