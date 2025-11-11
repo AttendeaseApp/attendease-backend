@@ -81,7 +81,7 @@ public class UpdateUsersController {
      * Resets the password of any users
      * */
     @PutMapping("/osa/reset-password/{userId}")
-    public ResponseEntity<Map<String, Object>> osaResetUsersPassword(@Valid @PathVariable("userId") String userId, @RequestBody OsaResetUsersPasswordRequest requestBody) {
+    public ResponseEntity<Map<String, Object>> osaResetUsersPassword(@PathVariable("userId") String userId, @Valid @RequestBody OsaResetUsersPasswordRequest requestBody) {
         String message = updateUsersService.osaResetUserPassword(userId, requestBody.getNewPassword());
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
