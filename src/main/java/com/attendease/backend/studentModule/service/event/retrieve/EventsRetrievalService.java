@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -19,5 +20,9 @@ public class EventsRetrievalService {
 
     public List<EventSessions> getOngoingRegistrationAndActiveEvents() {
         return eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.ONGOING, EventStatus.UPCOMING, EventStatus.REGISTRATION));
+    }
+
+    public Optional<EventSessions> getEventById(String id){
+        return eventSessionRepository.findById(id);
     }
 }
