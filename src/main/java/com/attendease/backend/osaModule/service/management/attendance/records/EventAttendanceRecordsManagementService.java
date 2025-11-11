@@ -1,6 +1,5 @@
 package com.attendease.backend.osaModule.service.management.attendance.records;
 
-import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.records.AttendanceRecords;
@@ -8,12 +7,9 @@ import com.attendease.backend.domain.records.Response.AttendeesResponse;
 import com.attendease.backend.domain.records.Response.EventAttendeesResponse;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import com.attendease.backend.repository.students.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
