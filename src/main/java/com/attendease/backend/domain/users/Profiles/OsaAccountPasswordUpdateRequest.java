@@ -1,11 +1,10 @@
-package com.attendease.backend.studentModule.dto.request;
+package com.attendease.backend.domain.users.Profiles;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class PasswordUpdateRequest {
-
+public class OsaAccountPasswordUpdateRequest {
     @NotBlank(message = "Old password is required")
     private String oldPassword;
 

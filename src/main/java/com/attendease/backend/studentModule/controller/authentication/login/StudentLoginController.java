@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth/student")
 @RequiredArgsConstructor
 public class StudentLoginController {
+
     private final StudentAuthenticationService authService;
-    private final StudentBiometricsService biometricsService;
+
     /**
      * Login a student using student number and password
      */
@@ -27,12 +28,4 @@ public class StudentLoginController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Update student password
-     */
-    @PostMapping("/update-password")
-    public ResponseEntity<String> updatePassword(@RequestBody PasswordUpdateRequest request) {
-        String response = authService.updatePassword(request.getStudentNumber(), request.getOldPassword(), request.getNewPassword());
-        return ResponseEntity.ok(response);
-    }
 }

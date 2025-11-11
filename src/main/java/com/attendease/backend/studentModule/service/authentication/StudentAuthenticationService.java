@@ -1,8 +1,9 @@
 package com.attendease.backend.studentModule.service.authentication;
 
+import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
 import com.attendease.backend.studentModule.dto.response.LoginResponse;
-import com.attendease.backend.studentModule.repository.AuthenticationRepository;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
@@ -28,9 +29,11 @@ import java.util.regex.Pattern;
 @Slf4j
 @RequiredArgsConstructor
 public class StudentAuthenticationService {
+
+    private final UserRepository userRepository;
     private final SectionsRepository sectionsRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationRepository studentRepository;
+    private final StudentRepository studentRepository;
     private final JwtTokenizationUtil jwtTokenizationUtil;
     private final BiometricsRepository biometricsRepository;
 
@@ -51,8 +54,8 @@ public class StudentAuthenticationService {
         Students student = createStudentFromRegistrationRequest(registrationRequest);
         student.setUser(user);
 
-        studentRepository.saveUser(user);
-        studentRepository.saveStudent(student);
+        userRepository.save(user);
+        studentRepository.save(student);
 
         log.info("Registered new student account for studentNumber: {}", registrationRequest.getStudentNumber());
 
@@ -86,13 +89,13 @@ public class StudentAuthenticationService {
     /**
      * Updates student password
      *
-     * @param studentNumber The student number
+     * @param id The student number
      * @param oldPassword   Current password for verification
      * @param newPassword   New password to set
      * @return Success message
      */
-    public String updatePassword(String studentNumber, String oldPassword, String newPassword) {
-        if (studentNumber == null || studentNumber.trim().isEmpty()) {
+    public String updatePassword(String id, String oldPassword, String newPassword) {
+        if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("Student number is required.");
         }
         if (oldPassword == null || oldPassword.trim().isEmpty()) {
@@ -104,8 +107,7 @@ public class StudentAuthenticationService {
 
         validatePassword(newPassword);
 
-        Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found."));
-
+        Students student = studentRepository.findByUserId(id).orElseThrow(() -> new IllegalArgumentException("Student not found."));
         Users user = student.getUser();
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
@@ -113,9 +115,7 @@ public class StudentAuthenticationService {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        studentRepository.updateUser(user);
-
-        log.info("Password updated for studentNumber: {}", studentNumber);
+        userRepository.save(user);
 
         return "Password updated successfully.";
     }
