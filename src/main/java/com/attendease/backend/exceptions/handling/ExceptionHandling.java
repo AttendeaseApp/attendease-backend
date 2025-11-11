@@ -49,7 +49,7 @@ public class ExceptionHandling {
     }
 
     /**
-     * 🧩 Handles validation errors thrown by @Valid annotated inputs (like in your Users DTO)
+     *  Handles validation errors thrown by @Valid annotated inputs
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {

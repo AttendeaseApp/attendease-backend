@@ -1,9 +1,12 @@
 package com.attendease.backend.studentModule.controller.event.checkin;
 
+import com.attendease.backend.domain.locations.Request.CheckCurrentLocationRequest;
+import com.attendease.backend.domain.locations.Response.CheckCurrentLocationResponse;
 import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
 import com.attendease.backend.domain.records.EventCheckIn.RegistrationRequest;
 import com.attendease.backend.studentModule.service.event.registration.EventRegistrationService;
 import com.attendease.backend.studentModule.service.event.tracking.AttendanceTracking;
+import com.attendease.backend.studentModule.service.event.tracking.CheckCurrentLocation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +22,7 @@ public class EventRegistrationController {
 
     private final EventRegistrationService registrationService;
     private final AttendanceTracking attendanceTracking;
+    private final CheckCurrentLocation checkCurrentLocation;
 
     /**
      * Endpoint for student event registration.
@@ -41,6 +45,17 @@ public class EventRegistrationController {
         String authenticatedUserId = authentication.getName();
         boolean isInside = attendanceTracking.checkpointLocationPing(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
+    }
+
+    /**
+     * Endpoint for verifying students current location used for ui visuals only
+     * The authenticated user ID is automatically resolved from the security context.
+     */
+    @PostMapping("/check-location")
+    public ResponseEntity<CheckCurrentLocationResponse> checkCurrentLocation(Authentication authentication, @RequestBody CheckCurrentLocationRequest request) {
+        String userId = authentication.getName();
+        CheckCurrentLocationResponse response = checkCurrentLocation.checkMyCurrentLocationPosition(userId, request);
+        return ResponseEntity.ok(response);
     }
 }
 
