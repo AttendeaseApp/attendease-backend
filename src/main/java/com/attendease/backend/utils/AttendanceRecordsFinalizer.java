@@ -60,7 +60,7 @@ public class AttendanceRecordsFinalizer {
                         .student(student)
                         .event(event)
                         .attendanceStatus(AttendanceStatus.ABSENT)
-                        .reason("No pings detected for event: " + eventName)
+                        .reason("No presence detected at all on this event")
                         .timeIn(null)
                         .timeOut(null)
                         .build();
