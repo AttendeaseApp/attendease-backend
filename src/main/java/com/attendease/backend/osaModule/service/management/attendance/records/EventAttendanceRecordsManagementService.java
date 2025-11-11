@@ -63,6 +63,8 @@ public class EventAttendanceRecordsManagementService {
 
                             .attendanceStatus(record.getAttendanceStatus())
                             .reason(record.getReason())
+                            .timeIn(record.getTimeIn())
+                            .timeOut(record.getTimeOut())
                             .attendanceRecordId(record.getRecordId())
                             .build();
                 })
