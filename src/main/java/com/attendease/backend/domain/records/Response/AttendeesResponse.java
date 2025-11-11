@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
  * */
 @Data
 @Builder
-public class EventAttendeesRecordsResponse {
+public class AttendeesResponse {
+    private String attendanceRecordId;
     private String userId;
     private String firstName;
     private String lastName;
