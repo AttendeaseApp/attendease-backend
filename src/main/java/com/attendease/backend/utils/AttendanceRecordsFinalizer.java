@@ -60,7 +60,7 @@ public class AttendanceRecordsFinalizer {
                         .student(student)
                         .event(event)
                         .attendanceStatus(AttendanceStatus.ABSENT)
-                        .reason("No pings detected for event: " + eventName)
+                        .reason("No presence of student detected at all on this event")
                         .timeIn(null)
                         .timeOut(null)
                         .build();
@@ -77,7 +77,7 @@ public class AttendanceRecordsFinalizer {
     private AttendanceStatus evaluateAttendanceFromLogs(EventSessions event, AttendanceRecords record) {
         List<AttendancePingLogs> pings = record.getAttendancePingLogs();
         if (pings == null || pings.isEmpty()) {
-            record.setReason("No location pings recorded");
+            record.setReason("No location pings from student mobile were recorded");
             return AttendanceStatus.ABSENT;
         }
 
