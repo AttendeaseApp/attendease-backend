@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service.authentication.biometrics;
+package com.attendease.backend.studentModule.service.event.registration;
 
 import com.attendease.backend.studentModule.dto.request.biometrics.FaceImageRequest;
 import com.attendease.backend.studentModule.dto.request.biometrics.FaceVerificationRequest;
@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FacialRecognitionService {
+public class BiometricsVerificationService {
 
     private final RestTemplate restTemplate;
 

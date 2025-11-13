@@ -18,7 +18,6 @@ import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.dto.response.biometrics.FaceEncodingResponse;
 import com.attendease.backend.studentModule.dto.response.biometrics.FaceVerificationResponse;
-import com.attendease.backend.studentModule.service.authentication.biometrics.FacialRecognitionService;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,7 @@ public class EventRegistrationService {
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
-    private final FacialRecognitionService facialRecognitionService;
+    private final BiometricsVerificationService biometricsVerificationService;
     private final BiometricsRepository biometricsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
@@ -111,24 +110,18 @@ public class EventRegistrationService {
             }
 
             log.info("Extracting facial encoding from uploaded image for student: {}", studentNumber);
-            FaceEncodingResponse encodingResponse = facialRecognitionService.extractFaceEncoding(faceImageBase64);
+            FaceEncodingResponse encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImageBase64);
 
             if (!encodingResponse.getSuccess() || encodingResponse.getFacialEncoding() == null) {
                 throw new IllegalStateException("Failed to detect face in uploaded image");
             }
 
             log.info("Comparing facial encodings for student: {}", studentNumber);
-            FaceVerificationResponse verificationResponse = facialRecognitionService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
+            FaceVerificationResponse verificationResponse = biometricsVerificationService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
 
             if (!verificationResponse.getSuccess() || !verificationResponse.getIs_face_matched()) {
-                log.warn("Facial verification failed for student: {}. Confidence: {}, Distance: {}",
-                        studentNumber,
-                        verificationResponse.getConfidence(),
-                        verificationResponse.getFace_distance()
-                );
-                throw new IllegalStateException(
-                        String.format("Facial verification failed. Confidence: %.2f%%. Please try again with better lighting.", verificationResponse.getConfidence() * 100)
-                );
+                log.warn("Facial verification failed for student: {}", studentNumber);
+                throw new IllegalStateException("Facial verification failed. Please try again with better lighting.");
             }
         } catch (IllegalStateException e) {
             throw e;
