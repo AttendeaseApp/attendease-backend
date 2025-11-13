@@ -43,7 +43,12 @@ public class BiometricsRegistrationController {
     public ResponseEntity<String> registerFacialDataFromImage(Authentication authentication, @RequestParam("images") List<MultipartFile> images) {
         String userId = authentication.getName();
         try {
-            return biometricsRegistrationService.registerFacialBiometrics(userId, images);
+            ResponseEntity<String> response = biometricsRegistrationService.registerFacialBiometrics(userId, images);
+            if (response.getStatusCode().isError()) {
+                log.error("Biometrics registration failed for user {}: {} (status: {})", userId, response.getBody(), response.getStatusCode());
+                return ResponseEntity.status(response.getStatusCode()).body("Facial biometric registration failed. Please try again later.");
+            }
+            return response;
         } catch (Exception ex) {
             log.error("Exception occurred while registering facial biometrics for user {}: {}", userId, ex.getMessage(), ex);
             return ResponseEntity.status(500).body("Facial biometric registration failed. Please try again later.");
