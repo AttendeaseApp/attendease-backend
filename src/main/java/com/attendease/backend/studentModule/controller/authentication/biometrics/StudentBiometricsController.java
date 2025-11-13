@@ -45,8 +45,8 @@ public class StudentBiometricsController {
             return ResponseEntity.badRequest().body("Image file cannot be null or empty");
         }
 
-        if (imageFile.size() < 3) {
-            return ResponseEntity.badRequest().body("At least 3 face images required for registration");
+        if (imageFile.size() < 5) {
+            return ResponseEntity.badRequest().body("At least 5 face images required for registration");
         }
 
         if (imageFile.size() > 5) {

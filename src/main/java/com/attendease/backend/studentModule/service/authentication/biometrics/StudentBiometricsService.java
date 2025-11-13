@@ -42,7 +42,7 @@ public class StudentBiometricsService {
         }
 
         BiometricData biometricData = BiometricData.builder()
-                .facialId("face_" + studentNumber + "_" + UUID.randomUUID())
+                .facialId(String.valueOf(UUID.randomUUID()))
                 .studentNumber(studentNumber)
                 .facialEncoding(facialEncoding)
                 .biometricsStatus(BiometricStatus.ACTIVE)
