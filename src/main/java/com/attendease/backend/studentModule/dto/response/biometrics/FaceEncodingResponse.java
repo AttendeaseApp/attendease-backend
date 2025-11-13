@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class FaceEncodingResponse {
     private Boolean success;
-    private List<String> facialEncoding;
+    private List<Double> facialEncoding;
 }
