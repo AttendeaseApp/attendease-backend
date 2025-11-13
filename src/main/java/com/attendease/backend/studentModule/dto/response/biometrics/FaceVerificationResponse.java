@@ -7,6 +7,4 @@ public class FaceVerificationResponse {
     private Boolean success;
     private Boolean verified;
     private Boolean is_face_matched;
-    private Double confidence;
-    private Double face_distance;
 }

@@ -9,10 +9,27 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+
+/**
+ * Utility class for validating geographical locations and checking if a given point
+ * lies within a defined polygon boundary of an {@link EventLocations} object.
+ * <p>
+ * This is primarily used to verify if a student's current location is within the
+ * allowed event or campus boundaries.
+ * </p>
+ */
 @Slf4j
 @Component
 public class LocationValidator {
 
+    /**
+     * Checks if a given latitude and longitude lies within the polygon boundary of an event location.
+     *
+     * @param location the {@link EventLocations} object containing the polygon geometry
+     * @param latitude the latitude of the point to check
+     * @param longitude the longitude of the point to check
+     * @return {@code true} if the point lies within the polygon boundary, {@code false} otherwise
+     */
     public boolean isWithinLocationBoundary(EventLocations location, double latitude, double longitude) {
         GeoJsonPolygon polygon = location.getGeometry();
         if (polygon == null) {
@@ -40,6 +57,14 @@ public class LocationValidator {
         return isInside;
     }
 
+    /**
+     * Implements the ray-casting algorithm to determine if a point is inside a polygon.
+     *
+     * @param latitude the latitude of the point to check
+     * @param longitude the longitude of the point to check
+     * @param polygonPoints the list of {@link Point} objects defining the polygon vertices
+     * @return {@code true} if the point is inside the polygon, {@code false} otherwise
+     */
     private boolean isPointInPolygon(double latitude, double longitude, List<Point> polygonPoints) {
         int n = polygonPoints.size();
         boolean inside = false;
