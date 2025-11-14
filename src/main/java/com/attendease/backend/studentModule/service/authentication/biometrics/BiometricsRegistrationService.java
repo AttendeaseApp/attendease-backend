@@ -86,7 +86,7 @@ public class BiometricsRegistrationService {
 
         try {
             Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found with student number: " + studentNumber));
-            List<String> encodings = apiResponse.getFacialEncoding().stream().map(String::valueOf).collect(Collectors.toList());
+            List<Double> encodings = apiResponse.getFacialEncoding();
             String result = saveBiometricsDataToDatabase(student, encodings);
             return ResponseEntity.ok(result);
 
@@ -110,7 +110,7 @@ public class BiometricsRegistrationService {
      * @throws IllegalStateException    if the student already has registered biometrics
      * @throws IllegalArgumentException if the facial encoding is invalid
      */
-    private String saveBiometricsDataToDatabase(Students student, List<String> facialEncoding) {
+    private String saveBiometricsDataToDatabase(Students student, List<Double> facialEncoding) {
         String studentNumber = student.getStudentNumber();
 
         Optional<BiometricData> existing = biometricsRepository.findByStudentNumber(studentNumber);

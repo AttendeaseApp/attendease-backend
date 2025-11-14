@@ -31,7 +31,7 @@ public class BiometricData {
 
     @NotNull(message = "Facial encoding is required")
     @Size(min = 128, max = 128, message = "Facial encoding must have exactly 128 elements")
-    private List<String> facialEncoding;
+    private List<Double> facialEncoding;
 
     private String studentNumber;
 

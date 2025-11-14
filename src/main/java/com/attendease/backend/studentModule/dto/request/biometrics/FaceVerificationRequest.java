@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class FaceVerificationRequest {
-    private List<String> uploaded_encoding;
-    private List<String> reference_encoding;
+    private List<Double> uploaded_encoding;
+    private List<Double> reference_encoding;
 }
