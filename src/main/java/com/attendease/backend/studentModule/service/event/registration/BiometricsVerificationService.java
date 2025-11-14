@@ -60,7 +60,7 @@ public class BiometricsVerificationService {
     /**
      * verifies if two facial encodings are match
      */
-    public FaceVerificationResponse verifyFace(List<String> uploadedEncoding, List<String> referenceEncoding) {
+    public FaceVerificationResponse verifyFace(List<Double> uploadedEncoding, List<Double> referenceEncoding) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
