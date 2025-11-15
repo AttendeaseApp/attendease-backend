@@ -3,11 +3,10 @@ package com.attendease.backend.studentModule.service.profile;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.studentModule.service.authentication.biometrics.BiometricsRegistrationService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 /**
  * Service layer for managing student facial biometric data.

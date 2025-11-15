@@ -3,14 +3,13 @@ package com.attendease.backend.utils;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -24,9 +23,7 @@ public class EventStatusScheduler {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            List<EventSessions> events = eventSessionRepository.findByEventStatusIn(
-                    Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING)
-            );
+            List<EventSessions> events = eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
 
             boolean updated = false;
 

@@ -1,12 +1,12 @@
 package com.attendease.backend.studentModule.service.authentication.biometrics;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.biometrics.Response.BiometricsRegistrationResponse;
 import com.attendease.backend.domain.enums.BiometricStatus;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.dto.response.FacialEncodingResponse;
 import com.attendease.backend.studentModule.service.utils.BiometricImageRequestValidator;
 import com.attendease.backend.studentModule.service.utils.BiometricsRegistrationClient;
 import java.io.IOException;
@@ -62,28 +62,30 @@ public class BiometricsRegistrationService {
         }
 
         String studentNumber = getStudentNumberByUserId(userId).orElseThrow(() -> new IllegalArgumentException("No student profile found for authenticated user"));
+        BiometricsRegistrationResponse biometricsRegistrationResponse;
 
-        FacialEncodingResponse apiResponse;
         try {
-            apiResponse = facialRecognitionClient.extractFacialEncodings(images);
+            biometricsRegistrationResponse = facialRecognitionClient.extractFacialEncodings(images);
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("Failed to process image files");
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(e.getMessage());
         }
 
-        if (apiResponse == null || !apiResponse.isSuccess()) {
-            String errorMsg = (apiResponse != null && apiResponse.getMessage() != null) ? apiResponse.getMessage() : "Invalid response from facial recognition service";
+        if (biometricsRegistrationResponse == null || !biometricsRegistrationResponse.isSuccess()) {
+            String errorMsg = (biometricsRegistrationResponse != null && biometricsRegistrationResponse.getMessage() != null)
+                ? biometricsRegistrationResponse.getMessage()
+                : "Invalid response from facial recognition service";
             return ResponseEntity.badRequest().body("Face processing failed: " + StringEscapeUtils.escapeHtml4(errorMsg));
         }
 
-        if (apiResponse.getFacialEncoding() == null || apiResponse.getFacialEncoding().isEmpty()) {
+        if (biometricsRegistrationResponse.getFacialEncoding() == null || biometricsRegistrationResponse.getFacialEncoding().isEmpty()) {
             return ResponseEntity.badRequest().body("Face processing failed: No encoding data received");
         }
 
         try {
             Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found with student number: " + studentNumber));
-            List<Float> encodings = apiResponse.getFacialEncoding();
+            List<Float> encodings = biometricsRegistrationResponse.getFacialEncoding();
             String result = saveBiometricsDataToDatabase(student, encodings);
             return ResponseEntity.ok(result);
         } catch (IllegalStateException e) {

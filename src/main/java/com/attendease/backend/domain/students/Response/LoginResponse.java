@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.dto.response;
+package com.attendease.backend.domain.students.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

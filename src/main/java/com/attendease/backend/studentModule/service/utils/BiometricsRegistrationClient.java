@@ -1,6 +1,5 @@
 package com.attendease.backend.studentModule.service.utils;
 
-import com.attendease.backend.studentModule.dto.response.FacialEncodingResponse;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.attendease.backend.domain.biometrics.Response.BiometricsRegistrationResponse;
 
 /**
  * Client component responsible for communicating with an external facial recognition service.
@@ -42,14 +43,14 @@ public class BiometricsRegistrationClient {
      *
      * <p>Each image is converted to a {@link ByteArrayResource} and added to a multipart request.
      * The request is sent using {@link RestTemplate}, and the response is mapped to
-     * {@link FacialEncodingResponse}.</p>
+     * {@link BiometricsRegistrationResponse}.</p>
      *
      * @param images the list of facial image files to process
-     * @return a {@link FacialEncodingResponse} containing extracted facial encodings and metadata
+     * @return a {@link BiometricsRegistrationResponse} containing extracted facial encodings and metadata
      * @throws IOException if reading any of the image files fails
      * @throws IllegalStateException if communication with the external service fails
      */
-    public FacialEncodingResponse extractFacialEncodings(List<MultipartFile> images) throws IOException {
+    public BiometricsRegistrationResponse extractFacialEncodings(List<MultipartFile> images) throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         for (MultipartFile file : images) {
@@ -66,7 +67,7 @@ public class BiometricsRegistrationClient {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
 
         try {
-            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, FacialEncodingResponse.class);
+            ResponseEntity<BiometricsRegistrationResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, BiometricsRegistrationResponse.class);
 
             return response.getBody();
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.dto.request;
+package com.attendease.backend.domain.students.Request;
 
 import lombok.Data;
 

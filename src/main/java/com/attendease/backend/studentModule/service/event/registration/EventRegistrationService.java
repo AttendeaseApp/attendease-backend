@@ -1,13 +1,15 @@
 package com.attendease.backend.studentModule.service.event.registration;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.biometrics.Response.BiometricsServiceVerificationResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventCheckIn.RegistrationRequest;
+import com.attendease.backend.domain.records.EventRegistration.EventRegistrationBiometricsVerification;
+import com.attendease.backend.domain.records.EventRegistration.EventRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
@@ -16,8 +18,6 @@ import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.dto.response.biometrics.FaceEncodingResponse;
-import com.attendease.backend.studentModule.dto.response.biometrics.FaceVerificationResponse;
 import com.attendease.backend.studentModule.service.utils.BiometricsVerificationClient;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
 import java.time.LocalDateTime;
@@ -41,7 +41,7 @@ public class EventRegistrationService {
     //    private final StudentRepository studentRepository;
     private final LocationValidator locationValidator;
 
-    public RegistrationRequest eventRegistration(String authenticatedUserId, RegistrationRequest registrationRequest) {
+    public EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
@@ -106,14 +106,14 @@ public class EventRegistrationService {
             }
 
             log.info("Extracting facial encoding from uploaded image for student: {}", studentNumber);
-            FaceEncodingResponse encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImageBase64);
+            EventRegistrationBiometricsVerification encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImageBase64);
 
             if (!encodingResponse.getSuccess() || encodingResponse.getFacialEncoding() == null) {
                 throw new IllegalStateException("Failed to detect face in uploaded image");
             }
 
             log.info("Comparing facial encodings for student: {}", studentNumber);
-            FaceVerificationResponse verificationResponse = biometricsVerificationService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
+            BiometricsServiceVerificationResponse verificationResponse = biometricsVerificationService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
 
             if (!verificationResponse.getSuccess() || !verificationResponse.getIs_face_matched()) {
                 log.warn("Facial verification failed for student: {}", studentNumber);

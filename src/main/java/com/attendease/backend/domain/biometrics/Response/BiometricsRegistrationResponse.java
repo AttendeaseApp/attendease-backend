@@ -1,11 +1,11 @@
-package com.attendease.backend.studentModule.dto.response;
+package com.attendease.backend.domain.biometrics.Response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Data;
 
 @Data
-public class FacialEncodingResponse {
+public class BiometricsRegistrationResponse {
 
     private boolean success;
     private String message;
