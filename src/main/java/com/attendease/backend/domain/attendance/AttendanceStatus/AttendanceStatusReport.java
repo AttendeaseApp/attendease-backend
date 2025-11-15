@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.records.AttendanceStatus;
+package com.attendease.backend.domain.attendance.AttendanceStatus;
 
 import com.attendease.backend.domain.students.Students;
 import lombok.Data;

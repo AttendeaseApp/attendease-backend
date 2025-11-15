@@ -1,8 +1,8 @@
 package com.attendease.backend.osaModule.controller.management.attendance.records;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.Response.EventAttendeesResponse;
 import com.attendease.backend.osaModule.service.management.attendance.records.EventAttendanceRecordsManagementService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

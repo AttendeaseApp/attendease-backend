@@ -1,9 +1,9 @@
 package com.attendease.backend.studentModule.service.attendance.tracking;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
@@ -66,7 +66,7 @@ public class AttendanceTrackingService {
      *             <li>The student does not have a prior registration record</li>
      *         </ul>
      */
-    public boolean attendanceMonitoringLocationPings(String authenticatedUserId, AttendancePingLogs attendancePingLogs) {
+    public boolean attendanceMonitoringLocationPings(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(attendancePingLogs.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
