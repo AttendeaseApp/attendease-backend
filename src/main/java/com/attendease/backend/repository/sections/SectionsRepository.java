@@ -1,8 +1,9 @@
 package com.attendease.backend.repository.sections;
 
-import com.attendease.backend.domain.students.Sections;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
+
+import com.attendease.backend.domain.sections.Sections;
 
 import java.util.Optional;
 

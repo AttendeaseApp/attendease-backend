@@ -1,8 +1,9 @@
 package com.attendease.backend.repository.clusters;
 
-import com.attendease.backend.domain.students.Clusters;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
+
+import com.attendease.backend.domain.clusters.Clusters;
 
 import java.util.Optional;
 

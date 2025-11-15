@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.biometrics.Response;
+package com.attendease.backend.domain.biometrics.Registration.Response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

@@ -1,7 +1,8 @@
 package com.attendease.backend.osaModule.controller.management.academic.course;
 
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.osaModule.service.management.academic.course.AcademicCourseService;
-import com.attendease.backend.domain.students.Courses;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,7 @@
 package com.attendease.backend.osaModule.service.management.academic.course;
 
-import com.attendease.backend.domain.students.Clusters;
-import com.attendease.backend.domain.students.Courses;
+import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import lombok.RequiredArgsConstructor;

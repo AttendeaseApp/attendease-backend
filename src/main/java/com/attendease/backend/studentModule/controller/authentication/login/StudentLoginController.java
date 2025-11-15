@@ -1,7 +1,7 @@
 package com.attendease.backend.studentModule.controller.authentication.login;
 
-import com.attendease.backend.domain.students.Request.LoginRequest;
-import com.attendease.backend.domain.students.Response.LoginResponse;
+import com.attendease.backend.domain.students.Login.Request.LoginRequest;
+import com.attendease.backend.domain.students.Login.Response.LoginResponse;
 import com.attendease.backend.studentModule.service.authentication.StudentAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

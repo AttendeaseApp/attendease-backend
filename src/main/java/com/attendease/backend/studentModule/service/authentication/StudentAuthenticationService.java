@@ -2,12 +2,12 @@ package com.attendease.backend.studentModule.service.authentication;
 
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.students.Response.LoginResponse;
+import com.attendease.backend.domain.students.Login.Response.LoginResponse;
+import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;

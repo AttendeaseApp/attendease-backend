@@ -1,9 +1,9 @@
 package com.attendease.backend.studentModule.service.utils;
 
-import com.attendease.backend.domain.biometrics.Response.BiometricsServiceVerificationResponse;
+import com.attendease.backend.domain.biometrics.Verification.Request.Base64ImageRequest;
+import com.attendease.backend.domain.biometrics.Verification.Request.BiometricsVerificationRequest;
+import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.records.EventRegistration.EventRegistrationBiometricsVerification;
-import com.attendease.backend.studentModule.dto.request.biometrics.FaceImageRequest;
-import com.attendease.backend.studentModule.dto.request.biometrics.FaceVerificationRequest;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +34,10 @@ public class BiometricsVerificationClient {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            FaceImageRequest request = new FaceImageRequest();
+            Base64ImageRequest request = new Base64ImageRequest();
             request.setImage_base64(imageBase64);
 
-            HttpEntity<FaceImageRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<Base64ImageRequest> entity = new HttpEntity<>(request, headers);
 
             ResponseEntity<EventRegistrationBiometricsVerification> response = restTemplate.postForEntity(extractSingleFaceEncoding, entity, EventRegistrationBiometricsVerification.class);
 
@@ -55,18 +55,18 @@ public class BiometricsVerificationClient {
     /**
      * verifies if two facial encodings are match
      */
-    public BiometricsServiceVerificationResponse verifyFace(List<Float> uploadedEncoding, List<Float> referenceEncoding) {
+    public BiometricsVerificationResponse verifyFace(List<Float> uploadedEncoding, List<Float> referenceEncoding) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            FaceVerificationRequest request = new FaceVerificationRequest();
+            BiometricsVerificationRequest request = new BiometricsVerificationRequest();
             request.setUploaded_encoding(uploadedEncoding);
             request.setReference_encoding(referenceEncoding);
 
-            HttpEntity<FaceVerificationRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<BiometricsVerificationRequest> entity = new HttpEntity<>(request, headers);
 
-            ResponseEntity<BiometricsServiceVerificationResponse> response = restTemplate.postForEntity(verifyFacialAuthentication, entity, BiometricsServiceVerificationResponse.class);
+            ResponseEntity<BiometricsVerificationResponse> response = restTemplate.postForEntity(verifyFacialAuthentication, entity, BiometricsVerificationResponse.class);
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return response.getBody();

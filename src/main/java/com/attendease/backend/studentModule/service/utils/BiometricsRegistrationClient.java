@@ -13,7 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.attendease.backend.domain.biometrics.Response.BiometricsRegistrationResponse;
+import com.attendease.backend.domain.biometrics.Registration.Response.BiometricsRegistrationResponse;
 
 /**
  * Client component responsible for communicating with an external facial recognition service.

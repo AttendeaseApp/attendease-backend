@@ -1,7 +1,7 @@
 package com.attendease.backend.studentModule.service.event.registration;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.biometrics.Response.BiometricsServiceVerificationResponse;
+import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
@@ -113,7 +113,7 @@ public class EventRegistrationService {
             }
 
             log.info("Comparing facial encodings for student: {}", studentNumber);
-            BiometricsServiceVerificationResponse verificationResponse = biometricsVerificationService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
+            BiometricsVerificationResponse verificationResponse = biometricsVerificationService.verifyFace(encodingResponse.getFacialEncoding(), biometricData.getFacialEncoding());
 
             if (!verificationResponse.getSuccess() || !verificationResponse.getIs_face_matched()) {
                 log.warn("Facial verification failed for student: {}", studentNumber);

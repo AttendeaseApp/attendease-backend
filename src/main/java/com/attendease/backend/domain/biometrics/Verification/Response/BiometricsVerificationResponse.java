@@ -1,9 +1,9 @@
-package com.attendease.backend.domain.biometrics.Response;
+package com.attendease.backend.domain.biometrics.Verification.Response;
 
 import lombok.Data;
 
 @Data
-public class BiometricsServiceVerificationResponse {
+public class BiometricsVerificationResponse {
 
     private Boolean success;
     private Boolean verified;

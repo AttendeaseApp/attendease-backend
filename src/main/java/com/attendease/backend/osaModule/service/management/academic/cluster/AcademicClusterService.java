@@ -1,6 +1,6 @@
 package com.attendease.backend.osaModule.service.management.academic.cluster;
 
-import com.attendease.backend.domain.students.Clusters;
+import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

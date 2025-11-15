@@ -1,7 +1,8 @@
 package com.attendease.backend.osaModule.controller.management.academic.cluster;
 
+import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.osaModule.service.management.academic.cluster.AcademicClusterService;
-import com.attendease.backend.domain.students.Clusters;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
