@@ -8,7 +8,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Service layer for retrieving the current state of events.
+ * Service responsible for providing current state of events for the student module.
+ * <p>
+ * Provides methods for:
+ * <ul>
+ *     <li>Providing state of events</li>
+ * </ul>
+ * </p>
  */
 @Service
 @RequiredArgsConstructor

@@ -12,7 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * Service layer for retrieving attendance history for students.
+ * Service responsible for retrieving event attendance records of a student for the student module.
+ * <p>
+ * Provides methods for:
+ * <ul>
+ *     <li>Retrieving attendance records of a stundent</li>
+ * </ul>
+ * </p>
  */
 @RequiredArgsConstructor
 @Service
