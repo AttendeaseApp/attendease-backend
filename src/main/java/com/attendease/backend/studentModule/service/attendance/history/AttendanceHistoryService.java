@@ -11,6 +11,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service layer for retrieving attendance history for students.
+ */
 @RequiredArgsConstructor
 @Service
 public class AttendanceHistoryService {
@@ -19,6 +22,13 @@ public class AttendanceHistoryService {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
 
+    /**
+     * Retrieves all attendance records for the student associated with the given authenticated user ID.
+     *
+     * @param authenticatedUserId the ID of the currently authenticated user
+     * @return a list of {@link AttendanceHistoryResponse} containing the student's attendance history
+     * @throws IllegalStateException if the user or corresponding student record cannot be found
+     */
     public List<AttendanceHistoryResponse> getAttendanceHistoryForStudent(String authenticatedUserId) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));

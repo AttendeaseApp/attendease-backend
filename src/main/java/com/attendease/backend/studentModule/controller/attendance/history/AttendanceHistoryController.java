@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for fetching attendance history of authenticated students.
+ * <p>
+ * All endpoints in this controller are restricted to users with the 'STUDENT' role.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
@@ -19,6 +25,12 @@ public class AttendanceHistoryController {
 
     private final AttendanceHistoryService attendanceHistoryService;
 
+    /**
+     * Retrieves the attendance history of the authenticated student.
+     *
+     * @param authentication the Spring Security authentication object containing the current user's details
+     * @return a {@link ResponseEntity} containing a list of {@link AttendanceHistoryResponse} objects
+     */
     @GetMapping("/history")
     public ResponseEntity<List<AttendanceHistoryResponse>> getStudentAttendanceHistory(Authentication authentication) {
         String authenticatedUserId = authentication.getName();

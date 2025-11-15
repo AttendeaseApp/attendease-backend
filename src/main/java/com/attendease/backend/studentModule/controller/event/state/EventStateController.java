@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for checking the state of an event for a student.
+ * <p>
+ * All endpoints in this controller are restricted to users with the 'STUDENT' role.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/registration")
 @RequiredArgsConstructor
@@ -18,6 +24,13 @@ public class EventStateController {
 
     private final EventStateService eventStateService;
 
+    /**
+     * Retrieves the current state of an event.
+     *
+     * @param id the ID of the event to check
+     * @return a {@link ResponseEntity} containing {@link EventStartStatusResponse} with details about the event state
+     * @throws IllegalStateException if the event with the given ID is not found
+     */
     @GetMapping("/{id}/start-status")
     public ResponseEntity<EventStartStatusResponse> getEventStartStatus(@PathVariable String id) {
         EventStartStatusResponse status = eventStateService.getEventStartStatus(id);

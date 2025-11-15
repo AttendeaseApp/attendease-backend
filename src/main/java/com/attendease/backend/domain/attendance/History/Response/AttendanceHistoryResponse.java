@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * Response DTO representing a single attendance record for a student.
+ */
 @Data
 @Builder
 public class AttendanceHistoryResponse {

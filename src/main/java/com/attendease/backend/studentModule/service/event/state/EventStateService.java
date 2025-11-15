@@ -7,12 +7,22 @@ import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service layer for retrieving the current state of events.
+ */
 @Service
 @RequiredArgsConstructor
 public class EventStateService {
 
     private final EventSessionsRepository eventSessionsRepository;
 
+    /**
+     * Retrieves the start status of a specific event.
+     *
+     * @param eventId the ID of the event to check
+     * @return {@link EventStartStatusResponse} containing flags and a status message
+     * @throws IllegalStateException if the event with the given ID is not found
+     */
     public EventStartStatusResponse getEventStartStatus(String eventId) {
         EventSessions event = eventSessionsRepository.findById(eventId).orElseThrow(() -> new IllegalStateException("Event not found"));
         EventStatus status = event.getEventStatus();
