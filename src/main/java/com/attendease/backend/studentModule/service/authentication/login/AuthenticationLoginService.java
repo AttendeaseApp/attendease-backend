@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service.authentication;
+package com.attendease.backend.studentModule.service.authentication.login;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.students.Login.Response.LoginResponse;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class StudentAuthenticationService {
+public class AuthenticationLoginService {
 
     private final PasswordEncoder passwordEncoder;
     private final StudentRepository studentRepository;

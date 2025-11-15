@@ -1,7 +1,8 @@
-package com.attendease.backend.studentModule.controller.event.retrive;
+package com.attendease.backend.studentModule.controller.event.retrieval;
 
-import com.attendease.backend.studentModule.service.event.retrieve.EventsRetrievalService;
 import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.studentModule.service.event.retrieval.EventRetrievalService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,9 +17,9 @@ import java.util.List;
 @RequestMapping("/api/registration/events")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class RetrieveEventsController {
+public class EventRetrievalController {
 
-    private final EventsRetrievalService eventsRetrievalService;
+    private final EventRetrievalService eventsRetrievalService;
 
     @GetMapping
     public List<EventSessions> getEventsByStatus() {

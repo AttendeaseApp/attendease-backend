@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service.event.retrieve;
+package com.attendease.backend.studentModule.service.event.retrieval;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class EventsRetrievalService {
+public class EventRetrievalService {
 
     private final EventSessionsRepository eventSessionRepository;
 

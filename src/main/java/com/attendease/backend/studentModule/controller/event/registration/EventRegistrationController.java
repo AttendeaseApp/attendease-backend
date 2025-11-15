@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.controller.event.checkin;
+package com.attendease.backend.studentModule.controller.event.registration;
 
 import com.attendease.backend.domain.locations.Request.CheckCurrentLocationRequest;
 import com.attendease.backend.domain.locations.Response.CheckCurrentLocationResponse;

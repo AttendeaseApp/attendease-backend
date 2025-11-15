@@ -3,6 +3,14 @@ package com.attendease.backend.domain.students.Password.Update.Request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/**
+ * Request DTO used for updating a student's password.
+ *
+ * <p>This object contains the old password (for verification) and the
+ * new password, which will be validated and applied if valid.</p>
+ *
+ * <p>Both fields are required and validated using {@link NotBlank}.</p>
+ */
 @Data
 public class PasswordUpdateRequest {
 

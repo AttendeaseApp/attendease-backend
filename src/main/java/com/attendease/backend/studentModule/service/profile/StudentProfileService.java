@@ -10,6 +10,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service class responsible for managing student personal profile operations,
+ * including retrieving profile information and updating passwords.
+ *
+ * <p>This service interacts with both {@link UserRepository} and
+ * {@link StudentRepository} to fetch and update data related to students
+ * and their associated user accounts.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class StudentProfileService {
@@ -19,11 +27,23 @@ public class StudentProfileService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidation passwordValidation;
 
+    /**
+     * Retrieves a student's personal profile using the associated user's ID.
+     *
+     * @param userId the ID of the user whose student profile is requested
+     * @return an {@link Optional} containing the student profile if found, otherwise empty
+     */
     public Optional<Students> getStudentProfileByUserId(String userId) {
         Optional<Users> userOptional = userRepository.findById(userId);
         return userOptional.flatMap(studentRepository::findByUser);
     }
 
+    /**
+     * Retrieves a user profile by user ID.
+     *
+     * @param userId the ID of the user
+     * @return an {@link Optional} containing the user profile if found, otherwise empty
+     */
     public Optional<Users> getUserProfileByUserId(String userId) {
         return userRepository.findById(userId);
     }
