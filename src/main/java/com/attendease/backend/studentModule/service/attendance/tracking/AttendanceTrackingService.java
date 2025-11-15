@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.service.event.tracking;
+package com.attendease.backend.studentModule.service.attendance.tracking;
 
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * AttendanceTracking service is responsible for attendance tracking during an event.
+ * {@link AttendanceTrackingService} is responsible for attendance tracking during an event.
  * <p>
  * This service processes periodic geolocation "pings" sent by the student app to:
  * <ul>
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AttendanceTracking {
+public class AttendanceTrackingService {
 
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
@@ -66,7 +66,7 @@ public class AttendanceTracking {
      *             <li>The student does not have a prior registration record</li>
      *         </ul>
      */
-    public boolean checkpointLocationPing(String authenticatedUserId, AttendancePingLogs attendancePingLogs) {
+    public boolean attendanceMonitoringLocationPings(String authenticatedUserId, AttendancePingLogs attendancePingLogs) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(attendancePingLogs.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
