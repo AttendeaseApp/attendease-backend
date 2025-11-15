@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class FaceImageRequest {
+
     private String image_base64;
 }

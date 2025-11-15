@@ -12,12 +12,11 @@ import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -52,8 +51,9 @@ public class AttendanceTracking {
 
         log.info("Attendance ping: Student={} Event={} Inside={}", student.getStudentNumber(), event.getEventId(), isInside);
 
-        AttendanceRecords attendanceRecord = attendanceRecordsRepository.findByStudentAndEventAndLocation(student, event, location)
-                .orElseThrow(() -> new IllegalStateException("Student must register before sending location pings"));
+        AttendanceRecords attendanceRecord = attendanceRecordsRepository
+            .findByStudentAndEventAndLocation(student, event, location)
+            .orElseThrow(() -> new IllegalStateException("Student must register before sending location pings"));
 
         if (attendanceRecord.getAttendancePingLogs() == null) {
             attendanceRecord.setAttendancePingLogs(new ArrayList<>());
@@ -66,5 +66,4 @@ public class AttendanceTracking {
         log.info("Attendance record updated successfully for student {} and event {}", student.getStudentNumber(), event.getEventId());
         return isInside;
     }
-
 }

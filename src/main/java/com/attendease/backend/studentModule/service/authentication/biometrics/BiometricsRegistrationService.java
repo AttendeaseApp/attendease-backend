@@ -2,13 +2,17 @@ package com.attendease.backend.studentModule.service.authentication.biometrics;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.BiometricStatus;
+import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.dto.response.FacialEncodingResponse;
-import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.studentModule.service.utils.BiometricImageRequestValidator;
-import com.attendease.backend.studentModule.service.utils.FacialRecognitionClient;
+import com.attendease.backend.studentModule.service.utils.BiometricsRegistrationClient;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
@@ -16,13 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 
 /**
  * Service responsible for registering and managing facial biometric data for students.
@@ -40,7 +37,7 @@ public class BiometricsRegistrationService {
     private final UserRepository userRepository;
     private final BiometricsRepository biometricsRepository;
     private final BiometricImageRequestValidator imageValidator;
-    private final FacialRecognitionClient facialRecognitionClient;
+    private final BiometricsRegistrationClient facialRecognitionClient;
 
     /**
      * Registers facial biometrics for a student associated with the given user ID.
@@ -86,10 +83,9 @@ public class BiometricsRegistrationService {
 
         try {
             Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Student not found with student number: " + studentNumber));
-            List<Double> encodings = apiResponse.getFacialEncoding();
+            List<Float> encodings = apiResponse.getFacialEncoding();
             String result = saveBiometricsDataToDatabase(student, encodings);
             return ResponseEntity.ok(result);
-
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Your facial biometrics is already registered");
         } catch (IllegalArgumentException e) {
@@ -100,7 +96,6 @@ public class BiometricsRegistrationService {
         }
     }
 
-
     /**
      * Saves the extracted facial encoding data for a student to the database.
      *
@@ -110,7 +105,7 @@ public class BiometricsRegistrationService {
      * @throws IllegalStateException    if the student already has registered biometrics
      * @throws IllegalArgumentException if the facial encoding is invalid
      */
-    private String saveBiometricsDataToDatabase(Students student, List<Double> facialEncoding) {
+    private String saveBiometricsDataToDatabase(Students student, List<Float> facialEncoding) {
         String studentNumber = student.getStudentNumber();
 
         Optional<BiometricData> existing = biometricsRepository.findByStudentNumber(studentNumber);
@@ -123,11 +118,11 @@ public class BiometricsRegistrationService {
         }
 
         BiometricData biometricData = BiometricData.builder()
-                .facialId(String.valueOf(UUID.randomUUID()))
-                .studentNumber(studentNumber)
-                .facialEncoding(facialEncoding)
-                .biometricsStatus(BiometricStatus.ACTIVE)
-                .build();
+            .facialId(String.valueOf(UUID.randomUUID()))
+            .studentNumber(studentNumber)
+            .facialEncoding(facialEncoding)
+            .biometricsStatus(BiometricStatus.ACTIVE)
+            .build();
 
         biometricsRepository.save(biometricData);
 

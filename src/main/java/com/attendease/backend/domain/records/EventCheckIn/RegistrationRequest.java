@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class RegistrationRequest {
+
     private String eventId;
     private String locationId;
     private Double latitude;

@@ -1,15 +1,10 @@
 package com.attendease.backend.studentModule.service.event.tracking;
 
-import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Request.CheckCurrentLocationRequest;
 import com.attendease.backend.domain.locations.Response.CheckCurrentLocationResponse;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -18,16 +13,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CheckCurrentLocation {
 
-    private final EventSessionsRepository eventSessionsRepository;
-    private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
@@ -47,5 +37,4 @@ public class CheckCurrentLocation {
 
         return response;
     }
-
 }

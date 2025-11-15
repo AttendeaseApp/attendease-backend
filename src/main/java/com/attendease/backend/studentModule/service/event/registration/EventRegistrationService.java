@@ -18,13 +18,13 @@ import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.dto.response.biometrics.FaceEncodingResponse;
 import com.attendease.backend.studentModule.dto.response.biometrics.FaceVerificationResponse;
+import com.attendease.backend.studentModule.service.utils.BiometricsVerificationClient;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,11 +34,11 @@ public class EventRegistrationService {
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
-    private final BiometricsVerificationService biometricsVerificationService;
+    private final BiometricsVerificationClient biometricsVerificationService;
     private final BiometricsRepository biometricsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
-//    private final StudentRepository studentRepository;
+    //    private final StudentRepository studentRepository;
     private final LocationValidator locationValidator;
 
     public RegistrationRequest eventRegistration(String authenticatedUserId, RegistrationRequest registrationRequest) {
@@ -49,9 +49,9 @@ public class EventRegistrationService {
         LocalDateTime now = LocalDateTime.now();
         getEventStatus(event, now);
 
-//        if (!isStudentEligibleForEvent(event, student)) {
-//            throw new IllegalStateException("Student is not eligible to check in for this event.");
-//        }
+        //        if (!isStudentEligibleForEvent(event, student)) {
+        //            throw new IllegalStateException("Student is not eligible to check in for this event.");
+        //        }
 
         EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -61,19 +61,13 @@ public class EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-//        if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64().isEmpty()) {
-//            throw new IllegalStateException("Face image is required for check-in");
-//        }
-//
-//        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+        if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64() == null) {
+            throw new IllegalStateException("Face image is required for check-in");
+        }
 
-        AttendanceRecords record = AttendanceRecords.builder()
-                .student(student)
-                .event(event)
-                .location(location)
-                .timeIn(now)
-                .attendanceStatus(AttendanceStatus.REGISTERED)
-                .build();
+        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+
+        AttendanceRecords record = AttendanceRecords.builder().student(student).event(event).location(location).timeIn(now).attendanceStatus(AttendanceStatus.REGISTERED).build();
 
         attendanceRecordsRepository.save(record);
         log.info("Student {} successfully registered for event {} with facial verification.", student.getStudentNumber(), event.getEventId());
@@ -103,7 +97,9 @@ public class EventRegistrationService {
 
     private void verifyStudentFace(String studentNumber, String faceImageBase64) {
         try {
-            BiometricData biometricData = biometricsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalStateException("No biometric data found for student. Please register your face first."));
+            BiometricData biometricData = biometricsRepository
+                .findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new IllegalStateException("No biometric data found for student. Please register your face first."));
 
             if (biometricData.getFacialEncoding() == null || biometricData.getFacialEncoding().isEmpty()) {
                 throw new IllegalStateException("Student's facial encoding is not registered");
@@ -154,4 +150,3 @@ public class EventRegistrationService {
         return courseMatch || sectionMatch;
     }
 }
-
