@@ -2,8 +2,8 @@ package com.attendease.backend.studentModule.controller.event.checkin;
 
 import com.attendease.backend.domain.locations.Request.CheckCurrentLocationRequest;
 import com.attendease.backend.domain.locations.Response.CheckCurrentLocationResponse;
-import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
-import com.attendease.backend.domain.records.EventCheckIn.RegistrationRequest;
+import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
+import com.attendease.backend.domain.records.EventRegistration.EventRegistrationRequest;
 import com.attendease.backend.studentModule.service.event.registration.EventRegistrationService;
 import com.attendease.backend.studentModule.service.event.tracking.AttendanceTracking;
 import com.attendease.backend.studentModule.service.event.tracking.CheckCurrentLocation;
@@ -30,9 +30,9 @@ public class EventRegistrationController {
      * @param registrationRequest  RegistrationRequest (contains eventId, locationId, latitude, longitude)
      */
     @PostMapping
-    public ResponseEntity<?> registerStudentToEvent(@RequestBody RegistrationRequest registrationRequest, Authentication authentication) {
+    public ResponseEntity<?> registerStudentToEvent(@RequestBody EventRegistrationRequest registrationRequest, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
-        RegistrationRequest response = registrationService.eventRegistration(authenticatedUserId, registrationRequest);
+        EventRegistrationRequest response = registrationService.eventRegistration(authenticatedUserId, registrationRequest);
         return ResponseEntity.ok(response);
     }
 

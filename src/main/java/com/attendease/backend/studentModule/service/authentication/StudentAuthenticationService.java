@@ -1,37 +1,30 @@
 package com.attendease.backend.studentModule.service.authentication;
 
-import com.attendease.backend.repository.students.StudentRepository;
-import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
-import com.attendease.backend.studentModule.dto.response.LoginResponse;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.students.Login.Response.LoginResponse;
+import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.security.JwtTokenizationUtil;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
-/**
- * Refactored StudentAuthenticationService that works with separate users and Students entities.
- * Uses composition domain instead of inheritance.
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class StudentAuthenticationService {
 
     private final UserRepository userRepository;
-    private final SectionsRepository sectionsRepository;
     private final PasswordEncoder passwordEncoder;
     private final StudentRepository studentRepository;
     private final JwtTokenizationUtil jwtTokenizationUtil;
@@ -62,10 +55,8 @@ public class StudentAuthenticationService {
         return "Student account registered successfully.";
     }
 
-
     public LoginResponse loginStudent(String studentNumber, String password) {
-        Students student = studentRepository.findByStudentNumber(studentNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid student number or password"));
+        Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Invalid student number or password"));
 
         Users user = student.getUser();
 
@@ -81,9 +72,11 @@ public class StudentAuthenticationService {
         log.info("Student login successful. StudentNumber: {}, Requires Facial Registration: {}", studentNumber, requiresFacialRegistration);
 
         return LoginResponse.builder()
-                .token(token)
-                .requiresFacialRegistration(requiresFacialRegistration)
-                .message(requiresFacialRegistration ? "Login successful. Please complete facial registration." : "Login successful.").studentNumber(studentNumber).build();
+            .token(token)
+            .requiresFacialRegistration(requiresFacialRegistration)
+            .message(requiresFacialRegistration ? "Login successful. Please complete facial registration." : "Login successful.")
+            .studentNumber(studentNumber)
+            .build();
     }
 
     /**
@@ -119,7 +112,6 @@ public class StudentAuthenticationService {
 
         return "Password updated successfully.";
     }
-
 
     // helper methods
 

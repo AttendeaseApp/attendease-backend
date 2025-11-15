@@ -4,6 +4,8 @@ import com.attendease.backend.domain.enums.BiometricStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +14,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Class representing biometric data for a user.
@@ -31,7 +30,7 @@ public class BiometricData {
 
     @NotNull(message = "Facial encoding is required")
     @Size(min = 128, max = 128, message = "Facial encoding must have exactly 128 elements")
-    private List<Double> facialEncoding;
+    private List<Float> facialEncoding;
 
     private String studentNumber;
 

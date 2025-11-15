@@ -3,21 +3,19 @@ package com.attendease.backend.utils;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventCheckIn.AttendancePingLogs;
+import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +35,10 @@ public class AttendanceRecordsFinalizer {
 
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventId(eventId);
         List<Students> expectedStudents = getExpectedStudentsForEvent(event);
-        Set<String> studentsWithRecords = attendanceRecords.stream().map(r -> r.getStudent().getId()).collect(Collectors.toSet());
+        Set<String> studentsWithRecords = attendanceRecords
+            .stream()
+            .map(r -> r.getStudent().getId())
+            .collect(Collectors.toSet());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -57,13 +58,13 @@ public class AttendanceRecordsFinalizer {
         for (Students student : expectedStudents) {
             if (!studentsWithRecords.contains(student.getId())) {
                 AttendanceRecords absentRecord = AttendanceRecords.builder()
-                        .student(student)
-                        .event(event)
-                        .attendanceStatus(AttendanceStatus.ABSENT)
-                        .reason("No presence of student detected at all on this event")
-                        .timeIn(null)
-                        .timeOut(null)
-                        .build();
+                    .student(student)
+                    .event(event)
+                    .attendanceStatus(AttendanceStatus.ABSENT)
+                    .reason("No presence of student detected at all on this event")
+                    .timeIn(null)
+                    .timeOut(null)
+                    .build();
                 attendanceRecordsRepository.save(absentRecord);
                 log.info("Marked ABSENT for missing student {} in event {}, {}", student.getStudentNumber(), eventId, eventName);
             }

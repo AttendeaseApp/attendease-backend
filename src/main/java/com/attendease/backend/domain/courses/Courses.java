@@ -1,5 +1,6 @@
-package com.attendease.backend.domain.students;
+package com.attendease.backend.domain.courses;
 
+import com.attendease.backend.domain.clusters.Clusters;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

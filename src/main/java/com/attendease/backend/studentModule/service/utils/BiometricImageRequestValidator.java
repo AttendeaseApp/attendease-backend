@@ -1,11 +1,10 @@
 package com.attendease.backend.studentModule.service.utils;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.ResponseEntity;
-
-import java.util.List;
 
 /**
  * Utility component for validating facial image upload requests for biometric registration.
@@ -59,4 +58,3 @@ public class BiometricImageRequestValidator {
         return null;
     }
 }
-

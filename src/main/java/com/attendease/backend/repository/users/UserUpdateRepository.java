@@ -1,8 +1,6 @@
 package com.attendease.backend.repository.users;
 
-import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
-
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 

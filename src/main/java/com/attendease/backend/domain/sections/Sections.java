@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.students;
+package com.attendease.backend.domain.sections;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.attendease.backend.domain.courses.Courses;
 
 @Data
 @NoArgsConstructor

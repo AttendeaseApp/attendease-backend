@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.dto.request;
+package com.attendease.backend.domain.students.Password.Update.Request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

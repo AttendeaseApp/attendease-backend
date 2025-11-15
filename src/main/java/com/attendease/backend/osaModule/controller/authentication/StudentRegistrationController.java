@@ -1,6 +1,6 @@
 package com.attendease.backend.osaModule.controller.authentication;
 
-import com.attendease.backend.studentModule.dto.request.StudentRegistrationRequest;
+import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.studentModule.service.authentication.StudentAuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

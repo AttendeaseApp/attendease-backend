@@ -3,12 +3,11 @@ package com.attendease.backend.utils;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,5 +32,3 @@ public class EventScheduleFinalizer {
         }
     }
 }
-
-

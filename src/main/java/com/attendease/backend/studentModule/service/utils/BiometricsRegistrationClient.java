@@ -1,6 +1,7 @@
 package com.attendease.backend.studentModule.service.utils;
 
-import com.attendease.backend.studentModule.dto.response.FacialEncodingResponse;
+import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.List;
-
+import com.attendease.backend.domain.biometrics.Registration.Response.BiometricsRegistrationResponse;
 
 /**
  * Client component responsible for communicating with an external facial recognition service.
@@ -26,7 +25,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class FacialRecognitionClient {
+public class BiometricsRegistrationClient {
 
     private final RestTemplate restTemplate;
     private final HttpHeaders httpHeaders;
@@ -44,14 +43,14 @@ public class FacialRecognitionClient {
      *
      * <p>Each image is converted to a {@link ByteArrayResource} and added to a multipart request.
      * The request is sent using {@link RestTemplate}, and the response is mapped to
-     * {@link FacialEncodingResponse}.</p>
+     * {@link BiometricsRegistrationResponse}.</p>
      *
      * @param images the list of facial image files to process
-     * @return a {@link FacialEncodingResponse} containing extracted facial encodings and metadata
+     * @return a {@link BiometricsRegistrationResponse} containing extracted facial encodings and metadata
      * @throws IOException if reading any of the image files fails
      * @throws IllegalStateException if communication with the external service fails
      */
-    public FacialEncodingResponse extractFacialEncodings(List<MultipartFile> images) throws IOException {
+    public BiometricsRegistrationResponse extractFacialEncodings(List<MultipartFile> images) throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         for (MultipartFile file : images) {
@@ -68,11 +67,7 @@ public class FacialRecognitionClient {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
 
         try {
-            ResponseEntity<FacialEncodingResponse> response = restTemplate.postForEntity(
-                    extractMultipleFacialEncoding,
-                    requestEntity,
-                    FacialEncodingResponse.class
-            );
+            ResponseEntity<BiometricsRegistrationResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, BiometricsRegistrationResponse.class);
 
             return response.getBody();
         } catch (Exception e) {
@@ -81,4 +76,3 @@ public class FacialRecognitionClient {
         }
     }
 }
-

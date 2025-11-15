@@ -2,15 +2,15 @@ package com.attendease.backend.osaModule.service.management.user;
 
 
 import com.attendease.backend.domain.students.CSV.CSVRowData;
-import com.attendease.backend.domain.students.Courses;
-import com.attendease.backend.domain.students.Sections;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.opencsv.CSVReader;

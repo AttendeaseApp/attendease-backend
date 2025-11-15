@@ -1,4 +1,4 @@
-package com.attendease.backend.studentModule.dto.response;
+package com.attendease.backend.domain.students.Login.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
+
     private String token;
     private boolean requiresFacialRegistration;
     private String message;
