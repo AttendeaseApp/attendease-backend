@@ -1,9 +1,9 @@
-package com.attendease.backend.domain.attendance.EventRegistration;
+package com.attendease.backend.domain.attendance.Tracking.Response;
 
 import lombok.Data;
 
 @Data
-public class AttendancePingLogs {
+public class AttendanceTrackingResponse {
 
     private String eventId;
     private String locationId;

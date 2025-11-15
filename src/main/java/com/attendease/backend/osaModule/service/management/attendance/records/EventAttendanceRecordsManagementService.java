@@ -1,8 +1,8 @@
 package com.attendease.backend.osaModule.service.management.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
-import com.attendease.backend.domain.attendance.Response.AttendeesResponse;
-import com.attendease.backend.domain.attendance.Response.EventAttendeesResponse;
+import com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Response.AttendeesResponse;
+import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;

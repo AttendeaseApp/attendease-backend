@@ -1,6 +1,6 @@
 package com.attendease.backend.domain.attendance;
 
-import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
+import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
@@ -60,7 +60,7 @@ public class AttendanceRecords {
     private AttendanceStatus attendanceStatus;
 
     @Builder.Default
-    private List<AttendancePingLogs> attendancePingLogs = new ArrayList<>();
+    private List<AttendanceTrackingResponse> attendancePingLogs = new ArrayList<>();
 
     private String updatedByUserId;
 

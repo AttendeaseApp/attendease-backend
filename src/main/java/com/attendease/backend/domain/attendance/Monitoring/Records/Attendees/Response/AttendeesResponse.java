@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.attendance.Response;
+package com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Response;
 
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.AttendanceStatus;

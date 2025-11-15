@@ -1,7 +1,7 @@
 package com.attendease.backend.studentModule.controller.event.registration;
 
-import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
-import com.attendease.backend.domain.attendance.EventRegistration.EventRegistrationRequest;
+import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
+import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
 import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
 import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
 import com.attendease.backend.studentModule.service.attendance.tracking.AttendanceTrackingService;
@@ -40,7 +40,7 @@ public class EventRegistrationController {
      * The authenticated user ID is automatically resolved from the security context.
      */
     @PostMapping("/ping")
-    public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendancePingLogs attendancePingLogs) {
+    public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendanceTrackingResponse attendancePingLogs) {
         String authenticatedUserId = authentication.getName();
         boolean isInside = attendanceTrackingService.attendanceMonitoringLocationPings(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);

@@ -3,8 +3,6 @@ package com.attendease.backend.studentModule.service.location.tracking;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
 import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
-import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.locations.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -26,8 +24,6 @@ import org.springframework.stereotype.Service;
 public class LocationTrackingService {
 
     private final LocationRepository eventLocationsRepository;
-    private final StudentRepository studentsRepository;
-    private final UserRepository userRepository;
     private final LocationValidator locationValidator;
 
     /**

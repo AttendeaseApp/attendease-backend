@@ -1,7 +1,7 @@
 package com.attendease.backend.utils;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
-import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
+import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.students.Students;
@@ -76,7 +76,7 @@ public class AttendanceRecordsFinalizer {
      * Uses attendance ping logs to decide the student's final attendance.
      */
     private AttendanceStatus evaluateAttendanceFromLogs(EventSessions event, AttendanceRecords record) {
-        List<AttendancePingLogs> pings = record.getAttendancePingLogs();
+        List<AttendanceTrackingResponse> pings = record.getAttendancePingLogs();
         if (pings == null || pings.isEmpty()) {
             record.setReason("No location pings from student mobile were recorded");
             return AttendanceStatus.ABSENT;
@@ -106,16 +106,16 @@ public class AttendanceRecordsFinalizer {
      * Estimates how long (in ms) the student was inside based on pings.
      * This assumes pings are roughly evenly spaced in time.
      */
-    private long computeInsideDuration(List<AttendancePingLogs> pings, long eventStart, long eventEnd) {
+    private long computeInsideDuration(List<AttendanceTrackingResponse> pings, long eventStart, long eventEnd) {
         if (pings.size() < 2) return 0;
 
-        pings.sort(Comparator.comparingLong(AttendancePingLogs::getTimestamp));
+        pings.sort(Comparator.comparingLong(AttendanceTrackingResponse::getTimestamp));
 
         long totalInside = 0;
 
         for (int i = 0; i < pings.size() - 1; i++) {
-            AttendancePingLogs current = pings.get(i);
-            AttendancePingLogs next = pings.get(i + 1);
+            AttendanceTrackingResponse current = pings.get(i);
+            AttendanceTrackingResponse next = pings.get(i + 1);
 
             long t1 = Math.max(current.getTimestamp(), eventStart);
             long t2 = Math.min(next.getTimestamp(), eventEnd);
