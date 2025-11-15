@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.records.Response;
+package com.attendease.backend.domain.attendance.Response;
 
 import lombok.Builder;
 import lombok.Data;

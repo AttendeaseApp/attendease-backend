@@ -1,9 +1,9 @@
 package com.attendease.backend.studentModule.service.attendance.tracking;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;

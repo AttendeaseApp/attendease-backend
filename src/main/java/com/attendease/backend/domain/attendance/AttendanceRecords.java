@@ -1,9 +1,9 @@
-package com.attendease.backend.domain.records;
+package com.attendease.backend.domain.attendance;
 
+import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;

@@ -1,9 +1,9 @@
 package com.attendease.backend.repository.attendanceRecords;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.records.AttendanceRecords;
 import com.attendease.backend.domain.students.Students;
 import java.util.List;
 import java.util.Optional;

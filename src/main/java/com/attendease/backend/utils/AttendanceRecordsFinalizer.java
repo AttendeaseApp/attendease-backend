@@ -1,9 +1,9 @@
 package com.attendease.backend.utils;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.students.StudentRepository;

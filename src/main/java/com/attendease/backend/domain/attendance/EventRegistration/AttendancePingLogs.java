@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.records.EventRegistration;
+package com.attendease.backend.domain.attendance.EventRegistration;
 
 import lombok.Data;
 

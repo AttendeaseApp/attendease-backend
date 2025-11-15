@@ -1,5 +1,7 @@
 package com.attendease.backend.studentModule.service.event.registration;
 
+import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.EventRegistration.EventRegistrationRequest;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.biometrics.Verification.Response.EventRegistrationBiometricsVerificationResponse;
@@ -8,8 +10,6 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventRegistration.EventRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
