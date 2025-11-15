@@ -1,28 +1,15 @@
 package com.attendease.backend.osaModule.service.management.user;
 
-
-import com.attendease.backend.domain.students.CSV.CSVRowData;
-import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
-import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
-import com.attendease.backend.repository.students.StudentRepository;
-import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.students.CSV.CSVRowData;
 import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
@@ -31,15 +18,21 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class UsersManagementService {
+
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final SectionsRepository sectionRepository;
-    private final CourseRepository courseRepository;
     private final PasswordEncoder passwordEncoder;
 
     private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
@@ -78,7 +71,6 @@ public class UsersManagementService {
                         Users imported = createUserAndStudent(rowData);
                         importedUsers.add(imported);
                         log.info("Successfully imported student: {}", rowData.getStudentNumber());
-
                     } catch (IllegalArgumentException e) {
                         log.error("Validation error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
                         errors.add("Row " + rowNumber + ": " + e.getMessage());
@@ -112,15 +104,12 @@ public class UsersManagementService {
         List<Students> students = studentRepository.findByUserIn(users);
         log.info("Retrieved {} students", students.size());
 
-        Map<String, Students> studentMap = students.stream()
-                .collect(Collectors.toMap(
-                        s -> s.getUser().getUserId(),
-                        s -> s
-                ));
+        Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
 
-        return users.stream()
-                .map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId())))
-                .collect(Collectors.toList());
+        return users
+            .stream()
+            .map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId())))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -131,7 +120,6 @@ public class UsersManagementService {
         log.info("Retrieved {} students from repository", students.size());
         return students;
     }
-
 
     public void deleteUserById(String userId) throws ExecutionException, InterruptedException {
         boolean exists = userRepository.existsById(userId);
@@ -161,8 +149,8 @@ public class UsersManagementService {
 
         Set<String> headerSet = Set.of(header);
         List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream()
-                .filter(col -> !headerSet.contains(col))
-                .collect(Collectors.toList());
+            .filter(col -> !headerSet.contains(col))
+            .collect(Collectors.toList());
 
         if (!missingColumns.isEmpty()) {
             throw new IllegalArgumentException("Missing required columns: " + String.join(", ", missingColumns));
@@ -210,10 +198,7 @@ public class UsersManagementService {
     }
 
     private boolean isValidRowData(CSVRowData data) {
-        return data.getFirstName() != null &&
-                data.getLastName() != null &&
-                data.getStudentNumber() != null &&
-                data.getPassword() != null;
+        return data.getFirstName() != null && data.getLastName() != null && data.getStudentNumber() != null && data.getPassword() != null;
     }
 
     private Users createUserAndStudent(CSVRowData data) {
@@ -264,42 +249,40 @@ public class UsersManagementService {
             throw new IllegalArgumentException("Section is required");
         }
 
-        Courses course = courseRepository.findByCourseName(data.getCourse())
-                .orElseGet(() -> {
-                    Courses newCourse = new Courses();
-                    newCourse.setCourseName(data.getCourse());
-                    return courseRepository.save(newCourse);
-                });
+        // Courses course = courseRepository
+        //     .findByCourseName(data.getCourse())
+        //     .orElseGet(() -> {
+        //         Courses newCourse = new Courses();
+        //         newCourse.setCourseName(data.getCourse());
+        //         return courseRepository.save(newCourse);
+        //     });
 
-        Sections section = sectionRepository.findByNameAndCourseId(data.getSection(), course.getId())
-                .orElseGet(() -> {
-                    Sections newSection = new Sections();
-                    newSection.setName(data.getSection());
-                    newSection.setId(course.getId());
-                    return sectionRepository.save(newSection);
-                });
+        // Sections section = sectionRepository.findByNameAndCourseId(data.getSection(), course.getId())
+        //         .orElseGet(() -> {
+        //             Sections newSection = new Sections();
+        //             newSection.setName(data.getSection());
+        //             newSection.setId(course.getId());
+        //             return sectionRepository.save(newSection);
+        //         });
 
         return student;
     }
 
-
-
     public UserStudentResponse mapToResponseDTO(Users user, Students student) {
         return UserStudentResponse.builder()
-                .userId(user.getUserId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .contactNumber(user.getContactNumber())
-                .accountStatus(user.getAccountStatus())
-                .userType(user.getUserType())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .studentId(student != null ? student.getId() : null)
-                .studentNumber(student != null ? student.getStudentNumber() : null)
-                .section(student != null && student.getSectionId() != null ? student.getSectionId() : null)
-                .course(student != null && student.getCourseId() != null ? student.getCourseId() : null)
-                .build();
+            .userId(user.getUserId())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .email(user.getEmail())
+            .contactNumber(user.getContactNumber())
+            .accountStatus(user.getAccountStatus())
+            .userType(user.getUserType())
+            .createdAt(user.getCreatedAt())
+            .updatedAt(user.getUpdatedAt())
+            .studentId(student != null ? student.getId() : null)
+            .studentNumber(student != null ? student.getStudentNumber() : null)
+            .section(student != null && student.getSectionId() != null ? student.getSectionId() : null)
+            .course(student != null && student.getCourseId() != null ? student.getCourseId() : null)
+            .build();
     }
 }
-

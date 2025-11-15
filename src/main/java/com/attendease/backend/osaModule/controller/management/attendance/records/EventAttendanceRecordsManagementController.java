@@ -1,17 +1,14 @@
 package com.attendease.backend.osaModule.controller.management.attendance.records;
 
-import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.records.AttendanceRecords;
 import com.attendease.backend.domain.records.Response.EventAttendeesResponse;
 import com.attendease.backend.osaModule.service.management.attendance.records.EventAttendanceRecordsManagementService;
-import com.attendease.backend.domain.events.EventSessions;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Controller for managing attendance records of students for finalized or ongoing events.
@@ -36,8 +33,6 @@ public class EventAttendanceRecordsManagementController {
         return attendanceService.getAllSortedByCreatedAt();
     }
 
-
-
     /**
      * Retrieves all attendees for a specific event, including student information,
      * attendance status, and reasons for absence or tardiness.
@@ -49,8 +44,6 @@ public class EventAttendanceRecordsManagementController {
     public EventAttendeesResponse getAttendeesByEvent(@PathVariable String eventId) {
         return attendanceService.getAttendeesByEvent(eventId);
     }
-
-
 
     /**
      * Retrieves a specific event by its unique ID.
@@ -64,8 +57,6 @@ public class EventAttendanceRecordsManagementController {
         return attendanceService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
     }
 
-
-
     /**
      * Retrieves all attendance records for a specific student.
      *
@@ -78,4 +69,3 @@ public class EventAttendanceRecordsManagementController {
         return ResponseEntity.ok(records);
     }
 }
-

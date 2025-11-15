@@ -1,10 +1,12 @@
 package com.attendease.backend.osaModule.service.management.user;
 
-import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Search.SearchKeywords;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.repository.users.UserUpdateRepository;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,10 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -114,7 +112,6 @@ public class UpdateUsersService {
         log.info("OSA successfully reset password for user {}", targetUserId);
         return "Password reset successfully for user " + targetUserId;
     }
-
 
     private void validatePassword(String password) {
         if (password == null || password.trim().isEmpty()) {

@@ -1,9 +1,8 @@
 package com.attendease.backend.studentModule.controller.profile;
 
-import com.attendease.backend.studentModule.service.authentication.StudentAuthenticationService;
-import com.attendease.backend.studentModule.service.profile.StudentProfileService;
 import com.attendease.backend.domain.students.Password.Update.Request.PasswordUpdateRequest;
 import com.attendease.backend.domain.students.UserStudent.UserStudent;
+import com.attendease.backend.studentModule.service.profile.StudentProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class UserProfileController {
+public class StudentProfileController {
 
     private final StudentProfileService studentProfileService;
-    private final StudentAuthenticationService authService;
 
     @GetMapping("/user-student/me")
     public ResponseEntity<UserStudent> getUserStudentProfile(Authentication authentication) {
@@ -44,8 +42,7 @@ public class UserProfileController {
     @PatchMapping("/update-password")
     public ResponseEntity<String> updatePassword(Authentication authentication, @RequestBody @Valid PasswordUpdateRequest request) {
         String id = authentication.getName();
-        String response = authService.updatePassword(id, request.getOldPassword(), request.getNewPassword());
+        String response = studentProfileService.updatePassword(id, request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok(response);
     }
-
 }
