@@ -1,18 +1,17 @@
-package com.attendease.backend.studentModule.controller.event.checkin;
+package com.attendease.backend.studentModule.controller.event.registration;
 
-import com.attendease.backend.domain.locations.Request.CheckCurrentLocationRequest;
-import com.attendease.backend.domain.locations.Response.CheckCurrentLocationResponse;
+import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
+import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
 import com.attendease.backend.domain.records.EventRegistration.AttendancePingLogs;
 import com.attendease.backend.domain.records.EventRegistration.EventRegistrationRequest;
+import com.attendease.backend.studentModule.service.attendance.tracking.AttendanceTrackingService;
 import com.attendease.backend.studentModule.service.event.registration.EventRegistrationService;
-import com.attendease.backend.studentModule.service.event.tracking.AttendanceTracking;
-import com.attendease.backend.studentModule.service.event.tracking.CheckCurrentLocation;
+import com.attendease.backend.studentModule.service.location.tracking.LocationTrackingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/registration")
@@ -21,8 +20,8 @@ import org.springframework.web.bind.annotation.*;
 public class EventRegistrationController {
 
     private final EventRegistrationService registrationService;
-    private final AttendanceTracking attendanceTracking;
-    private final CheckCurrentLocation checkCurrentLocation;
+    private final AttendanceTrackingService attendanceTrackingService;
+    private final LocationTrackingService locationTrackingService;
 
     /**
      * Endpoint for student event registration.
@@ -43,7 +42,7 @@ public class EventRegistrationController {
     @PostMapping("/ping")
     public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendancePingLogs attendancePingLogs) {
         String authenticatedUserId = authentication.getName();
-        boolean isInside = attendanceTracking.checkpointLocationPing(authenticatedUserId, attendancePingLogs);
+        boolean isInside = attendanceTrackingService.attendanceMonitoringLocationPings(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
     }
 
@@ -52,10 +51,9 @@ public class EventRegistrationController {
      * The authenticated user ID is automatically resolved from the security context.
      */
     @PostMapping("/check-location")
-    public ResponseEntity<CheckCurrentLocationResponse> checkCurrentLocation(Authentication authentication, @RequestBody CheckCurrentLocationRequest request) {
+    public ResponseEntity<LocationTrackingResponse> trackCurrentLocationOfStudent(Authentication authentication, @RequestBody LocationTrackingRequest request) {
         String userId = authentication.getName();
-        CheckCurrentLocationResponse response = checkCurrentLocation.checkMyCurrentLocationPosition(userId, request);
+        LocationTrackingResponse response = locationTrackingService.trackCurrentLocation(userId, request);
         return ResponseEntity.ok(response);
     }
 }
-

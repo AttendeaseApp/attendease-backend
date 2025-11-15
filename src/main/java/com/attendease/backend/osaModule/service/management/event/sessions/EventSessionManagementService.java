@@ -1,18 +1,16 @@
 package com.attendease.backend.osaModule.service.management.event.sessions;
 
-import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -29,11 +27,7 @@ public class EventSessionManagementService {
     public EventSessions createEvent(EventSessions eventSession) {
         log.info("Creating new event session: {}", eventSession.getEventName());
 
-        validateDateRange(
-                eventSession.getTimeInRegistrationStartDateTime(),
-                eventSession.getStartDateTime(),
-                eventSession.getEndDateTime()
-        );
+        validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
 
         eventSession.setEventStatus(EventStatus.UPCOMING);
         eventSession.setCreatedAt(LocalDateTime.now());
@@ -106,8 +100,7 @@ public class EventSessionManagementService {
      * Update Event
      */
     public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
-        EventSessions existingEvent = eventSessionRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+        EventSessions existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
         existingEvent.setEventName(updateEvent.getEventName());
         existingEvent.setDescription(updateEvent.getDescription());
@@ -117,8 +110,9 @@ public class EventSessionManagementService {
         existingEvent.setEventStatus(updateEvent.getEventStatus() != null ? updateEvent.getEventStatus() : existingEvent.getEventStatus());
 
         if (updateEvent.getEventLocation() != null) {
-            EventLocations location = locationRepository.findById(updateEvent.getEventLocation().getLocationId())
-                    .orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
+            EventLocations location = locationRepository
+                .findById(updateEvent.getEventLocation().getLocationId())
+                .orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
             existingEvent.setEventLocation(location);
         }
 
@@ -134,8 +128,7 @@ public class EventSessionManagementService {
      *
      */
     public EventSessions cancelEvent(String id) {
-        EventSessions existingEvent = eventSessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+        EventSessions existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
         existingEvent.setEventStatus(EventStatus.CANCELLED);
         existingEvent.setUpdatedAt(LocalDateTime.now());

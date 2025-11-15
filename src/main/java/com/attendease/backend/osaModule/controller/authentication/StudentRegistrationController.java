@@ -1,7 +1,7 @@
 package com.attendease.backend.osaModule.controller.authentication;
 
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
-import com.attendease.backend.studentModule.service.authentication.StudentAuthenticationService;
+import com.attendease.backend.osaModule.service.management.user.student.StudentRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('OSA')")
 public class StudentRegistrationController {
 
-    private final StudentAuthenticationService authService;
+    private final StudentRegistrationService studentRegistrationService;
 
     /**
      * Register a new student account
      */
     @PostMapping("/register")
     public ResponseEntity<String> registerStudent(@Valid @RequestBody StudentRegistrationRequest request) {
-        String response = authService.registerNewStudentAccount(request);
+        String response = studentRegistrationService.registerNewStudentAccount(request);
         return ResponseEntity.ok(response);
     }
 }

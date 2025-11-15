@@ -5,6 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Response DTO returned after a student login attempt.
+ *
+ * <p>This object includes authentication results such as tokens,
+ * additional requirements (e.g., facial registration), and related metadata.</p>
+ */
 @Data
 @Builder
 @NoArgsConstructor
