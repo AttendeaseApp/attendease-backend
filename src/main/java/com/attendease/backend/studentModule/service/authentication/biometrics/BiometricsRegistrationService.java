@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Service responsible for registering and managing facial biometric data for students.
+ * BiometricsRegistrationService is responsible for registering and managing facial biometric data for students.
  * <p>
  * This service handles validation of uploaded images, communication with an external
  * facial recognition API, and persistence of biometric data to the database.

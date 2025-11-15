@@ -2,13 +2,13 @@ package com.attendease.backend.studentModule.service.event.registration;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
+import com.attendease.backend.domain.biometrics.Verification.Response.EventRegistrationBiometricsVerificationResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.records.AttendanceRecords;
-import com.attendease.backend.domain.records.EventRegistration.EventRegistrationBiometricsVerification;
 import com.attendease.backend.domain.records.EventRegistration.EventRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
@@ -26,6 +26,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * EventRegistrationService is responsible for handling student event registrations.
+ * <p>
+ * This includes:
+ * <ul>
+ *     <li>Validating event registration time windows</li>
+ *     <li>Confirming physical location proximity</li>
+ *     <li>Performing biometric (facial) verification</li>
+ *     <li>Ensuring the student is not already registered</li>
+ *     <li>Creating attendance records upon successful registration</li>
+ * </ul>
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -38,9 +51,24 @@ public class EventRegistrationService {
     private final BiometricsRepository biometricsRepository;
     private final StudentRepository studentsRepository;
     private final UserRepository userRepository;
-    //    private final StudentRepository studentRepository;
     private final LocationValidator locationValidator;
 
+    /**
+     * Registers a student for an event after validating:
+     * <ul>
+     *     <li>Event availability</li>
+     *     <li>Location boundaries</li>
+     *     <li>Duplicate registration prevention</li>
+     *     <li>Biometric facial verification</li>
+     * </ul>
+     *
+     * @param authenticatedUserId the ID of the currently authenticated user
+     * @param registrationRequest the registration request containing event, location, and biometric data
+     * @return the original registration request if successful
+     *
+     * @throws IllegalStateException if the user, student, event, location, or biometrics are invalid,
+     *                               or if registration conditions are not met
+     */
     public EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest) {
         Users user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
@@ -75,6 +103,14 @@ public class EventRegistrationService {
         return registrationRequest;
     }
 
+    /**
+     * Validates whether the event is in a state that permits registration.
+     *
+     * @param event the event to be validated
+     * @param now   the current timestamp
+     *
+     * @throws IllegalStateException if the event is not in an allowable registration state
+     */
     private void getEventStatus(EventSessions event, LocalDateTime now) {
         EventStatus status = event.getEventStatus();
 
@@ -95,6 +131,19 @@ public class EventRegistrationService {
         }
     }
 
+    /**
+     * Performs facial biometric verification by:
+     * <ul>
+     *     <li>Fetching stored biometric data</li>
+     *     <li>Extracting facial encodings from the uploaded image</li>
+     *     <li>Comparing extracted and stored encodings</li>
+     * </ul>
+     *
+     * @param studentNumber   the student's unique number
+     * @param faceImageBase64 base64-encoded face image
+     *
+     * @throws IllegalStateException if verification fails or required biometric data is missing
+     */
     private void verifyStudentFace(String studentNumber, String faceImageBase64) {
         try {
             BiometricData biometricData = biometricsRepository
@@ -106,7 +155,7 @@ public class EventRegistrationService {
             }
 
             log.info("Extracting facial encoding from uploaded image for student: {}", studentNumber);
-            EventRegistrationBiometricsVerification encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImageBase64);
+            EventRegistrationBiometricsVerificationResponse encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImageBase64);
 
             if (!encodingResponse.getSuccess() || encodingResponse.getFacialEncoding() == null) {
                 throw new IllegalStateException("Failed to detect face in uploaded image");
@@ -127,6 +176,15 @@ public class EventRegistrationService {
         }
     }
 
+    /**
+     * Checks if the student is already registered for the given event and location.
+     *
+     * @param student  the student attempting registration
+     * @param event    the event being registered for
+     * @param location the location where the student is checking in
+     *
+     * @throws IllegalStateException if a prior registration already exists
+     */
     private void isAlreadyRegistered(Students student, EventSessions event, EventLocations location) {
         List<AttendanceRecords> existingRecords = attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.REGISTERED);
 
@@ -135,6 +193,7 @@ public class EventRegistrationService {
         }
     }
 
+    // TODO: Implementation of this. Dependent on CLUSTERS, SECTION, COURSES kaya hindi ko pa matuloy :)
     private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
         EligibilityCriteria criteria = event.getEligibleStudents();
         if (criteria == null) return false;
