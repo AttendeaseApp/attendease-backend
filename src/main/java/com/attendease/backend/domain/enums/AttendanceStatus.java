@@ -9,4 +9,5 @@ public enum AttendanceStatus {
     REGISTERED,
     IDLE,
     LATE,
+    EXCUSED,
 }

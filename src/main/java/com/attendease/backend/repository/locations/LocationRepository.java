@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
  * {@code findById}, and {@code delete}. This repository currently does not define any custom query methods,
  * but can be extended in the future to include queries specific to event locations.
  * </p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
 public interface LocationRepository extends MongoRepository<EventLocations, String> {}

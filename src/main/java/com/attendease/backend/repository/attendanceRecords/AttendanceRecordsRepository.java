@@ -16,6 +16,8 @@ import org.springframework.stereotype.Repository;
  * Extends {@link MongoRepository} to provide standard data access methods such as
  * {@code save}, {@code findAll}, {@code findById}, and {@code delete}.
  * </p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
 public interface AttendanceRecordsRepository extends MongoRepository<AttendanceRecords, String> {
@@ -55,4 +57,13 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @return a list of {@link AttendanceRecords} associated with the student
      */
     List<AttendanceRecords> findByStudentId(String studentId);
+
+    /**
+     * Retrieves an optional attendance record for a specific student ID and event ID.
+     *
+     * @param studentId the unique identifier of the student
+     * @param eventId the unique identifier of the event session
+     * @return an {@link Optional} containing the {@link AttendanceRecords} if found, otherwise empty
+     */
+    Optional<AttendanceRecords> findByStudentIdAndEventEventId(String studentId, String eventId);
 }

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
  * providing standard operations like {@code save}, {@code findAll}, {@code findById}, {@code delete},
  * as well as custom query methods specific to student facial biometrics.
  * </p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
 public interface BiometricsRepository extends MongoRepository<BiometricData, String> {

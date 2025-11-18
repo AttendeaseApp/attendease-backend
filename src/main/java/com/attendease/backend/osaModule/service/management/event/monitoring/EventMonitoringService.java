@@ -8,14 +8,17 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-
 /**
- * Service used for monitoring event attendees and event statuses.
+ * {@link EventMonitoringService} a service used for monitoring ongoing event attendees and event statuses.
+ *
+ * <p>Provides methods to retrieve ongoing events and fetch attendees</p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -44,18 +47,16 @@ public class EventMonitoringService {
     public EventAttendeesResponse getAttendeesByEventWithRegisteredAttendanceStatus(String eventId) {
         List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
 
-        List<AttendeesResponse> attendees = records.stream()
-                .filter(Objects::nonNull)
-                .filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED)
-                .filter(record -> record.getStudent() != null && record.getStudent().getUser() != null)
-                .map(this::mapToAttendeeResponse)
-                .distinct()
-                .toList();
+        List<AttendeesResponse> attendees = records
+            .stream()
+            .filter(Objects::nonNull)
+            .filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED)
+            .filter(record -> record.getStudent() != null && record.getStudent().getUser() != null)
+            .map(this::mapToAttendeeResponse)
+            .distinct()
+            .toList();
 
-        return EventAttendeesResponse.builder()
-                .totalAttendees(attendees.size())
-                .attendees(attendees)
-                .build();
+        return EventAttendeesResponse.builder().totalAttendees(attendees.size()).attendees(attendees).build();
     }
 
     /**
@@ -69,25 +70,23 @@ public class EventMonitoringService {
         var user = student.getUser();
 
         return AttendeesResponse.builder()
-                .userId(user.getUserId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .contactNumber(user.getContactNumber())
-                .accountStatus(user.getAccountStatus())
-                .userType(user.getUserType())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-
-                .studentId(student.getId())
-                .studentNumber(student.getStudentNumber())
-                .section(student.getSectionId())
-                .course(student.getCourseId())
-
-                .attendanceStatus(record.getAttendanceStatus())
-                .reason(record.getReason())
-                .timeIn(record.getTimeIn())
-                .attendanceRecordId(record.getRecordId())
-                .build();
+            .userId(user.getUserId())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .email(user.getEmail())
+            .contactNumber(user.getContactNumber())
+            .accountStatus(user.getAccountStatus())
+            .userType(user.getUserType())
+            .createdAt(user.getCreatedAt())
+            .updatedAt(user.getUpdatedAt())
+            .studentId(student.getId())
+            .studentNumber(student.getStudentNumber())
+            .section(student.getSectionId())
+            .course(student.getCourseId())
+            .attendanceStatus(record.getAttendanceStatus())
+            .reason(record.getReason())
+            .timeIn(record.getTimeIn())
+            .attendanceRecordId(record.getRecordId())
+            .build();
     }
 }

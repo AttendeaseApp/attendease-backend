@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
  * {@code findById}, and {@code delete}. This repository also defines custom query methods to
  * retrieve students based on student number, user account, course, section, and combinations thereof.
  * </p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
 public interface StudentRepository extends MongoRepository<Students, String> {
