@@ -24,13 +24,13 @@ public class EventAttendanceRecordsManagementController {
     private final EventAttendanceRecordsManagementService attendanceService;
 
     /**
-     * Retrieves all events sorted by creation date, regardless of their status.
+     * Retrieves all events with {@link EventStatus} FINALIZED.
      *
      * @return a list of {@link EventSessions}
      */
-    @GetMapping("/event/all")
-    public List<EventSessions> getAllEvents() {
-        return attendanceService.getAllSortedByCreatedAt();
+    @GetMapping("/event/finalized")
+    public List<EventSessions> getAllEventsWithFinalizedStatus() {
+        return attendanceService.getFinalizedEvents();
     }
 
     /**
