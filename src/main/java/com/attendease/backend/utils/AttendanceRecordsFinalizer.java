@@ -46,6 +46,14 @@ public class AttendanceRecordsFinalizer {
             AttendanceStatus oldStatus = record.getAttendanceStatus();
             AttendanceStatus finalStatus = evaluateAttendanceFromLogs(event, record);
 
+            if (finalStatus == AttendanceStatus.PRESENT) {
+                AttendanceStatus lateStatus = evaluateLateAttendees(event, record);
+                if (lateStatus == AttendanceStatus.LATE) {
+                    finalStatus = AttendanceStatus.LATE;
+                    log.info("Overrode to LATE for student {} (arrived after start) in event {}", record.getStudent().getStudentNumber(), eventName);
+                }
+            }
+
             if (finalStatus != oldStatus) {
                 record.setAttendanceStatus(finalStatus);
                 record.setTimeOut(now);
@@ -61,7 +69,7 @@ public class AttendanceRecordsFinalizer {
                     .student(student)
                     .event(event)
                     .attendanceStatus(AttendanceStatus.ABSENT)
-                    .reason("No presence of student detected at all on this event")
+                    .reason("Missing, no any presence found and did not registered at all")
                     .timeIn(null)
                     .timeOut(null)
                     .build();
@@ -94,12 +102,20 @@ public class AttendanceRecordsFinalizer {
             record.setReason(null);
             return AttendanceStatus.PRESENT;
         } else if (insideRatio >= 0.3) {
-            record.setReason("Student was present only for part of the event");
+            record.setReason("Present only for part of the event");
             return AttendanceStatus.IDLE;
         } else {
-            record.setReason("Student was outside for most of the event");
+            record.setReason("Outside for most of the event");
             return AttendanceStatus.ABSENT;
         }
+    }
+
+    private AttendanceStatus evaluateLateAttendees(EventSessions event, AttendanceRecords record) {
+        if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartDateTime())) {
+            return null;
+        }
+        record.setReason("Late attendee: Arrived after event start at " + record.getTimeIn());
+        return AttendanceStatus.LATE;
     }
 
     /**

@@ -7,8 +7,8 @@ import com.attendease.backend.domain.biometrics.Verification.Response.EventRegis
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
-import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
 import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
@@ -95,10 +95,18 @@ public class EventRegistrationService {
 
         verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
 
-        AttendanceRecords record = AttendanceRecords.builder().student(student).event(event).location(location).timeIn(now).attendanceStatus(AttendanceStatus.REGISTERED).build();
+        AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
+        AttendanceRecords record = AttendanceRecords.builder()
+            .student(student)
+            .event(event)
+            .location(location)
+            .timeIn(now)
+            .attendanceStatus(initialStatus)
+            .reason(now.isAfter(event.getStartDateTime()) ? "Late registration" : null)
+            .build();
 
         attendanceRecordsRepository.save(record);
-        log.info("Student {} successfully registered for event {} with facial verification.", student.getStudentNumber(), event.getEventId());
+        log.info("Student {} {}registered for event {} with facial verification.", student.getStudentNumber(), now.isAfter(event.getStartDateTime()) ? "late " : "", event.getEventId());
 
         return registrationRequest;
     }
@@ -120,10 +128,6 @@ public class EventRegistrationService {
 
         if (status == EventStatus.CONCLUDED) {
             throw new IllegalStateException("This event has already ended and at the stage of finalizing records. You can no longer register.");
-        }
-
-        if (status == EventStatus.ONGOING && now.isAfter(event.getStartDateTime())) {
-            throw new IllegalStateException("The event has already started. You can no longer register.");
         }
 
         if (status == EventStatus.FINALIZED) {
