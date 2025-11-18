@@ -69,7 +69,7 @@ public class AttendanceRecordsFinalizer {
                     .student(student)
                     .event(event)
                     .attendanceStatus(AttendanceStatus.ABSENT)
-                    .reason("Missing no any presence found and did not registered at all")
+                    .reason("Missing, no any presence found and did not registered at all")
                     .timeIn(null)
                     .timeOut(null)
                     .build();
