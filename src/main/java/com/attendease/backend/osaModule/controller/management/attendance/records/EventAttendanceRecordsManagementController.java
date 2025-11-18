@@ -1,6 +1,7 @@
 package com.attendease.backend.osaModule.controller.management.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Request.UpdateAttendanceRequest;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.osaModule.service.management.attendance.records.EventAttendanceRecordsManagementService;
@@ -8,12 +9,17 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller for managing attendance records of students for finalized or ongoing events.
  * <p>
  * Accessible only by users with the OSA role.
+ * <p>
+ *
+ * Authored: jakematthewviado204@gmail.com
  */
 @RestController
 @RequestMapping("/api/attendance/records")
@@ -67,5 +73,24 @@ public class EventAttendanceRecordsManagementController {
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
         List<AttendanceRecords> records = attendanceService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
+    }
+
+    /**
+     * Updates the attendance status for a student's record in a specific event.
+     * Uses Spring Security's Authentication to identify the updating user for audit logging.
+     *
+     * @param studentId the ID of the student
+     * @param eventId the ID of the event session
+     * @param request the update request containing status and reason.
+     * @return a {@link ResponseEntity} containing the updated {@link AttendanceRecords}
+     */
+    @PutMapping("/{studentId}/event/{eventId}")
+    public ResponseEntity<AttendanceRecords> updateAttendanceStatus(@PathVariable String studentId, @PathVariable String eventId, @RequestBody UpdateAttendanceRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String updatedByUserId = auth.getName();
+
+        AttendanceRecords updatedRecord = attendanceService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
+
+        return ResponseEntity.ok(updatedRecord);
     }
 }

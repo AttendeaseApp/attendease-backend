@@ -12,6 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * {@link EventSessionManagementService} is a service used for managing event sessions, including creation, retrieval,
+ * updates, and deletion of events.
+ *
+ * <p>Provides methods to handle event lifecycle operations such as creating upcoming events, updating details,
+ * canceling events, and querying by status or date ranges. Ensures date validations and location references are properly handled.</p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -21,8 +30,13 @@ public class EventSessionManagementService {
     private final EventSessionsRepository eventSessionRepository;
 
     /**
-     * Create event
+     * Creates a new event session with the provided details.
+     * Validates the date range and sets the initial status to {@link EventStatus#UPCOMING}.
+     * Associates the event with a location if provided.
      *
+     * @param eventSession the {@link EventSessions} object containing event details
+     * @return the saved {@link EventSessions} with generated ID and timestamps
+     * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
     public EventSessions createEvent(EventSessions eventSession) {
         log.info("Creating new event session: {}", eventSession.getEventName());
@@ -44,8 +58,11 @@ public class EventSessionManagementService {
     }
 
     /**
-     * Get event by ID
+     * Retrieves an event session by its unique identifier.
      *
+     * @param id the unique ID of the event session
+     * @return the {@link EventSessions} matching the ID
+     * @throws RuntimeException if no event is found with the provided ID
      */
     public EventSessions getEventById(String id) {
         log.info("Retrieving event session with ID: {}", id);
@@ -53,40 +70,52 @@ public class EventSessionManagementService {
     }
 
     /**
-     * Get all events
+     * Retrieves all event sessions.
      *
+     * @return a list of all {@link EventSessions}
      */
     public List<EventSessions> getAllEvents() {
         return eventSessionRepository.findAll();
     }
 
     /**
-     * Get events by status
+     * Retrieves event sessions filtered by a specific status.
      *
+     * @param status the {@link EventStatus} to filter by
+     * @return a list of {@link EventSessions} with the matching status
      */
     public List<EventSessions> getEventsByStatus(EventStatus status) {
         return eventSessionRepository.findByEventStatus(status);
     }
 
     /**
-     * Get events by date range
+     * Retrieves event sessions within a specified date range.
      *
+     * @param from the start date (inclusive)
+     * @param to the end date (inclusive)
+     * @return a list of {@link EventSessions} within the date range
      */
     public List<EventSessions> getEventsByDateRange(Date from, Date to) {
         return eventSessionRepository.findByDateRange(from, to);
     }
 
     /**
-     * Get events by status and date range
+     * Retrieves event sessions filtered by status and within a specified date range.
      *
+     * @param status the {@link EventStatus} to filter by
+     * @param from the start date (inclusive)
+     * @param to the end date (inclusive)
+     * @return a list of {@link EventSessions} matching the status and date range
      */
     public List<EventSessions> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
         return eventSessionRepository.findByStatusAndDateRange(status, from, to);
     }
 
     /**
-     * Delete event by ID
+     * Deletes an event session by its unique identifier.
      *
+     * @param id the unique ID of the event session to delete
+     * @throws RuntimeException if no event is found with the provided ID
      */
     public void deleteEventById(String id) {
         if (!eventSessionRepository.existsById(id)) {
@@ -97,7 +126,14 @@ public class EventSessionManagementService {
     }
 
     /**
-     * Update Event
+     * Updates an existing event session with new details.
+     * Validates location if provided and updates timestamps.
+     *
+     * @param eventId the unique ID of the event to update
+     * @param updateEvent the {@link EventSessions} object containing updated fields
+     * @return the updated {@link EventSessions}
+     * @throws RuntimeException if no event is found with the provided ID
+     * @throws IllegalArgumentException if the location ID is invalid
      */
     public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
         EventSessions existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
@@ -124,8 +160,11 @@ public class EventSessionManagementService {
     }
 
     /**
-     * Cancel event
+     * Cancels an event session by setting its status to {@link EventStatus#CANCELLED}.
      *
+     * @param id the unique ID of the event to cancel
+     * @return the updated {@link EventSessions} with cancelled status
+     * @throws RuntimeException if no event is found with the provided ID
      */
     public EventSessions cancelEvent(String id) {
         EventSessions existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));

@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
  * {@code findById}, and {@code delete}. This repository also defines custom query methods to
  * retrieve event sessions by status, date ranges, or combinations of both, and to order events by creation time.
  * </p>
+ *
+ * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
 public interface EventSessionsRepository extends MongoRepository<EventSessions, String> {
