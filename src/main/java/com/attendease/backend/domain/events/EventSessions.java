@@ -4,7 +4,6 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * Class representing an event session.
