@@ -1,6 +1,7 @@
 package com.attendease.backend.osaModule.service.management.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Response.AttendeesResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
@@ -11,6 +12,7 @@ import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import java.time.LocalDateTime;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventAttendanceRecordsManagementService {
 
     private final EventSessionsRepository eventSessionsRepository;
@@ -38,12 +41,57 @@ public class EventAttendanceRecordsManagementService {
     }
 
     /**
-     * Retrieves all finalized event sessions.
+     * Retrieves all finalized event sessions with attendees per attendance status.
      *
      * @return a list of {@link EventSessions} with status {@link EventStatus#FINALIZED}
      */
-    public List<EventSessions> getFinalizedEvents() {
-        return eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
+    /**
+     * Retrieves finalized events with summarized attendance data.
+     *
+     * @return list of FinalizedAttendanceRecordsResponse
+     */
+    public List<FinalizedAttendanceRecordsResponse> getFinalizedEvents() {
+        List<EventSessions> finalizedEvents = eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
+        List<FinalizedAttendanceRecordsResponse> responses = new ArrayList<>();
+
+        for (EventSessions event : finalizedEvents) {
+            List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(event.getEventId());
+            long totalPresent = records
+                .stream()
+                .filter(r -> r.getAttendanceStatus() == AttendanceStatus.PRESENT)
+                .count();
+            long totalAbsent = records
+                .stream()
+                .filter(r -> r.getAttendanceStatus() == AttendanceStatus.ABSENT)
+                .count();
+            long totalIdle = records
+                .stream()
+                .filter(r -> r.getAttendanceStatus() == AttendanceStatus.IDLE)
+                .count();
+            long totalLate = records
+                .stream()
+                .filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE)
+                .count();
+
+            String locationName = event.getEventLocation() != null ? event.getEventLocation().getLocationName() : null;
+
+            FinalizedAttendanceRecordsResponse response = FinalizedAttendanceRecordsResponse.builder()
+                .eventId(event.getEventId())
+                .eventName(event.getEventName())
+                .locationName(locationName)
+                .timeInRegistrationStartDateTime(event.getTimeInRegistrationStartDateTime())
+                .startDateTime(event.getStartDateTime())
+                .endDateTime(event.getEndDateTime())
+                .eventStatus(event.getEventStatus())
+                .totalPresent((int) totalPresent)
+                .totalAbsent((int) totalAbsent)
+                .totalIdle((int) totalIdle)
+                .totalLate((int) totalLate)
+                .build();
+            responses.add(response);
+        }
+
+        return responses;
     }
 
     /**

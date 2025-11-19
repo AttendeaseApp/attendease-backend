@@ -1,6 +1,7 @@
 package com.attendease.backend.osaModule.controller.management.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
+import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Request.UpdateAttendanceRequest;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.events.EventSessions;
@@ -32,10 +33,10 @@ public class EventAttendanceRecordsManagementController {
     /**
      * Retrieves all events with {@link EventStatus} FINALIZED.
      *
-     * @return a list of {@link EventSessions}
+     * @return a list of {@link FinalizedAttendanceRecordsResponse}
      */
     @GetMapping("/event/finalized")
-    public List<EventSessions> getAllEventsWithFinalizedStatus() {
+    public List<FinalizedAttendanceRecordsResponse> getAllEventsWithFinalizedStatus() {
         return attendanceService.getFinalizedEvents();
     }
 
