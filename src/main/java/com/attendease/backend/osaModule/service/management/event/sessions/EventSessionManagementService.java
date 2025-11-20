@@ -5,6 +5,7 @@ import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -193,6 +194,14 @@ public class EventSessionManagementService {
 
         if (startDateTime.isAfter(endDateTime)) {
             throw new IllegalArgumentException("Event start date/time must be before event end date/time.");
+        }
+
+        long durationInMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+        if (durationInMinutes < 30) {
+            throw new IllegalArgumentException("Event duration must be at least 30 minutes.");
+        }
+        if (durationInMinutes > 360) {
+            throw new IllegalArgumentException("Event duration must not exceed 6 hours.");
         }
     }
 }
