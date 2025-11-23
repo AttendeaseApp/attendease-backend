@@ -2,6 +2,7 @@ package com.attendease.backend.domain.clusters;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +13,16 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
-
 /**
- * Class representing a student cluster.
+ * Domain entity representing a clusters.
+ *
+ * <p>Clusters serve as parent entities for courses, grouping related academic programs.
+ * Each cluster has a unique name, and auditing timestamps are automatically managed
+ * via Spring Data MongoDB (@CreatedDate, @LastModifiedDate). Enable {@code @EnableMongoAuditing}
+ * in the application configuration for timestamp population.</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-09-16
  */
 @Data
 @NoArgsConstructor

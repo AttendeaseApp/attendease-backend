@@ -1,15 +1,17 @@
 package com.attendease.backend.domain.students.Registration.Request;
 
 import jakarta.validation.constraints.*;
+import java.util.Date;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.util.Date;
 
 /**
  * DTO for student registration requests.
  * Contains all necessary information to create both User and Student entities.
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-08-22
  */
 @Data
 @NoArgsConstructor
@@ -43,10 +45,7 @@ public class StudentRegistrationRequest {
 
     private String section;
 
-    private String yearLevel;
-
     private String courseRefId;
 
     private String clusterRefId;
 }
-
