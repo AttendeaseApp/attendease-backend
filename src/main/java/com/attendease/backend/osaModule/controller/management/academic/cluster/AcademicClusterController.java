@@ -2,15 +2,22 @@ package com.attendease.backend.osaModule.controller.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.osaModule.service.management.academic.cluster.AcademicClusterService;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+/**
+ * {@code AcademicClusterController} id used for managing cluster courses.
+ *
+ * <p>This controller provides CRUD operations for clusters, ensuring that all endpoints are secured
+ * for OSA (Office of Student Affairs) role users only.</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-09-19
+ */
 @RestController
 @RequestMapping("/api/clusters")
 @RequiredArgsConstructor
@@ -45,4 +52,3 @@ public class AcademicClusterController {
         return ResponseEntity.noContent().build();
     }
 }
-

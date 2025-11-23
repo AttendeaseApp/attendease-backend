@@ -9,7 +9,6 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import java.time.LocalDateTime;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,8 @@ import org.springframework.stereotype.Service;
  * <p>Provides methods to retrieve ongoing and finalized events, fetch attendee details, and update attendance statuses
  * with audit logging support.</p>
  *
- * <p>Authored: jakematthewviado204@gmail.com</p>
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-11-11
  */
 @Service
 @RequiredArgsConstructor
