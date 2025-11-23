@@ -26,26 +26,84 @@ public class AcademicClusterController {
 
     private final AcademicClusterService clusterService;
 
+    /**
+     * Creates a new cluster.
+     *
+     * <p><strong>Request Body Example:</strong></p>
+     * <pre>{@code
+     * {
+     *   "clusterName": "CETE"
+     * }
+     * }</pre>
+     *
+     * @param cluster The cluster details (validated; must include a non-blank {@code clusterName}).
+     * @return The created {@link Clusters} entity (HTTP 200 OK).
+     *
+     * @throws IllegalArgumentException If the cluster name already exists.
+     */
     @PostMapping
     public ResponseEntity<Clusters> create(@RequestBody @Valid Clusters cluster) {
         return ResponseEntity.ok(clusterService.createCluster(cluster));
     }
 
+    /**
+     * Retrieves all clusters.
+     *
+     * @return A list of all {@link Clusters} (HTTP 200 OK).
+     */
     @GetMapping
     public ResponseEntity<List<Clusters>> getAll() {
         return ResponseEntity.ok(clusterService.getAllClusters());
     }
 
+    /**
+     * Retrieves a specific cluster by its ID.
+     *
+     * @param id The unique ID of the cluster.
+     * @return The {@link Clusters} entity (HTTP 200 OK).
+     *
+     * @throws RuntimeException If the cluster is not found.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<Clusters> getById(@PathVariable String id) {
         return ResponseEntity.ok(clusterService.getClusterById(id));
     }
 
+    /**
+     * Updates an existing cluster by ID.
+     *
+     * <p>Only the {@code clusterName} is updated. No cascade to courses (references use ID).</p>
+     *
+     * <p><strong>Request Body Example:</strong></p>
+     * <pre>{@code
+     * {
+     *   "clusterName": "ENGINEERING"
+     * }
+     * }</pre>
+     *
+     * @param id The unique ID of the cluster to update.
+     * @param cluster The updated cluster details (only {@code clusterName} is applied).
+     * @return The updated {@link Clusters} entity (HTTP 200 OK).
+     *
+     * @throws RuntimeException If the cluster is not found.
+     * @throws IllegalArgumentException If the new name already exists.
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Clusters> update(@PathVariable String id, @RequestBody Clusters cluster) {
         return ResponseEntity.ok(clusterService.updateCluster(id, cluster));
     }
 
+    /**
+     * Deletes a cluster and all its associated courses and sections.
+     *
+     * <p>This performs a full cascading delete: courses under the cluster are deleted first
+     * (including their sections), then the cluster.</p>
+     *
+     * @param id The unique ID of the cluster to delete.
+     * @return No content (HTTP 204 No Content).
+     *
+     * @throws RuntimeException If the cluster is not found.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         clusterService.deleteCluster(id);

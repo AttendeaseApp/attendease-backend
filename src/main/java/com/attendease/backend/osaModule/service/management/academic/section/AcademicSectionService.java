@@ -10,6 +10,17 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * {@code AcademicSectionService} is a service layer for managing academic sections (e.g., "BSIT-101", "BSA-101", "BSECE-101").
+ *
+ * <p>This service provides CRUD operations for sections, with strict validation on naming format
+ * ("COURSE_NAME-SECTION_NUMBER", e.g., "BSIT-101"). It supports auto-creation of defaults,
+ * bulk operations for courses, and cascading updates/deletes. Integrates with
+ * {@link CourseRepository} for parent course resolution.</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-11-25
+ */
 @Service
 @RequiredArgsConstructor
 public class AcademicSectionService {
@@ -17,6 +28,18 @@ public class AcademicSectionService {
     private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
 
+    /**
+     * Creates a new section under a specific course.
+     *
+     * <p>Validates the full name format and prefix match before saving.</p>
+     *
+     * @param courseId The ID of the parent course.
+     * @param section The {@link Sections} entity to create (must have a valid {@code name}).
+     * @return The saved {@link Sections} entity (with auto-generated ID and timestamps).
+     *
+     * @throws RuntimeException If the course is not found.
+     * @throws IllegalArgumentException If the name format is invalid or mismatches the course.
+     */
     public Sections createSection(String courseId, Sections section) {
         Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
         validateFullSectionName(section.getName(), course.getCourseName());
@@ -24,24 +47,67 @@ public class AcademicSectionService {
         return sectionsRepository.save(section);
     }
 
+    /**
+     * Retrieves all sections under a specific course.
+     *
+     * @param courseId The ID of the parent course.
+     * @return A {@link List} of {@link Sections} for the course.
+     *
+     * @throws RuntimeException If the course is not found.
+     */
     public List<Sections> getSectionsByCourse(String courseId) {
         Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
         return sectionsRepository.findByCourse(course);
     }
 
+    /**
+     * Retrieves all sections across all courses.
+     *
+     * @return A {@link List} of all {@link Sections} entities.
+     */
     public List<Sections> getAllSections() {
         return sectionsRepository.findAll();
     }
 
+    /**
+     * Retrieves a section by its ID.
+     *
+     * @param id The unique ID of the section.
+     * @return The {@link Sections} entity if found.
+     *
+     * @throws RuntimeException If the section is not found.
+     */
     public Sections getSectionById(String id) {
         return sectionsRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
     }
 
+    /**
+     * Retrieves a section by its full name (e.g., "BSIT-101").
+     *
+     * <p>Validates the format before querying.</p>
+     *
+     * @param fullName The full section name.
+     * @return An {@link Optional} containing the {@link Sections} if found.
+     *
+     * @throws IllegalArgumentException If the name format is invalid.
+     */
     public Optional<Sections> getSectionByFullName(String fullName) {
         validateFullCourseSectionFormat(fullName);
         return sectionsRepository.findByName(fullName);
     }
 
+    /**
+     * Updates an existing section by ID.
+     *
+     * <p>Only the {@code name} is updated. Validates the new name against the parent course.</p>
+     *
+     * @param id The unique ID of the section to update.
+     * @param updatedSection The updated details (only {@code name} is applied).
+     * @return The updated {@link Sections} entity (with refreshed timestamps).
+     *
+     * @throws RuntimeException If the section is not found.
+     * @throws IllegalArgumentException If the new name format is invalid or mismatches the course.
+     */
     public Sections updateSection(String id, Sections updatedSection) {
         Sections existing = getSectionById(id);
         validateFullSectionName(updatedSection.getName(), existing.getCourse().getCourseName());
@@ -49,10 +115,25 @@ public class AcademicSectionService {
         return sectionsRepository.save(existing);
     }
 
+    /**
+     * Deletes a section by its ID.
+     *
+     * @param id The unique ID of the section to delete.
+     *
+     * @throws RuntimeException If the section is not found (implicit via repo).
+     */
     public void deleteSection(String id) {
         sectionsRepository.deleteById(id);
     }
 
+    /**
+     * Creates default sections for a given course.
+     *
+     * <p>Generates sections "COURSE_NAME-101" to "COURSE_NAME-801" if they don't exist.
+     * Skips duplicates based on full name.</p>
+     *
+     * @param course The parent {@link Courses} entity.
+     */
     public void createDefaultSections(Courses course) {
         List<String> defaultSectionNumbers = Arrays.asList("101", "201", "301", "401", "501", "601", "701", "801");
         String coursePrefix = course.getCourseName() + "-";
@@ -65,11 +146,30 @@ public class AcademicSectionService {
         }
     }
 
+    /**
+     * Deletes all sections for a specific course.
+     *
+     * <p>Bulk delete operation; used for cascading on course deletion.</p>
+     *
+     * @param courseId The ID of the parent course.
+     *
+     * @throws RuntimeException If the course is not found.
+     */
     public void deleteSectionsByCourse(String courseId) {
         List<Sections> sections = getSectionsByCourse(courseId);
         sectionsRepository.deleteAll(sections);
     }
 
+    /**
+     * Updates all sections for a course when its name changes.
+     *
+     * <p>Rebuilds section names with the new course prefix (e.g., "OLD-101" → "NEW-101").</p>
+     *
+     * @param courseId The ID of the course.
+     * @param newCourseName The new course name to use as prefix.
+     *
+     * @throws RuntimeException If the course is not found.
+     */
     public void updateSectionsForCourseNameChange(String courseId, String newCourseName) {
         Courses course = courseRepository.findById(courseId).orElseThrow();
         List<Sections> sections = getSectionsByCourse(courseId);
@@ -81,12 +181,31 @@ public class AcademicSectionService {
         }
     }
 
+    /**
+     * Validates the full course-section identifier format.
+     *
+     * <p>Regex: Uppercase alphanum prefix + "-" + exactly 3 digits.</p>
+     *
+     * @param fullIdentifier The full identifier to validate (e.g., "BSIT-101").
+     *
+     * @throws IllegalArgumentException If the format is invalid.
+     */
     public void validateFullCourseSectionFormat(String fullIdentifier) {
         if (fullIdentifier == null || !fullIdentifier.matches("^[A-Z0-9]+-[0-9]{3}$")) {
             throw new IllegalArgumentException("Invalid format. Expected: COURSE_NAME-SECTION_NUMBER (e.g., BSECE-101). " + "COURSE_NAME: uppercase letters/digits; SECTION_NUMBER: exactly 3 digits.");
         }
     }
 
+    /**
+     * Validates the full section name against the course name and default numbers.
+     *
+     * <p>Private helper; checks prefix match and allowed section numbers (101-801).</p>
+     *
+     * @param fullSectionName The full name to validate (e.g., "BSIT-101").
+     * @param courseName The expected course prefix (e.g., "BSIT").
+     *
+     * @throws IllegalArgumentException If prefix mismatches, number invalid, or format wrong.
+     */
     private void validateFullSectionName(String fullSectionName, String courseName) {
         validateFullCourseSectionFormat(fullSectionName);
         String expectedPrefix = courseName + "-";
