@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.authentication.dto;
+package com.attendease.backend.domain.users.OSA.Login.Request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.user.student;
+package com.attendease.backend.osaModule.service.management.student.registration;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -58,7 +58,9 @@ public class StudentRegistrationService {
         return "Student account registered successfully.";
     }
 
-    // helper methods
+    /**
+     * PRIVATE HELPERS
+     */
 
     private void validateRegistrationRequest(StudentRegistrationRequest request) {
         if (request.getStudentNumber() == null || request.getStudentNumber().trim().isEmpty()) {
