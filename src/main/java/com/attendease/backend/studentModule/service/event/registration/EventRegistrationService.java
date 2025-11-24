@@ -77,9 +77,9 @@ public class EventRegistrationService {
         LocalDateTime now = LocalDateTime.now();
         getEventStatus(event, now);
 
-        //        if (!isStudentEligibleForEvent(event, student)) {
-        //            throw new IllegalStateException("Student is not eligible to check in for this event.");
-        //        }
+        if (!isStudentEligibleForEvent(event, student)) {
+            throw new IllegalStateException("Student is not eligible to check in for this event.");
+        }
 
         EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -89,11 +89,11 @@ public class EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64() == null) {
-            throw new IllegalStateException("Face image is required for check-in");
-        }
+        // if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64() == null) {
+        //     throw new IllegalStateException("Face image is required for check-in");
+        // }
 
-        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+        // verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
 
         AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
         AttendanceRecords record = AttendanceRecords.builder()
@@ -197,19 +197,12 @@ public class EventRegistrationService {
         }
     }
 
-    // TODO: Implementation of this. Dependent on CLUSTERS, SECTION, COURSES kaya hindi ko pa matuloy :)
     private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
         EligibilityCriteria criteria = event.getEligibleStudents();
-        if (criteria == null) return false;
-
-        if (criteria.isAllStudents()) return true;
-
-        String studentCourseId = student.getCourseId();
-        String studentSectionId = student.getSectionId();
-
-        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
-        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
-
-        return courseMatch || sectionMatch;
+        if (criteria == null || criteria.isAllStudents()) return true;
+        boolean clusterMatch = criteria.getCluster() != null && student.getCluster() != null && criteria.getCluster().contains(student.getCluster());
+        boolean courseMatch = criteria.getCourse() != null && student.getCourse() != null && criteria.getCourse().contains(student.getCourse());
+        boolean sectionMatch = criteria.getSections() != null && student.getSection() != null && criteria.getSections().contains(student.getSection());
+        return clusterMatch || courseMatch || sectionMatch;
     }
 }

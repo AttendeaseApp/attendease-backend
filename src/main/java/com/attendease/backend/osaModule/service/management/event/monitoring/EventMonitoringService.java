@@ -50,7 +50,7 @@ public class EventMonitoringService {
         List<AttendeesResponse> attendees = records
             .stream()
             .filter(Objects::nonNull)
-            .filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED)
+            .filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED || record.getAttendanceStatus() == AttendanceStatus.LATE)
             .filter(record -> record.getStudent() != null && record.getStudent().getUser() != null)
             .map(this::mapToAttendeeResponse)
             .distinct()
@@ -68,6 +68,9 @@ public class EventMonitoringService {
     private AttendeesResponse mapToAttendeeResponse(AttendanceRecords record) {
         var student = record.getStudent();
         var user = student.getUser();
+        String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
+        String courseName = (student.getCourse() != null) ? student.getCourse().getCourseName() : "";
+        String clusterName = (student.getCluster() != null) ? student.getCluster().getClusterName() : "";
 
         return AttendeesResponse.builder()
             .userId(user.getUserId())
@@ -81,8 +84,9 @@ public class EventMonitoringService {
             .updatedAt(user.getUpdatedAt())
             .studentId(student.getId())
             .studentNumber(student.getStudentNumber())
-            .section(student.getSectionId())
-            .course(student.getCourseId())
+            .sectionName(sectionName)
+            .courseName(courseName)
+            .clusterName(clusterName)
             .attendanceStatus(record.getAttendanceStatus())
             .reason(record.getReason())
             .timeIn(record.getTimeIn())

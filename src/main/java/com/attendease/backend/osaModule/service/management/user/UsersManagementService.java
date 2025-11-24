@@ -281,8 +281,8 @@ public class UsersManagementService {
             .updatedAt(user.getUpdatedAt())
             .studentId(student != null ? student.getId() : null)
             .studentNumber(student != null ? student.getStudentNumber() : null)
-            .section(student != null && student.getSectionId() != null ? student.getSectionId() : null)
-            .course(student != null && student.getCourseId() != null ? student.getCourseId() : null)
+            .section(student != null && student.getSection().getId() != null ? student.getSection().getId() : null)
+            .course(student != null && student.getCourse().getId() != null ? student.getCourse().getId() : null)
             .build();
     }
 }
