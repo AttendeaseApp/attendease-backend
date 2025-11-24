@@ -1,24 +1,16 @@
 package com.attendease.backend.osaModule.service.management.event.sessions;
 
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.repository.clusters.ClustersRepository;
-import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -50,14 +42,22 @@ public class EventSessionManagementService {
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
     public EventSessions createEvent(EventSessionRequest request) {
+        EligibilityCriteria criteria = request.getEligibleStudents();
+        if (criteria == null) {
+            criteria = EligibilityCriteria.builder().allStudents(true).build();
+        }
+        validateEligibilityCriteria(criteria);
+
         EventSessions eventSession = EventSessions.builder()
             .eventName(request.getEventName())
             .description(request.getDescription())
             .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
             .startDateTime(request.getStartDateTime())
             .endDateTime(request.getEndDateTime())
+            .eligibleStudents(criteria)
             .build();
 
+        eventSession.setEventLocationId(request.getEventLocationId());
         validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
 
         eventSession.setEventStatus(EventStatus.UPCOMING);
@@ -194,6 +194,10 @@ public class EventSessionManagementService {
         existingEvent.setUpdatedAt(LocalDateTime.now());
         return eventSessionRepository.save(existingEvent);
     }
+
+    /**
+     * PRIVATE HELPERS
+     */
 
     private void validateDateRange(LocalDateTime timeInDateTime, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         LocalDateTime now = LocalDateTime.now();
