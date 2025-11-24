@@ -1,6 +1,9 @@
 package com.attendease.backend.domain.students;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.users.Users;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -37,8 +40,12 @@ public class Students {
     @Indexed(unique = true)
     private String studentNumber;
 
-    private String sectionId;
-    private String courseId;
+    @DBRef
+    private Clusters cluster;
 
-    private String cluster;
+    @DBRef
+    private Courses course;
+
+    @DBRef
+    private Sections section;
 }

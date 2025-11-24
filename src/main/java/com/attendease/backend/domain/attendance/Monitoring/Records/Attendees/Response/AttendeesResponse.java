@@ -4,11 +4,9 @@ import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
-
 
 /**
  *  Used for retrieving attendance records of the students
@@ -16,6 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class AttendeesResponse {
+
     private String attendanceRecordId;
     private String userId;
     private String firstName;
@@ -42,7 +41,8 @@ public class AttendeesResponse {
 
     private String studentId;
     private String studentNumber;
-    private String section;
-    private String course;
+    
+    private String sectionName;
+    private String courseName;
+    private String clusterName;
 }
-

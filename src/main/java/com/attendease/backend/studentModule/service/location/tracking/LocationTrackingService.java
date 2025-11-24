@@ -4,8 +4,6 @@ import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
 import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
 import com.attendease.backend.repository.locations.LocationRepository;
-import com.attendease.backend.repository.students.StudentRepository;
-import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

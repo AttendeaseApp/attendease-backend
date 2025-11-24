@@ -75,11 +75,11 @@ public class EventRegistrationService {
         EventSessions event = eventSessionsRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        getEventStatus(event, now);
+        validateEventStatus(event, now);
 
-        //        if (!isStudentEligibleForEvent(event, student)) {
-        //            throw new IllegalStateException("Student is not eligible to check in for this event.");
-        //        }
+        if (!isStudentEligibleForEvent(event, student)) {
+            throw new IllegalStateException("Student is not eligible to check in for this event.");
+        }
 
         EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
@@ -112,14 +112,10 @@ public class EventRegistrationService {
     }
 
     /**
-     * Validates whether the event is in a state that permits registration.
-     *
-     * @param event the event to be validated
-     * @param now   the current timestamp
-     *
-     * @throws IllegalStateException if the event is not in an allowable registration state
+     * PRIVATE HELPERS
      */
-    private void getEventStatus(EventSessions event, LocalDateTime now) {
+
+    private void validateEventStatus(EventSessions event, LocalDateTime now) {
         EventStatus status = event.getEventStatus();
 
         if (status == EventStatus.UPCOMING) {
@@ -135,19 +131,6 @@ public class EventRegistrationService {
         }
     }
 
-    /**
-     * Performs facial biometric verification by:
-     * <ul>
-     *     <li>Fetching stored biometric data</li>
-     *     <li>Extracting facial encodings from the uploaded image</li>
-     *     <li>Comparing extracted and stored encodings</li>
-     * </ul>
-     *
-     * @param studentNumber   the student's unique number
-     * @param faceImageBase64 base64-encoded face image
-     *
-     * @throws IllegalStateException if verification fails or required biometric data is missing
-     */
     private void verifyStudentFace(String studentNumber, String faceImageBase64) {
         try {
             BiometricData biometricData = biometricsRepository
@@ -180,36 +163,19 @@ public class EventRegistrationService {
         }
     }
 
-    /**
-     * Checks if the student is already registered for the given event and location.
-     *
-     * @param student  the student attempting registration
-     * @param event    the event being registered for
-     * @param location the location where the student is checking in
-     *
-     * @throws IllegalStateException if a prior registration already exists
-     */
     private void isAlreadyRegistered(Students student, EventSessions event, EventLocations location) {
         List<AttendanceRecords> existingRecords = attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.REGISTERED);
-
         if (!existingRecords.isEmpty()) {
             throw new IllegalStateException("Student is already checked in for this event/location.");
         }
     }
 
-    // TODO: Implementation of this. Dependent on CLUSTERS, SECTION, COURSES kaya hindi ko pa matuloy :)
     private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
         EligibilityCriteria criteria = event.getEligibleStudents();
-        if (criteria == null) return false;
-
-        if (criteria.isAllStudents()) return true;
-
-        String studentCourseId = student.getCourseId();
-        String studentSectionId = student.getSectionId();
-
-        boolean courseMatch = criteria.getCourse() != null && criteria.getCourse().contains(studentCourseId);
-        boolean sectionMatch = criteria.getSections() != null && criteria.getSections().contains(studentSectionId);
-
-        return courseMatch || sectionMatch;
+        if (criteria == null || criteria.isAllStudents()) return true;
+        boolean clusterMatch = criteria.getCluster() != null && student.getCluster() != null && criteria.getCluster().contains(student.getCluster().getClusterId());
+        boolean courseMatch = criteria.getCourse() != null && student.getCourse() != null && criteria.getCourse().contains(student.getCourse().getId());
+        boolean sectionMatch = criteria.getSections() != null && student.getSection() != null && criteria.getSections().contains(student.getSection().getId());
+        return clusterMatch || courseMatch || sectionMatch;
     }
 }

@@ -122,7 +122,6 @@ public class EventAttendanceRecordsManagementService {
      */
     public EventAttendeesResponse getAttendeesByEvent(String eventId) {
         List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
-
         List<AttendeesResponse> attendees = records
             .stream()
             .filter(Objects::nonNull)
@@ -130,7 +129,9 @@ public class EventAttendanceRecordsManagementService {
             .map(record -> {
                 var student = record.getStudent();
                 var user = student.getUser();
-
+                String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
+                String courseName = (student.getCourse() != null) ? student.getCourse().getCourseName() : "";
+                String clusterName = (student.getCluster() != null) ? student.getCluster().getClusterName() : "";
                 return AttendeesResponse.builder()
                     .userId(user.getUserId())
                     .firstName(user.getFirstName())
@@ -143,8 +144,9 @@ public class EventAttendanceRecordsManagementService {
                     .updatedAt(user.getUpdatedAt())
                     .studentId(student.getId())
                     .studentNumber(student.getStudentNumber())
-                    .section(student.getSectionId())
-                    .course(student.getCourseId())
+                    .sectionName(sectionName)
+                    .courseName(courseName)
+                    .clusterName(clusterName)
                     .attendanceStatus(record.getAttendanceStatus())
                     .reason(record.getReason())
                     .timeIn(record.getTimeIn())
@@ -154,7 +156,6 @@ public class EventAttendanceRecordsManagementService {
             })
             .distinct()
             .toList();
-
         return EventAttendeesResponse.builder().totalAttendees(attendees.size()).attendees(attendees).build();
     }
 

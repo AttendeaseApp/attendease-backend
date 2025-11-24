@@ -1,16 +1,16 @@
 package com.attendease.backend.osaModule.controller.management.event.sessions;
 
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.osaModule.service.management.event.sessions.EventSessionManagementService;
 import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
+import com.attendease.backend.osaModule.service.management.event.sessions.EventSessionManagementService;
+import java.util.Date;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
@@ -21,7 +21,7 @@ public class EventSessionsManagementController {
     private final EventSessionManagementService eventService;
 
     @PostMapping
-    public ResponseEntity<EventSessions> createEvent(@RequestBody EventSessions eventCreationResponse) {
+    public ResponseEntity<EventSessions> createEvent(@RequestBody EventSessionRequest eventCreationResponse) {
         EventSessions createdEvent = eventService.createEvent(eventCreationResponse);
         return ResponseEntity.ok(createdEvent);
     }
@@ -46,25 +46,25 @@ public class EventSessionsManagementController {
 
     @GetMapping("/date-range")
     public ResponseEntity<List<EventSessions>> getEventsByDateRange(
-            @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
-            @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to) {
+        @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
+        @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to
+    ) {
         List<EventSessions> events = eventService.getEventsByDateRange(from, to);
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/status-date-range")
     public ResponseEntity<List<EventSessions>> getEventsByStatusAndDateRange(
-            @RequestParam("status") EventStatus status,
-            @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
-            @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to) {
+        @RequestParam("status") EventStatus status,
+        @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
+        @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to
+    ) {
         List<EventSessions> events = eventService.getEventsByStatusAndDateRange(status, from, to);
         return ResponseEntity.ok(events);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<EventSessions> updateEvent(
-            @PathVariable("id") String id,
-            @RequestBody EventSessions updateDTO) {
+    public ResponseEntity<EventSessions> updateEvent(@PathVariable("id") String id, @RequestBody EventSessions updateDTO) {
         EventSessions updatedEvent = eventService.updateEvent(id, updateDTO);
         return ResponseEntity.ok(updatedEvent);
     }
@@ -81,4 +81,3 @@ public class EventSessionsManagementController {
         return ResponseEntity.noContent().build();
     }
 }
-

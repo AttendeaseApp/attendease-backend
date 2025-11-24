@@ -1,7 +1,9 @@
 package com.attendease.backend.osaModule.service.management.event.sessions;
 
 import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
@@ -39,9 +41,23 @@ public class EventSessionManagementService {
      * @return the saved {@link EventSessions} with generated ID and timestamps
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
-    public EventSessions createEvent(EventSessions eventSession) {
-        log.info("Creating new event session: {}", eventSession.getEventName());
+    public EventSessions createEvent(EventSessionRequest request) {
+        EligibilityCriteria criteria = request.getEligibleStudents();
+        if (criteria == null) {
+            criteria = EligibilityCriteria.builder().allStudents(true).build();
+        }
+        validateEligibilityCriteria(criteria);
 
+        EventSessions eventSession = EventSessions.builder()
+            .eventName(request.getEventName())
+            .description(request.getDescription())
+            .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
+            .startDateTime(request.getStartDateTime())
+            .endDateTime(request.getEndDateTime())
+            .eligibleStudents(criteria)
+            .build();
+
+        eventSession.setEventLocationId(request.getEventLocationId());
         validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
 
         eventSession.setEventStatus(EventStatus.UPCOMING);
@@ -146,6 +162,10 @@ public class EventSessionManagementService {
         existingEvent.setTimeInRegistrationStartDateTime(updateEvent.getTimeInRegistrationStartDateTime());
         existingEvent.setEventStatus(updateEvent.getEventStatus() != null ? updateEvent.getEventStatus() : existingEvent.getEventStatus());
 
+        if (updateEvent.getEligibleStudents() != null) {
+            validateEligibilityCriteria(updateEvent.getEligibleStudents());
+            existingEvent.setEligibleStudents(updateEvent.getEligibleStudents());
+        }
         if (updateEvent.getEventLocation() != null) {
             EventLocations location = locationRepository
                 .findById(updateEvent.getEventLocation().getLocationId())
@@ -175,6 +195,10 @@ public class EventSessionManagementService {
         return eventSessionRepository.save(existingEvent);
     }
 
+    /**
+     * PRIVATE HELPERS
+     */
+
     private void validateDateRange(LocalDateTime timeInDateTime, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -202,6 +226,39 @@ public class EventSessionManagementService {
         }
         if (durationInMinutes > 360) {
             throw new IllegalArgumentException("Event duration must not exceed 6 hours.");
+        }
+    }
+
+    private void validateEligibilityCriteria(EligibilityCriteria criteria) {
+        if (criteria.isAllStudents()) {
+            if (
+                (criteria.getCluster() != null && !criteria.getCluster().isEmpty()) ||
+                (criteria.getCourse() != null && !criteria.getCourse().isEmpty()) ||
+                (criteria.getSections() != null && !criteria.getSections().isEmpty())
+            ) {
+                throw new IllegalArgumentException("If 'allStudents' is true, criteria lists must be empty or null.");
+            }
+            return;
+        }
+        boolean hasCriteria =
+            (criteria.getCluster() != null && !criteria.getCluster().isEmpty()) ||
+            (criteria.getCourse() != null && !criteria.getCourse().isEmpty()) ||
+            (criteria.getSections() != null && !criteria.getSections().isEmpty());
+        if (!hasCriteria) {
+            throw new IllegalArgumentException("At least one criteria list (cluster, course, or sections) must be provided when 'allStudents' is false.");
+        }
+        validateListStrings(criteria.getCluster(), "cluster");
+        validateListStrings(criteria.getCourse(), "course");
+        validateListStrings(criteria.getSections(), "sections");
+    }
+
+    private void validateListStrings(List<String> list, String fieldName) {
+        if (list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i) == null || list.get(i).trim().isEmpty()) {
+                    throw new IllegalArgumentException(String.format("%s list at index %d must not be empty.", fieldName, i));
+                }
+            }
         }
     }
 }
