@@ -7,6 +7,7 @@ import com.attendease.backend.domain.locations.Response.LocationResponse;
 import com.attendease.backend.repository.locations.LocationRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.geo.Point;
@@ -24,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
  * calculating centroids for response DTOs, and enforcing validation on geometry types.</p>
  *
  * <p>Authored: jakematthewviado204@gmail.com</p>
+ * @since 2025-09-16
  */
 @Service
 @RequiredArgsConstructor
@@ -53,6 +55,37 @@ public class LocationsManagementService {
 
         location = locationRepository.save(location);
 
+        return convertToResponseDTO(location);
+    }
+
+    /**
+     * Updates an existing event location based on the provided request.
+     * Supports partial updates for name, type, and geometry. Updates the updatedAt timestamp.
+     *
+     * @param locationId the unique ID of the location to update
+     * @param request the {@link EventLocationRequest} containing updated location details and optional geometry
+     * @return a {@link LocationResponse} representing the updated location with computed centroid
+     * @throws ResponseStatusException if the location is not found, or if the geometry is invalid or not a Polygon
+     */
+    public LocationResponse updateLocation(String locationId, EventLocationRequest request) {
+        Optional<EventLocations> optLocation = locationRepository.findById(locationId);
+        if (optLocation.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found: " + locationId);
+        }
+        EventLocations location = optLocation.get();
+        if (request.getLocationName() != null) {
+            location.setLocationName(request.getLocationName());
+        }
+        if (request.getLocationType() != null) {
+            location.setLocationType(request.getLocationType());
+        }
+        if (request.getGeoJsonData() != null) {
+            GeoJsonPolygon polygon = convertToGeoJsonPolygon(request.getGeoJsonData());
+            location.setGeometry(polygon);
+            location.setGeometryType("Polygon");
+        }
+        location.setUpdatedAt(LocalDateTime.now());
+        location = locationRepository.save(location);
         return convertToResponseDTO(location);
     }
 
