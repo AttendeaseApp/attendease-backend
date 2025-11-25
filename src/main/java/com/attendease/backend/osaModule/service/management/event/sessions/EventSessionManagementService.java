@@ -37,7 +37,7 @@ public class EventSessionManagementService {
      * Validates the date range and sets the initial status to {@link EventStatus#UPCOMING}.
      * Associates the event with a location if provided.
      *
-     * @param eventSession the {@link EventSessions} object containing event details
+     * @param request the {@link EventSessions} object containing event details
      * @return the saved {@link EventSessions} with generated ID and timestamps
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
@@ -87,12 +87,12 @@ public class EventSessionManagementService {
     }
 
     /**
-     * Retrieves all event sessions.
+     * Retrieves all event sessions (ordered by newest first).
      *
      * @return a list of all {@link EventSessions}
      */
     public List<EventSessions> getAllEvents() {
-        return eventSessionRepository.findAll();
+        return eventSessionRepository.findAllByOrderByCreatedAtDesc();
     }
 
     /**
