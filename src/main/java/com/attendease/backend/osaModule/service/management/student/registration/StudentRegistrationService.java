@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.user.student;
+package com.attendease.backend.osaModule.service.management.student.registration;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -58,7 +58,9 @@ public class StudentRegistrationService {
         return "Student account registered successfully.";
     }
 
-    // helper methods
+    /**
+     * PRIVATE HELPERS
+     */
 
     private void validateRegistrationRequest(StudentRegistrationRequest request) {
         if (request.getStudentNumber() == null || request.getStudentNumber().trim().isEmpty()) {
@@ -94,9 +96,8 @@ public class StudentRegistrationService {
     private Students createStudentFromRegistrationRequest(StudentRegistrationRequest request) {
         Students student = new Students();
         student.setStudentNumber(request.getStudentNumber());
-        Sections derivedSection = null;
-        Courses derivedCourse = null;
-        Clusters derivedCluster = null;
+        Sections derivedSection;
+        Courses derivedCourse;
 
         if (request.getSection() != null && !request.getSection().trim().isEmpty()) {
             String sectionValue = request.getSection().trim();
@@ -111,33 +112,8 @@ public class StudentRegistrationService {
             if (derivedCourse == null) {
                 throw new IllegalArgumentException("Section has no associated course.");
             }
-            student.setCourse(derivedCourse);
-
-            derivedCluster = derivedCourse.getCluster();
-            if (derivedCluster == null) {
-                throw new IllegalArgumentException("Course has no associated cluster.");
-            }
-            student.setCluster(derivedCluster);
-        } else if (request.getCourseRefId() != null) {
-            derivedCourse = courseRepository.findById(request.getCourseRefId()).orElseThrow(() -> new IllegalArgumentException("Course ID not found: " + request.getCourseRefId()));
-            student.setCourse(derivedCourse);
-            derivedCluster = derivedCourse.getCluster();
-            if (derivedCluster != null) student.setCluster(derivedCluster);
-        } else if (request.getClusterRefId() != null) {
-            derivedCluster = clustersRepository.findById(request.getClusterRefId()).orElseThrow(() -> new IllegalArgumentException("Cluster ID not found: " + request.getClusterRefId()));
-            student.setCluster(derivedCluster);
         }
-        validateAcademicReferencing(student, request);
         return student;
-    }
-
-    private void validateAcademicReferencing(Students student, StudentRegistrationRequest request) {
-        if (request.getCourseRefId() != null && student.getCourse() != null && !request.getCourseRefId().equals(student.getCourse().getId())) {
-            throw new IllegalArgumentException("Provided course ID does not match derived from section.");
-        }
-        if (request.getClusterRefId() != null && student.getCluster() != null && !request.getClusterRefId().equals(student.getCluster().getClusterId())) {
-            throw new IllegalArgumentException("Provided cluster ID does not match derived from section/course.");
-        }
     }
 
     private boolean isValidId(String value) {

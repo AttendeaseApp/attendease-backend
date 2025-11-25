@@ -53,32 +53,6 @@ public interface StudentRepository extends MongoRepository<Students, String> {
     List<Students> findByUserIn(List<Users> users);
 
     /**
-     * Finds all students enrolled in any of the specified course IDs.
-     *
-     * @param courseIds a list of course IDs
-     * @return a list of {@link Students} enrolled in the specified courses
-     */
-    List<Students> findByCourseIdIn(List<String> courseIds);
-
-    /**
-     * Finds all students belonging to any of the specified section IDs.
-     *
-     * @param sectionIds a list of section IDs
-     * @return a list of {@link Students} in the specified sections
-     */
-    List<Students> findBySectionIdIn(List<String> sectionIds);
-
-    /**
-     * Finds all students who are either enrolled in any of the specified course IDs
-     * or belong to any of the specified section IDs.
-     *
-     * @param courseIds a list of course IDs
-     * @param sectionIds a list of section IDs
-     * @return a list of {@link Students} matching the course or section criteria
-     */
-    List<Students> findByCourseIdInOrSectionIdIn(List<String> courseIds, List<String> sectionIds);
-
-    /**
      * Finds a student by the ID of their associated user account using a custom MongoDB query.
      *
      * @param userId the ID of the {@link Users} account

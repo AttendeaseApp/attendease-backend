@@ -69,8 +69,6 @@ public class EventMonitoringService {
         var student = record.getStudent();
         var user = student.getUser();
         String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
-        String courseName = (student.getCourse() != null) ? student.getCourse().getCourseName() : "";
-        String clusterName = (student.getCluster() != null) ? student.getCluster().getClusterName() : "";
 
         return AttendeesResponse.builder()
             .userId(user.getUserId())
@@ -85,8 +83,6 @@ public class EventMonitoringService {
             .studentId(student.getId())
             .studentNumber(student.getStudentNumber())
             .sectionName(sectionName)
-            .courseName(courseName)
-            .clusterName(clusterName)
             .attendanceStatus(record.getAttendanceStatus())
             .reason(record.getReason())
             .timeIn(record.getTimeIn())
