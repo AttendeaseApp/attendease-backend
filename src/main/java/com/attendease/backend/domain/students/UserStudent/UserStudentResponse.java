@@ -24,4 +24,5 @@ public class UserStudentResponse {
     private String studentNumber;
     private String section;
     private String course;
+    private String cluster;
 }

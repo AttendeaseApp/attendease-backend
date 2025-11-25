@@ -1,5 +1,6 @@
 package com.attendease.backend.osaModule.controller.management.osa.registration;
 
+import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.osaModule.service.management.osa.registration.OsaRegistrationService;
 import jakarta.validation.Valid;
@@ -17,7 +18,7 @@ public class OsaRegistrationController {
     private final OsaRegistrationService osaRegistrationService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerOsa(@Valid @RequestBody Users user) {
-        return ResponseEntity.ok(osaRegistrationService.registerNewOsaAccount(user));
+    public ResponseEntity<String> registerOsa(@Valid @RequestBody OsaRegistrationRequest osaRegistrationRequest) {
+        return ResponseEntity.ok(osaRegistrationService.registerNewOsaAccount(osaRegistrationRequest));
     }
 }

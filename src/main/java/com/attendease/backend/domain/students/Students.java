@@ -41,11 +41,5 @@ public class Students {
     private String studentNumber;
 
     @DBRef
-    private Clusters cluster;
-
-    @DBRef
-    private Courses course;
-
-    @DBRef
     private Sections section;
 }

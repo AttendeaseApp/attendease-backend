@@ -173,8 +173,8 @@ public class EventRegistrationService {
     private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
         EligibilityCriteria criteria = event.getEligibleStudents();
         if (criteria == null || criteria.isAllStudents()) return true;
-        boolean clusterMatch = criteria.getCluster() != null && student.getCluster() != null && criteria.getCluster().contains(student.getCluster().getClusterId());
-        boolean courseMatch = criteria.getCourse() != null && student.getCourse() != null && criteria.getCourse().contains(student.getCourse().getId());
+        boolean clusterMatch = criteria.getCluster() != null && student.getSection().getCourse().getCluster() != null && criteria.getCluster().contains(student.getSection().getCourse().getCluster().getClusterId());
+        boolean courseMatch = criteria.getCourse() != null && student.getSection().getCourse() != null && criteria.getCourse().contains(student.getSection().getCourse().getId());
         boolean sectionMatch = criteria.getSections() != null && student.getSection() != null && criteria.getSections().contains(student.getSection().getId());
         return clusterMatch || courseMatch || sectionMatch;
     }

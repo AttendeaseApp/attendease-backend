@@ -70,16 +70,13 @@ public class UserInformationManagementService {
             targetUser.setContactNumber(request.getContactNumber());
             userChanged = true;
         }
-        if (request.getAccountStatus() != null) {
-            targetUser.setAccountStatus(request.getAccountStatus());
-            userChanged = true;
-        }
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
             validatePassword(request.getPassword());
             targetUser.setPassword(passwordEncoder.encode(request.getPassword()));
             userChanged = true;
         }
         targetUser.setUpdatedBy(updatedBy);
+
         Users updatedUser = userChanged ? userRepository.save(targetUser) : targetUser;
         if (targetUser.getUserType() == UserType.STUDENT) {
             boolean hasStudentFields = request.getStudentNumber() != null || request.getSectionId() != null;
@@ -93,11 +90,9 @@ public class UserInformationManagementService {
                     targetStudent.setStudentNumber(request.getStudentNumber().trim());
                     studentChanged = true;
                 }
-                if (request.getSectionId() != null && !request.getSectionId().trim().isEmpty() && !request.getSectionId().trim().equals(targetStudent.getSection().getId())) {
+                if (request.getSectionId() != null) {
                     Sections newSection = sectionsRepository.findById(request.getSectionId().trim()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found."));
                     targetStudent.setSection(newSection);
-                    targetStudent.setCourse(newSection.getCourse());
-                    targetStudent.setCluster(newSection.getCourse().getCluster());
                     studentChanged = true;
                 }
                 if (studentChanged) {

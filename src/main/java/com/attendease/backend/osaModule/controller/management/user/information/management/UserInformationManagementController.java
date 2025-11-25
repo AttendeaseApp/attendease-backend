@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users/management")
+@RequestMapping("/api/users/information/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class UserInformationManagementController {
@@ -36,7 +36,7 @@ public class UserInformationManagementController {
      * @param request The update request containing optional fields to update
      * @return The updated user
      */
-    @PutMapping("/{userId}")
+    @PatchMapping("/{userId}")
     public ResponseEntity<Users> updateUserInfo(@PathVariable String userId, @Valid @RequestBody UpdateUserRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();

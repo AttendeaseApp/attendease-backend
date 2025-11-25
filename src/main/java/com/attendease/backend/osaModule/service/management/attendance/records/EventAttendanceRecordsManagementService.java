@@ -45,11 +45,6 @@ public class EventAttendanceRecordsManagementService {
      *
      * @return a list of {@link EventSessions} with status {@link EventStatus#FINALIZED}
      */
-    /**
-     * Retrieves finalized events with summarized attendance data.
-     *
-     * @return list of FinalizedAttendanceRecordsResponse
-     */
     public List<FinalizedAttendanceRecordsResponse> getFinalizedEvents() {
         List<EventSessions> finalizedEvents = eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
         List<FinalizedAttendanceRecordsResponse> responses = new ArrayList<>();
@@ -130,8 +125,9 @@ public class EventAttendanceRecordsManagementService {
                 var student = record.getStudent();
                 var user = student.getUser();
                 String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
-                String courseName = (student.getCourse() != null) ? student.getCourse().getCourseName() : "";
-                String clusterName = (student.getCluster() != null) ? student.getCluster().getClusterName() : "";
+                assert student.getSection() != null;
+                String courseName = (student.getSection().getCourse().getCourseName() != null) ? student.getSection().getCourse().getCourseName() : "";
+                String clusterName = (student.getSection().getCourse().getCluster() != null) ? student.getSection().getCourse().getCluster().getClusterName() : "";
                 return AttendeesResponse.builder()
                     .userId(user.getUserId())
                     .firstName(user.getFirstName())
