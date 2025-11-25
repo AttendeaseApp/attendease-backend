@@ -142,6 +142,7 @@ public class UsersManagementService {
      * @throws ResponseStatusException if the section is not found
      */
     public void deleteStudentsBySection(String sectionName) {
+        validateSectionFormat(sectionName);
         Optional<Sections> optSection = sectionsRepository.findByName(sectionName);
         if (optSection.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName);
@@ -162,6 +163,16 @@ public class UsersManagementService {
      * PRIVATE HELPERS
      */
 
+    private void validateSectionFormat(String section) {
+        if (section == null || section.trim().isEmpty()) {
+            throw new IllegalArgumentException("Section is required and cannot be blank");
+        }
+        String trimmed = section.trim();
+        if (!trimmed.matches("[A-Z]+-[0-9]+")) {
+            throw new IllegalArgumentException("Invalid section format. Expected: COURSE_NAME-NUMBER (e.g., BSIT-101), got: " + trimmed);
+        }
+    }
+
     private void validateCSVFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("CSV file is required and cannot be empty");
@@ -180,8 +191,8 @@ public class UsersManagementService {
 
         Set<String> headerSet = Set.of(header);
         List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream()
-            .filter(col -> !headerSet.contains(col))
-            .collect(Collectors.toList());
+                .filter(col -> !headerSet.contains(col))
+                .collect(Collectors.toList());
 
         if (!missingColumns.isEmpty()) {
             throw new IllegalArgumentException("Missing required columns: " + String.join(", ", missingColumns));
@@ -268,16 +279,14 @@ public class UsersManagementService {
         student.setUser(user);
         student.setStudentNumber(data.getStudentNumber());
 
-        if (data.getSection() != null && !data.getSection().isBlank()) {
-            Optional<Sections> optSection = sectionsRepository.findByName(data.getSection());
-            if (optSection.isEmpty()) {
-                throw new IllegalArgumentException("Section not found: " + data.getSection());
-            }
-            student.setSection(optSection.get());
-            log.info("Assigned existing section '{}' to student '{}'", data.getSection(), data.getStudentNumber());
-        } else {
-            throw new IllegalArgumentException("Section is required and cannot be blank");
+        validateSectionFormat(data.getSection());
+
+        Optional<Sections> optSection = sectionsRepository.findByName(data.getSection());
+        if (optSection.isEmpty()) {
+            throw new IllegalArgumentException("Section not found: " + data.getSection());
         }
+        student.setSection(optSection.get());
+        log.info("Assigned existing section '{}' to student '{}'", data.getSection(), data.getStudentNumber());
 
         return student;
     }
