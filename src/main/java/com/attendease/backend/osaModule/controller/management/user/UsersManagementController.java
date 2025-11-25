@@ -64,4 +64,13 @@ public class UsersManagementController {
     public void deleteUser(@PathVariable String userId) throws Exception {
         userManagementService.deleteUserById(userId);
     }
+
+    /**
+     * Allows OSA to permanently delete all student accounts associated with a specific section.
+     */
+    @DeleteMapping("/section/{sectionName}")
+    public ResponseEntity<?> deleteStudentsBySection(@PathVariable String sectionName) {
+        userManagementService.deleteStudentsBySection(sectionName);
+        return ResponseEntity.noContent().build();
+    }
 }

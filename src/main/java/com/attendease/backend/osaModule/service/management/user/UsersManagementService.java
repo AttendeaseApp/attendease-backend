@@ -136,6 +136,29 @@ public class UsersManagementService {
     }
 
     /**
+     * Deletes all student accounts (users and students) associated with the given section.
+     *
+     * @param sectionName the name of the section (e.g., "BSIT-401")
+     * @throws ResponseStatusException if the section is not found
+     */
+    public void deleteStudentsBySection(String sectionName) {
+        Optional<Sections> optSection = sectionsRepository.findByName(sectionName);
+        if (optSection.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName);
+        }
+        Sections section = optSection.get();
+        List<Students> students = studentRepository.findBySection(section);
+        if (students.isEmpty()) {
+            log.info("No students found in section: {}", sectionName);
+            return;
+        }
+        List<String> userIds = students.stream().map(student -> student.getUser().getUserId()).collect(Collectors.toList());
+        userRepository.deleteAllById(userIds);
+        studentRepository.deleteAll(students);
+        log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
+    }
+
+    /**
      * PRIVATE HELPERS
      */
 
