@@ -83,17 +83,13 @@ public class AcademicSectionController {
     /**
      * Retrieves a section by its full name (e.g., "BSECE-101").
      *
-     * @param fullName The full section name.
+     * @param sectionName The full section name.
      * @return The section if found.
      */
     @GetMapping("/full/{sectionName}")
     public ResponseEntity<Sections> getSectionByFullName(@PathVariable String sectionName) {
         Optional<Sections> optionalSection = academicSectionService.getSectionByFullName(sectionName);
-        if (optionalSection.isPresent()) {
-            return ResponseEntity.ok(optionalSection.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return optionalSection.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**

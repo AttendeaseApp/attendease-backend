@@ -1,5 +1,6 @@
 package com.attendease.backend.repository.students;
 
+import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import java.util.List;
@@ -60,4 +61,12 @@ public interface StudentRepository extends MongoRepository<Students, String> {
      */
     @Query("{ 'user' : ?0 }")
     Optional<Students> findByUserId(String userId);
+
+    /**
+     * Finds all students associated with the given section.
+     *
+     * @param section the {@link Sections} entity representing the section
+     * @return a {@link List} of all {@link Students} enrolled in the specified section
+     */
+    List<Students> findBySection(Sections section);
 }
