@@ -1,11 +1,14 @@
 package com.attendease.backend.osaModule.controller.management.user.information.management;
 
-import com.attendease.backend.domain.users.Information.Management.UpdateUserRequest;
+import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.users.Information.Management.Request.UpdateUserRequest;
+import com.attendease.backend.domain.users.Information.Management.Response.UpdateResultResponse;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.osaModule.service.management.user.information.management.UserInformationManagementService;
 import jakarta.validation.Valid;
 import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -37,10 +40,14 @@ public class UserInformationManagementController {
      * @return The updated user
      */
     @PatchMapping("/{userId}")
-    public ResponseEntity<Users> updateUserInfo(@PathVariable String userId, @Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<?> updateUserInfo(@PathVariable String userId, @Valid @RequestBody UpdateUserRequest request) throws ChangeSetPersister.NotFoundException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
-        Users updatedUser = userInformationManagementService.osaUpdateUserInfo(userId, request, updatedByUserId);
-        return ResponseEntity.ok(updatedUser);
+        UpdateResultResponse result = userInformationManagementService.osaUpdateUserInfo(userId, request, updatedByUserId);
+        if (result.getUser().getUserType() == UserType.STUDENT) {
+            return ResponseEntity.ok(result.getStudentResponse());
+        } else {
+            return ResponseEntity.ok(result.getUser());
+        }
     }
 }
