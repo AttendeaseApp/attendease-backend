@@ -30,7 +30,7 @@ public class UpdateUserRequest {
     @Email(message = "Email should be valid")
     private String email;
 
-    @Size(min = 8, max = 8, message = "Student number must be exactly 8 characters (e.g., CT00-0000)")
+    @Size(min = 9, max = 9, message = "Student number must be exactly 9 characters (e.g., CT00-0000)")
     @Pattern(regexp = "^CT\\d{2}-\\d{4}$", message = "Student number must follow format CTyy-xxxx (e.g., CT00-0000)")
     private String studentNumber;
 

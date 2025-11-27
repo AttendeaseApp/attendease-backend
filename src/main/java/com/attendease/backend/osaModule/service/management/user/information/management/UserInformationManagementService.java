@@ -136,7 +136,7 @@ public class UserInformationManagementService {
 
     private void validateContactNumber(String contactNumber) {
         if (contactNumber != null && !contactNumber.trim().isEmpty()) {
-            if (!Pattern.compile("^[+]?[0-9]{12,15}$").matcher(contactNumber.replaceAll("[\\s\\-()]", "")).matches()) {
+            if (!Pattern.compile("^[+]?[0-9]{11,15}$").matcher(contactNumber.replaceAll("[\\s\\-()]", "")).matches()) {
                 throw new IllegalArgumentException("Contact number must be a valid phone number (12-15 digits)");
             }
         }
