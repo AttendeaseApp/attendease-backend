@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.users.Information.Management;
+package com.attendease.backend.domain.users.Information.Management.Request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -22,9 +22,17 @@ public class UpdateUserRequest {
     @Pattern(regexp = "^[A-Za-zÀ-ÖØ-öø-ÿ'\\-\\s]+$", message = "Last name contains invalid characters")
     private String lastName;
 
-    @Size(min = 6, max = 128, message = "Password must be between 6 and 128 characters")
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,128}$",
+            message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and be 8-128 characters long"
+    )
     private String password;
 
+    @Pattern(
+            regexp = "^[+]?[0-9]{11,15}$",
+            message = "Contact number must be a valid phone number (11-15 digits, optional + prefix; spaces/dashes ignored)"
+    )
     private String contactNumber;
 
     @Email(message = "Email should be valid")
