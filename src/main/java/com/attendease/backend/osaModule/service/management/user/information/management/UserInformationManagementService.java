@@ -15,7 +15,6 @@ import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;

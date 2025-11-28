@@ -176,12 +176,11 @@ public class EventSessionManagementService {
 
         if (updateEvent.getEligibleStudents() != null) {
             validateEligibilityCriteria(updateEvent.getEligibleStudents());
-            existingEvent.setEligibleStudents(updateEvent.getEligibleStudents());
+            EligibilityCriteria expandedCriteria = populateDomainEligibilityCriteria(updateEvent.getEligibleStudents());
+            existingEvent.setEligibleStudents(expandedCriteria);
         }
         if (updateEvent.getEventLocation() != null) {
-            EventLocations location = locationRepository
-                .findById(updateEvent.getEventLocation().getLocationId())
-                .orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
+            EventLocations location = locationRepository.findById(updateEvent.getEventLocation().getLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
             existingEvent.setEventLocation(location);
         }
 
@@ -242,24 +241,67 @@ public class EventSessionManagementService {
     }
 
     private EligibilityCriteria populateDomainEligibilityCriteria(EligibilityCriteria reqCriteria) {
-        EligibilityCriteria.EligibilityCriteriaBuilder criteriaBuilder = EligibilityCriteria.builder().allStudents(reqCriteria.isAllStudents());
-        if (!reqCriteria.isAllStudents()) {
-            List<String> clusterIds = reqCriteria.getCluster();
-            List<Clusters> clusters = clustersRepository.findAllById(clusterIds);
-            List<String> clusterNames = clusters.stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
-            criteriaBuilder.cluster(clusterIds).clusterNames(clusterNames);
-
-            List<String> courseIds = reqCriteria.getCourse();
-            List<Courses> courses = courseRepository.findAllById(courseIds);
-            List<String> courseNames = courses.stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
-            criteriaBuilder.course(courseIds).courseNames(courseNames);
-
-            List<String> sectionIds = reqCriteria.getSections();
-            List<Sections> sections = sectionsRepository.findAllById(sectionIds);
-            List<String> sectionNames = sections.stream().map(Sections::getName).sorted().collect(Collectors.toList());
-            criteriaBuilder.sections(sectionIds).sectionNames(sectionNames);
+        if (reqCriteria.isAllStudents()) {
+            return EligibilityCriteria.builder().allStudents(true).build();
         }
-        return criteriaBuilder.build();
+
+        Set<String> clusterIds = new HashSet<>();
+        Set<String> courseIds = new HashSet<>();
+        Set<String> sectionIds = new HashSet<>();
+
+        if (reqCriteria.getCluster() != null && !reqCriteria.getCluster().isEmpty()) {
+            clusterIds.addAll(reqCriteria.getCluster());
+            for (String clusterId : reqCriteria.getCluster()) {
+                List<Courses> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
+                for (Courses course : coursesUnderCluster) {
+                    courseIds.add(course.getId());
+                    List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(course.getId());
+                    sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+                }
+            }
+        }
+
+        if (reqCriteria.getCourse() != null && !reqCriteria.getCourse().isEmpty()) {
+            for (String courseId : reqCriteria.getCourse()) {
+                courseIds.add(courseId);
+                Courses course = courseRepository.findById(courseId)
+                        .orElseThrow(() -> new IllegalArgumentException("Course ID not found: " + courseId));
+                if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
+                    clusterIds.add(course.getCluster().getClusterId());
+                }
+                List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(courseId);
+                sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+            }
+        }
+
+        if (reqCriteria.getSections() != null && !reqCriteria.getSections().isEmpty()) {
+            for (String sectionId : reqCriteria.getSections()) {
+                sectionIds.add(sectionId);
+                Sections section = sectionsRepository.findById(sectionId)
+                        .orElseThrow(() -> new IllegalArgumentException("Section ID not found: " + sectionId));
+                if (section.getCourse() != null && section.getCourse().getId() != null) {
+                    courseIds.add(section.getCourse().getId());
+                    Courses course = section.getCourse();
+                    if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
+                        clusterIds.add(course.getCluster().getClusterId());
+                    }
+                }
+            }
+        }
+
+        List<String> clusterNames = clusterIds.isEmpty() ? null : clustersRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
+        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
+        List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getName).sorted().collect(Collectors.toList());
+
+        return EligibilityCriteria.builder()
+                .allStudents(false)
+                .cluster(new ArrayList<>(clusterIds))
+                .clusterNames(clusterNames)
+                .course(new ArrayList<>(courseIds))
+                .courseNames(courseNames)
+                .sections(new ArrayList<>(sectionIds))
+                .sectionNames(sectionNames)
+                .build();
     }
 
     private void validateEligibilityCriteria(EligibilityCriteria criteria) {
