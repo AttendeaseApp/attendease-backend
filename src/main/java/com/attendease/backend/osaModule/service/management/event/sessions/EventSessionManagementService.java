@@ -1,16 +1,24 @@
 package com.attendease.backend.osaModule.service.management.event.sessions;
 
+import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
+import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
 import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import com.attendease.backend.repository.sections.SectionsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +38,9 @@ import org.springframework.stereotype.Service;
 public class EventSessionManagementService {
 
     private final LocationRepository locationRepository;
+    private final SectionsRepository sectionsRepository;
+    private final CourseRepository courseRepository;
+    private final ClustersRepository clustersRepository;
     private final EventSessionsRepository eventSessionRepository;
 
     /**
@@ -41,25 +52,27 @@ public class EventSessionManagementService {
      * @return the saved {@link EventSessions} with generated ID and timestamps
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
-    public EventSessions createEvent(EventSessionRequest request) {
-        EligibilityCriteria criteria = request.getEligibleStudents();
-        if (criteria == null) {
-            criteria = EligibilityCriteria.builder().allStudents(true).build();
+    public EventCreationResponse createEvent(EventSessionRequest request) {
+        EligibilityCriteria domainCriteria;
+        EligibilityCriteria reqCriteria = request.getEligibleStudents();
+        if (reqCriteria == null) {
+            domainCriteria = EligibilityCriteria.builder().allStudents(true).build();
+        } else {
+            validateEligibilityCriteria(reqCriteria);
+            domainCriteria = populateDomainEligibilityCriteria(reqCriteria);
         }
-        validateEligibilityCriteria(criteria);
 
         EventSessions eventSession = EventSessions.builder()
-            .eventName(request.getEventName())
-            .description(request.getDescription())
-            .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
-            .startDateTime(request.getStartDateTime())
-            .endDateTime(request.getEndDateTime())
-            .eligibleStudents(criteria)
-            .build();
+                .eventName(request.getEventName())
+                .description(request.getDescription())
+                .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
+                .startDateTime(request.getStartDateTime())
+                .endDateTime(request.getEndDateTime())
+                .eligibleStudents(domainCriteria)
+                .build();
 
         eventSession.setEventLocationId(request.getEventLocationId());
         validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
-
         eventSession.setEventStatus(EventStatus.UPCOMING);
         eventSession.setCreatedAt(LocalDateTime.now());
         eventSession.setUpdatedAt(LocalDateTime.now());
@@ -68,10 +81,9 @@ public class EventSessionManagementService {
             EventLocations location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
             eventSession.setEventLocation(location);
         }
-
         EventSessions savedEvent = eventSessionRepository.save(eventSession);
         log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
-        return savedEvent;
+        return mapToEventCreationResponse(savedEvent);
     }
 
     /**
@@ -164,12 +176,11 @@ public class EventSessionManagementService {
 
         if (updateEvent.getEligibleStudents() != null) {
             validateEligibilityCriteria(updateEvent.getEligibleStudents());
-            existingEvent.setEligibleStudents(updateEvent.getEligibleStudents());
+            EligibilityCriteria expandedCriteria = populateDomainEligibilityCriteria(updateEvent.getEligibleStudents());
+            existingEvent.setEligibleStudents(expandedCriteria);
         }
         if (updateEvent.getEventLocation() != null) {
-            EventLocations location = locationRepository
-                .findById(updateEvent.getEventLocation().getLocationId())
-                .orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
+            EventLocations location = locationRepository.findById(updateEvent.getEventLocation().getLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
             existingEvent.setEventLocation(location);
         }
 
@@ -229,36 +240,105 @@ public class EventSessionManagementService {
         }
     }
 
-    private void validateEligibilityCriteria(EligibilityCriteria criteria) {
-        if (criteria.isAllStudents()) {
-            if (
-                (criteria.getCluster() != null && !criteria.getCluster().isEmpty()) ||
-                (criteria.getCourse() != null && !criteria.getCourse().isEmpty()) ||
-                (criteria.getSections() != null && !criteria.getSections().isEmpty())
-            ) {
-                throw new IllegalArgumentException("If 'allStudents' is true, criteria lists must be empty or null.");
-            }
-            return;
+    private EligibilityCriteria populateDomainEligibilityCriteria(EligibilityCriteria reqCriteria) {
+        if (reqCriteria.isAllStudents()) {
+            return EligibilityCriteria.builder().allStudents(true).build();
         }
-        boolean hasCriteria =
-            (criteria.getCluster() != null && !criteria.getCluster().isEmpty()) ||
-            (criteria.getCourse() != null && !criteria.getCourse().isEmpty()) ||
-            (criteria.getSections() != null && !criteria.getSections().isEmpty());
-        if (!hasCriteria) {
-            throw new IllegalArgumentException("At least one criteria list (cluster, course, or sections) must be provided when 'allStudents' is false.");
-        }
-        validateListStrings(criteria.getCluster(), "cluster");
-        validateListStrings(criteria.getCourse(), "course");
-        validateListStrings(criteria.getSections(), "sections");
-    }
 
-    private void validateListStrings(List<String> list, String fieldName) {
-        if (list != null) {
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i) == null || list.get(i).trim().isEmpty()) {
-                    throw new IllegalArgumentException(String.format("%s list at index %d must not be empty.", fieldName, i));
+        Set<String> clusterIds = new HashSet<>();
+        Set<String> courseIds = new HashSet<>();
+        Set<String> sectionIds = new HashSet<>();
+
+        if (reqCriteria.getCluster() != null && !reqCriteria.getCluster().isEmpty()) {
+            clusterIds.addAll(reqCriteria.getCluster());
+            for (String clusterId : reqCriteria.getCluster()) {
+                List<Courses> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
+                for (Courses course : coursesUnderCluster) {
+                    courseIds.add(course.getId());
+                    List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(course.getId());
+                    sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
                 }
             }
         }
+
+        if (reqCriteria.getCourse() != null && !reqCriteria.getCourse().isEmpty()) {
+            for (String courseId : reqCriteria.getCourse()) {
+                courseIds.add(courseId);
+                Courses course = courseRepository.findById(courseId)
+                        .orElseThrow(() -> new IllegalArgumentException("Course ID not found: " + courseId));
+                if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
+                    clusterIds.add(course.getCluster().getClusterId());
+                }
+                List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(courseId);
+                sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+            }
+        }
+
+        if (reqCriteria.getSections() != null && !reqCriteria.getSections().isEmpty()) {
+            for (String sectionId : reqCriteria.getSections()) {
+                sectionIds.add(sectionId);
+                Sections section = sectionsRepository.findById(sectionId)
+                        .orElseThrow(() -> new IllegalArgumentException("Section ID not found: " + sectionId));
+                if (section.getCourse() != null && section.getCourse().getId() != null) {
+                    courseIds.add(section.getCourse().getId());
+                    Courses course = section.getCourse();
+                    if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
+                        clusterIds.add(course.getCluster().getClusterId());
+                    }
+                }
+            }
+        }
+
+        List<String> clusterNames = clusterIds.isEmpty() ? null : clustersRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
+        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
+        List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getName).sorted().collect(Collectors.toList());
+
+        return EligibilityCriteria.builder()
+                .allStudents(false)
+                .cluster(new ArrayList<>(clusterIds))
+                .clusterNames(clusterNames)
+                .course(new ArrayList<>(courseIds))
+                .courseNames(courseNames)
+                .sections(new ArrayList<>(sectionIds))
+                .sectionNames(sectionNames)
+                .build();
+    }
+
+    private void validateEligibilityCriteria(EligibilityCriteria criteria) {
+        if (criteria.isAllStudents()) {
+            return;
+        }
+        List<String> clusterIds = criteria.getCluster();
+        List<String> courseIds = criteria.getCourse();
+        List<String> sectionIds = criteria.getSections();
+        if ((clusterIds == null || clusterIds.isEmpty()) && (courseIds == null || courseIds.isEmpty()) && (sectionIds == null || sectionIds.isEmpty())) {
+            throw new IllegalArgumentException("At least one cluster, course, or section ID must be provided when not targeting all students.");
+        }
+        if ((clusterIds != null && clusterIds.stream().anyMatch(String::isBlank)) || (courseIds != null && courseIds.stream().anyMatch(String::isBlank)) || (sectionIds != null && sectionIds.stream().anyMatch(String::isBlank))) {
+            throw new IllegalArgumentException("IDs cannot be blank.");
+        }
+    }
+
+    private EventCreationResponse mapToEventCreationResponse(EventSessions event) {
+        EventCreationResponse response = EventCreationResponse.builder()
+                .eventName(event.getEventName())
+                .description(event.getDescription())
+                .eventLocationId(event.getEventLocationId())
+                .timeInRegistrationStartDateTime(event.getTimeInRegistrationStartDateTime())
+                .startDateTime(event.getStartDateTime())
+                .endDateTime(event.getEndDateTime())
+                .eventStatus(event.getEventStatus())
+                .build();
+
+        EligibilityCriteria criteria = event.getEligibleStudents();
+        if (!criteria.isAllStudents()) {
+            response.setClusterIDs(criteria.getCluster());
+            response.setClusterNames(criteria.getClusterNames());
+            response.setCourseIDs(criteria.getCourse());
+            response.setCourseNames(criteria.getCourseNames());
+            response.setSectionIDs(criteria.getSections());
+            response.setSectionNames(criteria.getSectionNames());
+        }
+        return response;
     }
 }

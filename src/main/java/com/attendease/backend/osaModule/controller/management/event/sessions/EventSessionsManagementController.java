@@ -3,11 +3,15 @@ package com.attendease.backend.osaModule.controller.management.event.sessions;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
+import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
 import com.attendease.backend.osaModule.service.management.event.sessions.EventSessionManagementService;
 import java.util.Date;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +25,9 @@ public class EventSessionsManagementController {
     private final EventSessionManagementService eventService;
 
     @PostMapping
-    public ResponseEntity<EventSessions> createEvent(@RequestBody EventSessionRequest eventCreationResponse) {
-        EventSessions createdEvent = eventService.createEvent(eventCreationResponse);
-        return ResponseEntity.ok(createdEvent);
+    public ResponseEntity<EventCreationResponse> createEvent(@Valid @RequestBody EventSessionRequest request) {
+        EventCreationResponse response = eventService.createEvent(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")

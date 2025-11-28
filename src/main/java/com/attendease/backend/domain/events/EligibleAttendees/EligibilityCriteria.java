@@ -13,7 +13,13 @@ import lombok.NoArgsConstructor;
 public class EligibilityCriteria {
 
     private boolean allStudents;
+
     private List<String> cluster;
+    private List<String> clusterNames;
+
     private List<String> course;
+    private List<String> courseNames;
+
     private List<String> sections;
+    private List<String> sectionNames;
 }

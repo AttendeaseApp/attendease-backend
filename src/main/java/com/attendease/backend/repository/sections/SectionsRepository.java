@@ -66,4 +66,8 @@ public interface SectionsRepository extends MongoRepository<Sections, String> {
      * @return A {@link List} of all matching {@link Sections}.
      */
     List<Sections> findByCourse(Courses course);
+
+    List<Sections> findByCourseIdIn(List<String> course);
+
+    List<Sections> findByCourseId(String id);
 }
