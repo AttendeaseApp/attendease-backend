@@ -72,6 +72,9 @@ public class EventSessionManagementService {
                 .build();
 
         eventSession.setEventLocationId(request.getEventLocationId());
+        if (eventSession.getEventLocationId() == null) {
+            throw new IllegalArgumentException("Event location ID is required");
+        }
         validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
         eventSession.setEventStatus(EventStatus.UPCOMING);
         eventSession.setCreatedAt(LocalDateTime.now());
@@ -165,23 +168,29 @@ public class EventSessionManagementService {
      * @throws IllegalArgumentException if the location ID is invalid
      */
     public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
-        EventSessions existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+        EventSessions existingEvent = eventSessionRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
         existingEvent.setEventName(updateEvent.getEventName());
         existingEvent.setDescription(updateEvent.getDescription());
         existingEvent.setStartDateTime(updateEvent.getStartDateTime());
         existingEvent.setEndDateTime(updateEvent.getEndDateTime());
         existingEvent.setTimeInRegistrationStartDateTime(updateEvent.getTimeInRegistrationStartDateTime());
-        existingEvent.setEventStatus(updateEvent.getEventStatus() != null ? updateEvent.getEventStatus() : existingEvent.getEventStatus());
+        existingEvent.setEventStatus(updateEvent.getEventStatus() != null
+                ? updateEvent.getEventStatus() : existingEvent.getEventStatus());
 
         if (updateEvent.getEligibleStudents() != null) {
             validateEligibilityCriteria(updateEvent.getEligibleStudents());
             EligibilityCriteria expandedCriteria = populateDomainEligibilityCriteria(updateEvent.getEligibleStudents());
             existingEvent.setEligibleStudents(expandedCriteria);
         }
-        if (updateEvent.getEventLocation() != null) {
-            EventLocations location = locationRepository.findById(updateEvent.getEventLocation().getLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocation().getLocationId()));
+
+        if (updateEvent.getEventLocationId() != null) {
+            EventLocations location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
             existingEvent.setEventLocation(location);
+            existingEvent.setEventLocationId(updateEvent.getEventLocationId());
+        } else if (existingEvent.getEventLocationId() == null) {
+            throw new IllegalArgumentException("Event location ID cannot be removed or left unset");
         }
 
         existingEvent.setUpdatedAt(LocalDateTime.now());
@@ -320,7 +329,9 @@ public class EventSessionManagementService {
     }
 
     private EventCreationResponse mapToEventCreationResponse(EventSessions event) {
+        EligibilityCriteria criteria = event.getEligibleStudents();
         EventCreationResponse response = EventCreationResponse.builder()
+                .eventId(event.getEventId())
                 .eventName(event.getEventName())
                 .description(event.getDescription())
                 .eventLocationId(event.getEventLocationId())
@@ -328,10 +339,10 @@ public class EventSessionManagementService {
                 .startDateTime(event.getStartDateTime())
                 .endDateTime(event.getEndDateTime())
                 .eventStatus(event.getEventStatus())
+                .allStudents(criteria == null || criteria.isAllStudents())
                 .build();
 
-        EligibilityCriteria criteria = event.getEligibleStudents();
-        if (!criteria.isAllStudents()) {
+        if (criteria != null && !criteria.isAllStudents()) {
             response.setClusterIDs(criteria.getCluster());
             response.setClusterNames(criteria.getClusterNames());
             response.setCourseIDs(criteria.getCourse());
