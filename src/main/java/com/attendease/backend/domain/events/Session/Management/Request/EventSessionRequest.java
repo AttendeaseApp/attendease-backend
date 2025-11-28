@@ -21,8 +21,12 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @Builder
 public class EventSessionRequest {
 
+    @NotNull(message = "Event name is required")
     private String eventName;
+
     private String description;
+
+    @NotNull(message = "Event location ID is required")
     private String eventLocationId;
 
     @NotNull(message = "Time in registration date time is required")
