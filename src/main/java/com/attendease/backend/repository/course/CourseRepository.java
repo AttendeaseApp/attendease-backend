@@ -20,4 +20,6 @@ public interface CourseRepository extends MongoRepository<Courses, String> {
     Optional<Courses> findByCourseName(String name);
     List<Courses> findByCluster(Clusters cluster);
     Optional<Courses> findByCourseNameAndCluster(String courseName, Clusters cluster);
+
+    List<Courses> findByClusterClusterIdIn(List<String> clusterIds);
 }

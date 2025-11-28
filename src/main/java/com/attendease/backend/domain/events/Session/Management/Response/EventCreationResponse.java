@@ -37,6 +37,8 @@ public class EventCreationResponse {
 
     private EventStatus eventStatus;
 
+    private boolean allStudents;
+
     private List<String> sectionIDs;
     private List<String> sectionNames;
 

@@ -58,7 +58,7 @@ public class EventStatusScheduler {
                 eventSessionRepository.saveAll(events);
             }
 
-            log.info("Checked {} events for status updates", events.size());
+            log.debug("Checked {} events for status updates", events.size());
         } catch (Exception e) {
             log.error("Error updating event statuses: {}", e.getMessage(), e);
         }

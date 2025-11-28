@@ -69,4 +69,6 @@ public interface StudentRepository extends MongoRepository<Students, String> {
      * @return a {@link List} of all {@link Students} enrolled in the specified section
      */
     List<Students> findBySection(Sections section);
+
+    List<Students> findBySectionIdIn(List<String> sections);
 }

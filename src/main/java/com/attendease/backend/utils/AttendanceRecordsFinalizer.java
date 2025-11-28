@@ -2,20 +2,24 @@ package com.attendease.backend.utils;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
+import com.attendease.backend.repository.course.CourseRepository;
+import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,8 @@ public class AttendanceRecordsFinalizer {
 
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
+    private final SectionsRepository sectionRepository;
+    private final CourseRepository courseRepository;
 
     /**
      * Re-evaluates and finalizes attendance based on ping logs.
@@ -145,7 +151,44 @@ public class AttendanceRecordsFinalizer {
     }
 
     private List<Students> getExpectedStudentsForEvent(EventSessions event) {
-        //TODO:eligible students
-        return studentRepository.findAll();
+        EligibilityCriteria criteria = event.getEligibleStudents();
+        if (criteria == null || criteria.isAllStudents()) {
+            return studentRepository.findAll();
+        }
+        Set<Students> uniqueStudents = new HashSet<>();
+
+        if (!CollectionUtils.isEmpty(criteria.getSections())) {
+            List<Students> sectionStudents = studentRepository.findBySectionIdIn(criteria.getSections());
+            uniqueStudents.addAll(sectionStudents);
+            log.debug("Fetched {} students from {} sections for event {}", sectionStudents.size(), criteria.getSections().size(), event.getEventId());
+        }
+
+        if (!CollectionUtils.isEmpty(criteria.getCourse())) {
+            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourse());
+            List<String> allSectionIds = courseSections.stream().map(Sections::getId).collect(Collectors.toList());
+            if (!allSectionIds.isEmpty()) {
+                List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
+                uniqueStudents.addAll(courseStudents);
+                log.debug("Fetched {} students from courses {} for event {}", courseStudents.size(), criteria.getCourse().size(), event.getEventId());
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(criteria.getCluster())) {
+            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getCluster());
+            List<String> allCourseIds = clusterCourses.stream().map(Courses::getId).collect(Collectors.toList());
+            if (!allCourseIds.isEmpty()) {
+                List<Sections> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);
+                List<String> allClusterSectionIds = clusterSections.stream().map(Sections::getId).collect(Collectors.toList());
+                if (!allClusterSectionIds.isEmpty()) {
+                    List<Students> clusterStudents = studentRepository.findBySectionIdIn(allClusterSectionIds);
+                    uniqueStudents.addAll(clusterStudents);
+                    log.debug("Fetched {} students from clusters {} for event {}", clusterStudents.size(), criteria.getCluster().size(), event.getEventId());
+                }
+            }
+        }
+
+        List<Students> expected = new ArrayList<>(uniqueStudents);
+        log.info("Total expected students for event {}: {}", event.getEventId(), expected.size());
+        return expected;
     }
 }
