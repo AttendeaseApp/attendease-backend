@@ -155,13 +155,13 @@ public class AttendanceRecordsFinalizer {
         if (criteria == null || criteria.isAllStudents()) {
             return studentRepository.findAll();
         }
-        Set<Students> uniqueStudents = new HashSet<>();
-
         if (!CollectionUtils.isEmpty(criteria.getSections())) {
-            List<Students> sectionStudents = studentRepository.findBySectionIdIn(criteria.getSections());
-            uniqueStudents.addAll(sectionStudents);
-            log.debug("Fetched {} students from {} sections for event {}", sectionStudents.size(), criteria.getSections().size(), event.getEventId());
+            List<Students> expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
+            log.info("Total expected students for event {}: {} (from {} sections)",
+                    event.getEventId(), expectedStudents.size(), criteria.getSections().size());
+            return expectedStudents;
         }
+        Set<Students> uniqueStudents = new HashSet<>();
 
         if (!CollectionUtils.isEmpty(criteria.getCourse())) {
             List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourse());
@@ -169,7 +169,6 @@ public class AttendanceRecordsFinalizer {
             if (!allSectionIds.isEmpty()) {
                 List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
                 uniqueStudents.addAll(courseStudents);
-                log.debug("Fetched {} students from courses {} for event {}", courseStudents.size(), criteria.getCourse().size(), event.getEventId());
             }
         }
 
@@ -182,13 +181,12 @@ public class AttendanceRecordsFinalizer {
                 if (!allClusterSectionIds.isEmpty()) {
                     List<Students> clusterStudents = studentRepository.findBySectionIdIn(allClusterSectionIds);
                     uniqueStudents.addAll(clusterStudents);
-                    log.debug("Fetched {} students from clusters {} for event {}", clusterStudents.size(), criteria.getCluster().size(), event.getEventId());
                 }
             }
         }
 
         List<Students> expected = new ArrayList<>(uniqueStudents);
-        log.info("Total expected students for event {}: {}", event.getEventId(), expected.size());
+        log.info("Total expected students for event {}: {} (fallback from courses/clusters)", event.getEventId(), expected.size());
         return expected;
     }
 }
