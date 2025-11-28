@@ -4,6 +4,8 @@ import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.biometrics.Verification.Response.EventRegistrationBiometricsVerificationResponse;
+import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
@@ -89,7 +91,7 @@ public class EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64() == null) {
+        if (registrationRequest.getFaceImageBase64() == null) {
             throw new IllegalStateException("Face image is required for check-in");
         }
 
@@ -173,9 +175,25 @@ public class EventRegistrationService {
     private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
         EligibilityCriteria criteria = event.getEligibleStudents();
         if (criteria == null || criteria.isAllStudents()) return true;
-        boolean clusterMatch = criteria.getCluster() != null && student.getSection().getCourse().getCluster() != null && criteria.getCluster().contains(student.getSection().getCourse().getCluster().getClusterId());
-        boolean courseMatch = criteria.getCourse() != null && student.getSection().getCourse() != null && criteria.getCourse().contains(student.getSection().getCourse().getId());
-        boolean sectionMatch = criteria.getSections() != null && student.getSection() != null && criteria.getSections().contains(student.getSection().getId());
-        return clusterMatch || courseMatch || sectionMatch;
+        if (student.getSection() == null) {
+            log.warn("Student {} has no section—cannot evaluate eligibility for event {}", student.getStudentNumber(), event.getEventId());
+            return false;
+        }
+        Courses course = student.getSection().getCourse();
+        Clusters cluster = (course != null) ? course.getCluster() : null;
+        if (criteria.getSections() != null && criteria.getSections().contains(student.getSection().getId())) {
+            log.debug("Student {} eligible via section match for event {}", student.getStudentNumber(), event.getEventId());
+            return true;
+        }
+        if (criteria.getCourse() != null && course != null && criteria.getCourse().contains(course.getId())) {
+            log.debug("Student {} eligible via course match for event {}", student.getStudentNumber(), event.getEventId());
+            return true;
+        }
+        if (criteria.getCluster() != null && cluster != null && criteria.getCluster().contains(cluster.getClusterId())) {
+            log.debug("Student {} eligible via cluster match for event {}", student.getStudentNumber(), event.getEventId());
+            return true;
+        }
+        log.debug("Student {} not eligible for event {} (no matches)", student.getStudentNumber(), event.getEventId());
+        return false;
     }
 }
