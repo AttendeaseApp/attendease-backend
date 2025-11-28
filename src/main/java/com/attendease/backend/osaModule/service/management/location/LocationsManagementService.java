@@ -8,7 +8,6 @@ import com.attendease.backend.repository.locations.LocationRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
@@ -42,6 +41,15 @@ public class LocationsManagementService {
      * @throws ResponseStatusException if the geometry is invalid or not a Polygon
      */
     public LocationResponse createLocation(EventLocationRequest request) {
+        if (request.getLocationName() == null || request.getLocationName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Location name is required and cannot be blank");
+        }
+        if (request.getLocationType() == null) {
+            throw new IllegalArgumentException("Location type is required");
+        }
+        if (request.getGeoJsonData() == null) {
+            throw new IllegalArgumentException("Geometry data is required");
+        }
         GeoJsonPolygon polygon = convertToGeoJsonPolygon(request.getGeoJsonData());
 
         EventLocations location = EventLocations.builder()
@@ -74,15 +82,25 @@ public class LocationsManagementService {
         }
         EventLocations location = optLocation.get();
         if (request.getLocationName() != null) {
-            location.setLocationName(request.getLocationName());
+            if (request.getLocationName().trim().isEmpty()) {
+                throw new IllegalArgumentException("Location name cannot be blank");
+            }
+            location.setLocationName(request.getLocationName().trim());
         }
         if (request.getLocationType() != null) {
-            location.setLocationType(request.getLocationType());
+            if (request.getLocationType().trim().isEmpty()) {
+                throw new IllegalArgumentException("Location type cannot be blank");
+            }
+            location.setLocationType(request.getLocationType().trim());
         }
         if (request.getGeoJsonData() != null) {
-            GeoJsonPolygon polygon = convertToGeoJsonPolygon(request.getGeoJsonData());
-            location.setGeometry(polygon);
-            location.setGeometryType("Polygon");
+            try {
+                GeoJsonPolygon polygon = convertToGeoJsonPolygon(request.getGeoJsonData());
+                location.setGeometry(polygon);
+                location.setGeometryType("Polygon");
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid geometry data: " + e.getMessage());
+            }
         }
         location.setUpdatedAt(LocalDateTime.now());
         location = locationRepository.save(location);
@@ -108,10 +126,8 @@ public class LocationsManagementService {
      * Retrieves all event locations.
      *
      * @return a list of {@link LocationResponse} DTOs for all locations, including computed centroids
-     * @throws ExecutionException if an execution error occurs during retrieval
-     * @throws InterruptedException if the thread is interrupted during retrieval
      */
-    public List<LocationResponse> getAllLocations() throws ExecutionException, InterruptedException {
+    public List<LocationResponse> getAllLocations() {
         List<EventLocations> locations = locationRepository.findAll();
         return locations.stream().map(this::convertToResponseDTO).toList();
     }
@@ -120,11 +136,8 @@ public class LocationsManagementService {
      * Deletes an event location by its unique identifier.
      *
      * @param locationId the unique ID of the location to delete
-     * @throws ResponseStatusException if the location is not found
-     * @throws ExecutionException if an execution error occurs during deletion
-     * @throws InterruptedException if the thread is interrupted during deletion
      */
-    public void deleteLocationById(String locationId) throws ExecutionException, InterruptedException {
+    public void deleteLocationById(String locationId) {
         boolean exists = locationRepository.existsById(locationId);
         if (!exists) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found: " + locationId);
