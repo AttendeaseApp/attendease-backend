@@ -124,10 +124,11 @@ public class EventAttendanceRecordsManagementService {
             .map(record -> {
                 var student = record.getStudent();
                 var user = student.getUser();
-                String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
-                assert student.getSection() != null;
-                String courseName = (student.getSection().getCourse().getCourseName() != null) ? student.getSection().getCourse().getCourseName() : "";
-                String clusterName = (student.getSection().getCourse().getCluster() != null) ? student.getSection().getCourse().getCluster().getClusterName() : "";
+                var section = student.getSection();
+                String sectionName = (section != null) ? section.getName() : "";
+                String courseName = (section != null && section.getCourse() != null) ? section.getCourse().getCourseName() : "";
+                String clusterName = (section != null && section.getCourse() != null && section.getCourse().getCluster() != null) ? section.getCourse().getCluster().getClusterName() : "";
+
                 return AttendeesResponse.builder()
                     .userId(user.getUserId())
                     .firstName(user.getFirstName())
