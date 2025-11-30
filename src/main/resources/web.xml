@@ -1,0 +1,3 @@
+<websocket-message-broker use-authorization-manager="true" same-origin-disabled="true">
+    <intercept-message pattern="/**" access="authenticated"/>
+</websocket-message-broker>

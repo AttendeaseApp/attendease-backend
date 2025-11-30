@@ -36,5 +36,5 @@ public class SecurityConstants {
     /**
      * URL's that are available in public
      * */
-    public static final String[] PUBLIC_URLS = {"/api/auth/osa/login","/api/auth/osa/register","/api/auth/student/login"};
+    public static final String[] PUBLIC_URLS = {"/api/auth/osa/login","/api/auth/osa/register","/api/auth/student/login", "/attendease-websocket"};
 }
