@@ -77,7 +77,7 @@ public class EventRegistrationService {
         EventSessions event = eventSessionsRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        validateEventStatus(event, now);
+        validateEventStatus(event);
 
         if (!isStudentEligibleForEvent(event, student)) {
             throw new IllegalStateException("Student is not eligible to check in for this event.");
@@ -117,7 +117,7 @@ public class EventRegistrationService {
      * PRIVATE HELPERS
      */
 
-    private void validateEventStatus(EventSessions event, LocalDateTime now) {
+    private void validateEventStatus(EventSessions event) {
         EventStatus status = event.getEventStatus();
 
         if (status == EventStatus.UPCOMING) {
