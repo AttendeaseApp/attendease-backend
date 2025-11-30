@@ -29,7 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
-        registry.addEndpoint("/attendease-websocket").setAllowedOrigins("*");
+        registry.addEndpoint("/attendease-websocket").setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override
