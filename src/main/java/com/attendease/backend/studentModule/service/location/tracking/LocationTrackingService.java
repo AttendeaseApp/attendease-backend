@@ -36,7 +36,6 @@ public class LocationTrackingService {
      * </ul>
      * </p>
      *
-     * @param authenticatedUserId the ID of the user attempting the location validation
      * @param request             the request payload containing latitude, longitude, and location ID
      * @return a {@link LocationTrackingResponse} containing boundary status and a user-friendly message
      *
@@ -47,7 +46,7 @@ public class LocationTrackingService {
      *             <li>The target location does not exist</li>
      *         </ul>
      */
-    public LocationTrackingResponse trackCurrentLocation(String authenticatedUserId, LocationTrackingRequest request) {
+    public LocationTrackingResponse trackCurrentLocation(LocationTrackingRequest request) {
         EventLocations location = eventLocationsRepository.findById(request.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
         boolean isInside = locationValidator.isWithinLocationBoundary(location, request.getLatitude(), request.getLongitude());
 
