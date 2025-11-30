@@ -21,7 +21,6 @@ public class EventRegistrationController {
 
     private final EventRegistrationService registrationService;
     private final AttendanceTrackingService attendanceTrackingService;
-    private final LocationTrackingService locationTrackingService;
 
     /**
      * Endpoint for student event registration.
@@ -44,16 +43,5 @@ public class EventRegistrationController {
         String authenticatedUserId = authentication.getName();
         boolean isInside = attendanceTrackingService.attendanceMonitoringLocationPings(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
-    }
-
-    /**
-     * Endpoint for verifying students current location used for ui visuals only
-     * The authenticated user ID is automatically resolved from the security context.
-     */
-    @PostMapping("/check-location")
-    public ResponseEntity<LocationTrackingResponse> trackCurrentLocationOfStudent(Authentication authentication, @RequestBody LocationTrackingRequest request) {
-        String userId = authentication.getName();
-        LocationTrackingResponse response = locationTrackingService.trackCurrentLocation(userId, request);
-        return ResponseEntity.ok(response);
     }
 }

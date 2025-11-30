@@ -91,11 +91,11 @@ public class EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (registrationRequest.getFaceImageBase64() == null) {
-            throw new IllegalStateException("Face image is required for check-in");
-        }
-
-        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+//        if (registrationRequest.getFaceImageBase64() == null) {
+//            throw new IllegalStateException("Face image is required for check-in");
+//        }
+//
+//        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
 
         AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
         AttendanceRecords record = AttendanceRecords.builder()
