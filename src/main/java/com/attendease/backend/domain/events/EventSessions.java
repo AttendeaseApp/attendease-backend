@@ -40,7 +40,9 @@ public class EventSessions {
 
     @DBRef
     private EventLocations eventLocation;
-    @Transient
+
+    @Field("eventLocationId")
+    @Indexed
     private String eventLocationId;
 
     private String description;

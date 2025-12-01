@@ -4,11 +4,13 @@ import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Geofencing.Geometry;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
+import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
@@ -26,11 +28,13 @@ import org.springframework.web.server.ResponseStatusException;
  * <p>Authored: jakematthewviado204@gmail.com</p>
  * @since 2025-09-16
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocationsManagementService {
 
     private final LocationRepository locationRepository;
+    private final EventSessionsRepository eventSessionsRepository;
 
     /**
      * Creates a new event location based on the provided request.
@@ -139,11 +143,16 @@ public class LocationsManagementService {
      */
     public void deleteLocationById(String locationId) {
         boolean exists = locationRepository.existsById(locationId);
+        EventLocations location = locationRepository.findById(locationId).orElseThrow(() -> new IllegalStateException("Location not found after existence check: " + locationId));
+        Long dependentCount = eventSessionsRepository.countByEventLocationId(locationId);
         if (!exists) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found: " + locationId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The location that you are trying to delete has not been found: " + locationId);
         }
-
+        if (dependentCount > 0) {
+            throw new IllegalStateException("Cannot delete location '" + location.getLocationName() + "' as it is referenced by " + dependentCount + " event session(s).");
+        }
         locationRepository.deleteById(locationId);
+        log.info("Deleted location: {}", locationId);
     }
 
     private LocationResponse convertToResponseDTO(EventLocations location) {

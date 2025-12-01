@@ -81,7 +81,7 @@ public class LocationManagementController {
      */
     @DeleteMapping("/{locationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteLocation(@PathVariable String locationId) throws Exception {
+    public void deleteLocation(@PathVariable String locationId) {
         locationsService.deleteLocationById(locationId);
     }
 }
