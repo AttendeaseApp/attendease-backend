@@ -56,6 +56,11 @@ public class LocationsManagementService {
         if (request.getLocationName() == null || request.getLocationName().trim().isEmpty()) {
             throw new IllegalArgumentException("Location name is required and cannot be blank");
         }
+        String trimmedName = request.getLocationName().trim();
+        Optional<EventLocations> existing = locationRepository.findByLocationName(trimmedName);
+        if (existing.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location with name '" + trimmedName + "' already exists");
+        }
         if (request.getLocationType() == null) {
             throw new IllegalArgumentException("Location type is required");
         }
@@ -65,13 +70,13 @@ public class LocationsManagementService {
         GeoJsonPolygon polygon = convertToGeoJsonPolygon(request.getGeoJsonData());
 
         EventLocations location = EventLocations.builder()
-            .locationName(request.getLocationName())
-            .locationType(request.getLocationType())
-            .geometryType("Polygon")
-            .geometry(polygon)
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
+                .locationName(trimmedName)
+                .locationType(request.getLocationType())
+                .geometryType("Polygon")
+                .geometry(polygon)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
 
         location = locationRepository.save(location);
 
@@ -112,10 +117,17 @@ public class LocationsManagementService {
         }
 
         if (request.getLocationName() != null) {
-            if (request.getLocationName().trim().isEmpty()) {
+            String newName = request.getLocationName().trim();
+            if (newName.isEmpty()) {
                 throw new IllegalArgumentException("Location name cannot be blank");
             }
-            location.setLocationName(request.getLocationName().trim());
+            if (!newName.equals(location.getLocationName())) {
+                Optional<EventLocations> existing = locationRepository.findByLocationName(newName);
+                if (existing.isPresent()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Location with name '" + newName + "' already exists");
+                }
+            }
+            location.setLocationName(newName);
         }
         if (request.getLocationType() != null) {
             if (request.getLocationType().trim().isEmpty()) {
@@ -135,21 +147,6 @@ public class LocationsManagementService {
         location.setUpdatedAt(LocalDateTime.now());
         location = locationRepository.save(location);
         return convertToResponseDTO(location);
-    }
-
-    private GeoJsonPolygon convertToGeoJsonPolygon(Geometry geometry) {
-        if (geometry == null || !"Polygon".equalsIgnoreCase(geometry.getType())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only Polygon geometry is supported");
-        }
-
-        List<List<Double>> outerRing = geometry.getCoordinates().getFirst();
-
-        List<Point> points = outerRing
-            .stream()
-            .map(coord -> new Point(coord.getFirst(), coord.get(1)))
-            .toList();
-
-        return new GeoJsonPolygon(points);
     }
 
     /**
@@ -194,6 +191,25 @@ public class LocationsManagementService {
         }
         locationRepository.deleteById(locationId);
         log.info("Deleted location: {}", locationId);
+    }
+
+    /**
+     * PRIVATE HELPERS
+     */
+
+    private GeoJsonPolygon convertToGeoJsonPolygon(Geometry geometry) {
+        if (geometry == null || !"Polygon".equalsIgnoreCase(geometry.getType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only Polygon geometry is supported");
+        }
+
+        List<List<Double>> outerRing = geometry.getCoordinates().getFirst();
+
+        List<Point> points = outerRing
+                .stream()
+                .map(coord -> new Point(coord.getFirst(), coord.get(1)))
+                .toList();
+
+        return new GeoJsonPolygon(points);
     }
 
     private LocationResponse convertToResponseDTO(EventLocations location) {

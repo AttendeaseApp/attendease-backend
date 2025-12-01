@@ -4,6 +4,8 @@ import com.attendease.backend.domain.locations.EventLocations;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * Repository interface for performing CRUD operations on {@link EventLocations} documents in MongoDB.
  * <p>
@@ -15,4 +17,6 @@ import org.springframework.stereotype.Repository;
  * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
-public interface LocationRepository extends MongoRepository<EventLocations, String> {}
+public interface LocationRepository extends MongoRepository<EventLocations, String> {
+    Optional<EventLocations> findByLocationName(String locationName);
+}
