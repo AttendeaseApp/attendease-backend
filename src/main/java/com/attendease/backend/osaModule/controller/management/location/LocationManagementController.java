@@ -54,7 +54,7 @@ public class LocationManagementController {
      * @param request the {@link EventLocationRequest} containing the fields to update (partial updates supported)
      * @return the {@link LocationResponse} representing the updated location, including centroid
      */
-    @PutMapping("/{locationId}")
+    @PatchMapping("/{locationId}")
     public LocationResponse updateLocation(@PathVariable String locationId, @RequestBody EventLocationRequest request) {
         return locationsService.updateLocation(locationId, request);
     }
@@ -68,7 +68,7 @@ public class LocationManagementController {
      * @return a {@link List} of {@link LocationResponse} objects, each containing location details and centroid
      */
     @GetMapping
-    public List<LocationResponse> getAllLocations() throws Exception {
+    public List<LocationResponse> getAllLocations() {
         return locationsService.getAllLocations();
     }
 

@@ -66,4 +66,6 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @return an {@link Optional} containing the {@link AttendanceRecords} if found, otherwise empty
      */
     Optional<AttendanceRecords> findByStudentIdAndEventEventId(String studentId, String eventId);
+
+    Long countByEventLocationId(String eventLocationId);
 }

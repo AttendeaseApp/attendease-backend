@@ -1,14 +1,21 @@
 package com.attendease.backend.osaModule.service.management.location;
 
+import com.attendease.backend.domain.enums.EventStatus;
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Geofencing.Geometry;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
+import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Point;
@@ -35,6 +42,7 @@ public class LocationsManagementService {
 
     private final LocationRepository locationRepository;
     private final EventSessionsRepository eventSessionsRepository;
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     /**
      * Creates a new event location based on the provided request.
@@ -85,6 +93,24 @@ public class LocationsManagementService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Location not found: " + locationId);
         }
         EventLocations location = optLocation.get();
+
+        List<EventSessions> referencingEvents = eventSessionsRepository.findByEventLocationId(locationId);
+        Set<EventStatus> blockedStatuses = Set.of(EventStatus.REGISTRATION, EventStatus.ONGOING, EventStatus.CONCLUDED, EventStatus.FINALIZED);
+
+        Map<EventStatus, Long> blockedCounts = referencingEvents.stream().filter(event -> blockedStatuses.contains(event.getEventStatus()))
+                .collect(Collectors.groupingBy(EventSessions::getEventStatus, Collectors.counting()));
+
+        if (!blockedCounts.isEmpty()) {
+            StringBuilder statusCounts = new StringBuilder();
+            blockedCounts.forEach((status, count) -> {
+                if (!statusCounts.isEmpty()) statusCounts.append(", ");
+                statusCounts.append(count).append(" ").append(status.name());
+            });
+            throw new IllegalStateException(
+                    String.format("Cannot update location '%s' as it is used by %s event session(s) with blocked statuses (%s). " + "This would affect attendance record integrity. Cancel or reassign those events first.", location.getLocationName(), statusCounts, statusCounts)
+            );
+        }
+
         if (request.getLocationName() != null) {
             if (request.getLocationName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Location name cannot be blank");
@@ -143,13 +169,28 @@ public class LocationsManagementService {
      */
     public void deleteLocationById(String locationId) {
         boolean exists = locationRepository.existsById(locationId);
-        EventLocations location = locationRepository.findById(locationId).orElseThrow(() -> new IllegalStateException("Location not found after existence check: " + locationId));
-        Long dependentCount = eventSessionsRepository.countByEventLocationId(locationId);
         if (!exists) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The location that you are trying to delete has not been found: " + locationId);
         }
-        if (dependentCount > 0) {
-            throw new IllegalStateException("Cannot delete location '" + location.getLocationName() + "' as it is referenced by " + dependentCount + " event session(s).");
+
+        EventLocations location = locationRepository.findById(locationId).orElseThrow(() -> new IllegalStateException("Location not found after existence check: " + locationId));
+
+        Long eventSessionDependentCount = eventSessionsRepository.countByEventLocationId(locationId);
+        Long attendanceRecordsDependentCount = attendanceRecordsRepository.countByEventLocationId(locationId);
+
+        if (eventSessionDependentCount > 0 || attendanceRecordsDependentCount > 0) {
+            StringBuilder message = new StringBuilder("Cannot delete location '").append(location.getLocationName()).append("' as it is used by ");
+            boolean hasEvents = eventSessionDependentCount > 0;
+            boolean hasAttendance = attendanceRecordsDependentCount > 0;
+            if (hasEvents && hasAttendance) {
+                message.append(eventSessionDependentCount).append(" event session(s) and ").append(attendanceRecordsDependentCount).append(" attendance record(s)");
+            } else if (hasEvents) {
+                message.append(eventSessionDependentCount).append(" event session(s)");
+            } else {
+                message.append(attendanceRecordsDependentCount).append(" attendance record(s)");
+            }
+            message.append(". Please reassign or delete the dependent records first.");
+            throw new IllegalStateException(message.toString());
         }
         locationRepository.deleteById(locationId);
         log.info("Deleted location: {}", locationId);

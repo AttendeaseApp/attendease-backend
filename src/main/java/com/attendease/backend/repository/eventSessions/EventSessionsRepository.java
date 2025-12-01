@@ -65,4 +65,6 @@ public interface EventSessionsRepository extends MongoRepository<EventSessions, 
     List<EventSessions> findAllByOrderByCreatedAtDesc();
 
     Long countByEventLocationId(String eventLocationId);
+
+    List<EventSessions> findByEventLocationId(String eventLocationId);
 }
