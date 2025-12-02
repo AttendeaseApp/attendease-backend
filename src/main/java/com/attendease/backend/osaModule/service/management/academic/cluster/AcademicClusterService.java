@@ -91,7 +91,7 @@ public class AcademicClusterService {
      *
      * @param id The unique ID of the cluster to delete.
      *
-     * @throws RuntimeException If the cluster is not found or dependencies exist (with detailed message including counts).
+     * @throws IllegalStateException If the cluster is not found or dependencies exist (with detailed message including counts).
      */
     public void deleteCluster(String id) {
         Clusters cluster = getClusterById(id);
@@ -109,7 +109,7 @@ public class AcademicClusterService {
                 message.append(")");
             }
             message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., update courses or event eligibility criteria).");
-            throw new RuntimeException(message.toString());
+            throw new IllegalStateException(message.toString());
         }
         clusterRepository.deleteById(id);
     }
