@@ -41,10 +41,7 @@ public class AttendanceRecordsFinalizer {
 
         List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventId(eventId);
         List<Students> expectedStudents = getExpectedStudentsForEvent(event);
-        Set<String> studentsWithRecords = attendanceRecords
-            .stream()
-            .map(r -> r.getStudent().getId())
-            .collect(Collectors.toSet());
+        Set<String> studentsWithRecords = attendanceRecords.stream().map(r -> r.getStudent().getId()).collect(Collectors.toSet());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -56,7 +53,7 @@ public class AttendanceRecordsFinalizer {
                 AttendanceStatus lateStatus = evaluateLateAttendees(event, record);
                 if (lateStatus == AttendanceStatus.LATE) {
                     finalStatus = AttendanceStatus.LATE;
-                    log.info("Overrode to LATE for student {} (arrived after start) in event {}", record.getStudent().getStudentNumber(), eventName);
+                    log.info("Adjusted attendance to LATE for student {} (arrived after event started) in event {}", record.getStudent().getStudentNumber(), eventName);
                 }
             }
 
@@ -64,7 +61,7 @@ public class AttendanceRecordsFinalizer {
                 record.setAttendanceStatus(finalStatus);
                 record.setTimeOut(now);
                 attendanceRecordsRepository.save(record);
-                log.info("Updated student {} to {} for event {}", record.getStudent().getStudentNumber(), finalStatus, eventName);
+                log.info("Finalized attendance for student {} as {} in event {}", record.getStudent().getStudentNumber(), finalStatus, eventName);
             }
         }
 
@@ -72,15 +69,15 @@ public class AttendanceRecordsFinalizer {
         for (Students student : expectedStudents) {
             if (!studentsWithRecords.contains(student.getId())) {
                 AttendanceRecords absentRecord = AttendanceRecords.builder()
-                    .student(student)
-                    .event(event)
-                    .attendanceStatus(AttendanceStatus.ABSENT)
-                    .reason("Missing, no any presence found and did not registered at all")
-                    .timeIn(null)
-                    .timeOut(null)
-                    .build();
+                        .student(student)
+                        .event(event)
+                        .attendanceStatus(AttendanceStatus.ABSENT)
+                        .reason("No attendance recorded – may have missed the event or not registered in time.")
+                        .timeIn(null)
+                        .timeOut(null)
+                        .build();
                 attendanceRecordsRepository.save(absentRecord);
-                log.info("Marked ABSENT for missing student {} in event {}, {}", student.getStudentNumber(), eventId, eventName);
+                log.info("Recorded as absent for student {} in event {}, {}", student.getStudentNumber(), eventId, eventName);
             }
         }
         log.info("Attendance finalization completed for event {}, {}", eventId, eventName);
@@ -92,7 +89,7 @@ public class AttendanceRecordsFinalizer {
     private AttendanceStatus evaluateAttendanceFromLogs(EventSessions event, AttendanceRecords record) {
         List<AttendanceTrackingResponse> pings = record.getAttendancePingLogs();
         if (pings == null || pings.isEmpty()) {
-            record.setReason("No location pings from student mobile were recorded");
+            record.setReason("No location updates were detected during the event.");
             return AttendanceStatus.ABSENT;
         }
 
@@ -102,16 +99,17 @@ public class AttendanceRecordsFinalizer {
         long insideTime = computeInsideDuration(pings, eventStart, eventEnd);
 
         double insideRatio = (double) insideTime / eventDuration;
-        log.info("Student {} inside {}% of event {}", record.getStudent().getStudentNumber(), insideRatio * 100, event.getEventName());
+        double percentage = insideRatio * 100;
+        log.info("Student {} was present for approximately {}% of event {}", record.getStudent().getStudentNumber(), percentage, event.getEventName());
 
         if (insideRatio >= 0.7) {
             record.setReason(null);
             return AttendanceStatus.PRESENT;
         } else if (insideRatio >= 0.3) {
-            record.setReason("Present only for part of the event");
+            record.setReason(String.format("Partially attended the event – present for %.1f%% of the time.", percentage));
             return AttendanceStatus.IDLE;
         } else {
-            record.setReason("Outside for most of the event");
+            record.setReason(String.format("Minimal attendance – present for only %.1f%% of the time.", percentage));
             return AttendanceStatus.ABSENT;
         }
     }
@@ -120,7 +118,7 @@ public class AttendanceRecordsFinalizer {
         if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartDateTime())) {
             return null;
         }
-        record.setReason("Late attendee: Arrived after event start at " + record.getTimeIn());
+        record.setReason("Arrived late to the event after it started at " + record.getTimeIn());
         return AttendanceStatus.LATE;
     }
 

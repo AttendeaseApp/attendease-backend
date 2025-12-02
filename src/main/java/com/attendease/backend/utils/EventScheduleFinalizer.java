@@ -22,6 +22,10 @@ public class EventScheduleFinalizer {
         try {
             List<EventSessions> concludedEvents = eventSessionsRepository.findByEventStatus(EventStatus.CONCLUDED);
             for (EventSessions event : concludedEvents) {
+                if (event.getEventStatus() == EventStatus.CANCELLED) {
+                    log.info("Skipping finalization for cancelled event: {} {}", event.getEventId(), event.getEventName());
+                    continue;
+                }
                 log.info("Finalizing attendance records and status for event: {} {}", event.getEventId(), event.getEventName());
                 attendanceRecordsFinalizer.finalizeAttendanceForEvent(event);
                 event.setEventStatus(EventStatus.FINALIZED);
