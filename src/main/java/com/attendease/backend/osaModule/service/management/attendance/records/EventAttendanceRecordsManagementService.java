@@ -192,4 +192,39 @@ public class EventAttendanceRecordsManagementService {
 
         return attendanceRecordsRepository.save(record);
     }
+
+    /**
+     * Retrieves all attendance records.
+     *
+     * @return a list of all {@link AttendanceRecords}
+     */
+    public List<AttendanceRecords> getAllAttendanceRecords() {
+        return attendanceRecordsRepository.findAll();
+    }
+
+    /**
+     * Deletes an attendance record by its unique identifier.
+     *
+     * @param recordId the unique ID of the attendance record to delete
+     * @throws RuntimeException if the record is not found
+     */
+    public void deleteAttendanceRecordById(String recordId) {
+        if (!attendanceRecordsRepository.existsById(recordId)) {
+            throw new RuntimeException("Attendance record not found: " + recordId);
+        }
+        attendanceRecordsRepository.deleteById(recordId);
+        log.info("Deleted attendance record: {}", recordId);
+    }
+
+    /**
+     * Deletes all attendance records.
+     * <p><strong>Warning:</strong> This operation is irreversible and will remove all attendance data.</p>
+     */
+    public void deleteAllAttendanceRecords() {
+        long count = attendanceRecordsRepository.count();
+        if (count > 0) {
+            attendanceRecordsRepository.deleteAll();
+            log.warn("Deleted all {} attendance records", count);
+        }
+    }
 }

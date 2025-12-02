@@ -31,7 +31,7 @@ public class EventAttendanceRecordsManagementController {
     private final EventAttendanceRecordsManagementService attendanceService;
 
     /**
-     * Retrieves all events with {@link EventStatus} FINALIZED.
+     * Retrieves all events with EventStatus.FINALIZED.
      *
      * @return a list of {@link FinalizedAttendanceRecordsResponse}
      */
@@ -93,5 +93,41 @@ public class EventAttendanceRecordsManagementController {
         AttendanceRecords updatedRecord = attendanceService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
 
         return ResponseEntity.ok(updatedRecord);
+    }
+
+    /**
+     * Retrieves all attendance records.
+     *
+     * @return a list of all {@link AttendanceRecords}
+     */
+    @GetMapping
+    public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
+        List<AttendanceRecords> records = attendanceService.getAllAttendanceRecords();
+        return ResponseEntity.ok(records);
+    }
+
+    /**
+     * Deletes an attendance record by its unique identifier.
+     *
+     * @param recordId the unique ID of the attendance record to delete
+     * @return a {@link ResponseEntity} with no content if successful
+     * @throws RuntimeException if the record is not found
+     */
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<Void> deleteAttendanceRecordById(@PathVariable String recordId) {
+        attendanceService.deleteAttendanceRecordById(recordId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deletes all attendance records.
+     * <p><strong>Warning:</strong> This operation is irreversible and will remove all attendance data.</p>
+     *
+     * @return a {@link ResponseEntity} with no content if successful
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllAttendanceRecords() {
+        attendanceService.deleteAllAttendanceRecords();
+        return ResponseEntity.noContent().build();
     }
 }

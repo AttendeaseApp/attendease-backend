@@ -63,4 +63,8 @@ public interface EventSessionsRepository extends MongoRepository<EventSessions, 
      * @return a list of {@link EventSessions} ordered from most recently created to oldest
      */
     List<EventSessions> findAllByOrderByCreatedAtDesc();
+
+    Long countByEventLocationId(String eventLocationId);
+
+    List<EventSessions> findByEventLocationId(String eventLocationId);
 }
