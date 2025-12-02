@@ -2,10 +2,13 @@ package com.attendease.backend.osaModule.service.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.osaModule.service.management.academic.course.AcademicCourseService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;
+
+import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,7 @@ public class AcademicClusterService {
 
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
+    private final EventSessionsRepository eventSessionsRepository;
     private final AcademicCourseService academicCourseService;
 
     /**
@@ -80,21 +84,32 @@ public class AcademicClusterService {
     }
 
     /**
-     * Deletes a cluster by its ID, cascading to all child courses and their sections.
+     * Deletes a cluster by its ID **only if no dependencies exist**.
      *
-     * <p>Full cascade: Fetches all courses under the cluster, deletes each course (which cascades
-     * to its sections via {@link AcademicCourseService#deleteCourse(String)}), then deletes the cluster.
-     * This ensures no orphaned references or data inconsistencies.</p>
+     * <p>Prevents deletion if courses or event sessions reference the cluster. Counts dependencies
+     * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
      *
      * @param id The unique ID of the cluster to delete.
      *
-     * @throws RuntimeException If the cluster is not found.
+     * @throws RuntimeException If the cluster is not found or dependencies exist (with detailed message including counts).
      */
     public void deleteCluster(String id) {
         Clusters cluster = getClusterById(id);
-        List<Courses> courses = courseRepository.findByCluster(cluster);
-        for (Courses course : courses) {
-            academicCourseService.deleteCourse(course.getId());
+        Long courseCount = courseRepository.countByCluster(cluster);
+        Long eventCountById = eventSessionsRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
+        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
+        Long totalEventCount = eventCountById + eventCountByName;
+
+        if (courseCount > 0 || eventCountById > 0 || eventCountByName > 0) {
+            String clusterName = cluster.getClusterName();
+            StringBuilder message = new StringBuilder("You cannot delete cluster '" + clusterName + "' due to existing dependencies (").append(courseCount).append(" courses");
+            if (eventCountById > 0 || eventCountByName > 0) {
+                message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
+            } else {
+                message.append(")");
+            }
+            message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., update courses or event eligibility criteria).");
+            throw new RuntimeException(message.toString());
         }
         clusterRepository.deleteById(id);
     }

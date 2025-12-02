@@ -108,14 +108,23 @@ public class AcademicCourseController {
     }
 
     /**
-     * Deletes a course and all its referencing sections.
+     * Deletes a course, conditionally cascading to sections.
      *
-     * <p>This performs a cascading delete: sections are removed first, then the course.</p>
+     * <p>This performs a conditional cascading delete: First checks for direct event dependencies on the course—if any exist,
+     * deletion is prevented. If sections exist and have no dependencies (students or events), they are deleted first, then the course.
+     * If any section has dependencies, deletion stops and throws a detailed integrity exception.</p>
+     *
+     * <p><strong>Responses:</strong></p>
+     * <ul>
+     *   <li><strong>204 No Content</strong>: Successful deletion (no dependencies or all resolved).</li>
+     *   <li><strong>409 Conflict</strong>: Deletion prevented due to dependencies (e.g., enrolled students, referenced events)—check logs/response body for details.</li>
+     *   <li><strong>404 Not Found</strong>: Course not found.</li>
+     * </ul>
      *
      * @param id The unique ID of the course to delete.
-     * @return No content (HTTP 204 No Content).
+     * @return No content (HTTP 204 No Content) on success.
      *
-     * @throws RuntimeException If the course is not found.
+     * @throws RuntimeException If integrity checks fail (mapped to 409) or course not found (mapped to 404).
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {

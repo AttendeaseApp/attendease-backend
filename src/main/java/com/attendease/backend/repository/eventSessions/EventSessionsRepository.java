@@ -4,6 +4,8 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import java.util.Date;
 import java.util.List;
+
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -67,4 +69,32 @@ public interface EventSessionsRepository extends MongoRepository<EventSessions, 
     Long countByEventLocationId(String eventLocationId);
 
     List<EventSessions> findByEventLocationId(String eventLocationId);
+
+    /**
+     * Finds all event sessions where the given cluster ID is in {@code eligibleStudents.cluster}.
+     *
+     * @param clusterId the cluster ID to search for
+     * @return a list of matching {@link EventSessions}
+     */
+    List<EventSessions> findByEligibleStudentsClusterContaining(String clusterId);
+
+    /**
+     * Finds all event sessions where the given cluster name is in {@code eligibleStudents.clusterNames}.
+     *
+     * @param clusterName the cluster name to search for
+     * @return a list of matching {@link EventSessions}
+     */
+    List<EventSessions> findByEligibleStudentsClusterNamesContaining(String clusterName);
+
+    Long countByEligibleStudentsClusterContaining(String clusterId);
+
+    Long countByEligibleStudentsClusterNamesContaining(@NotBlank(message = "Cluster name is required") String clusterName);
+
+    Long countByEligibleStudentsCourseContaining(String id);
+
+    Long countByEligibleStudentsCourseNamesContaining(@NotBlank(message = "Course name is required") String courseName);
+
+    Long countByEligibleStudentsSectionsContaining(String id);
+
+    Long countByEligibleStudentsSectionNamesContaining(String name);
 }

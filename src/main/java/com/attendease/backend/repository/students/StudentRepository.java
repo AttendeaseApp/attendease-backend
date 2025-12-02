@@ -71,4 +71,6 @@ public interface StudentRepository extends MongoRepository<Students, String> {
     List<Students> findBySection(Sections section);
 
     List<Students> findBySectionIdIn(List<String> sections);
+
+    Long countBySection(Sections section);
 }
