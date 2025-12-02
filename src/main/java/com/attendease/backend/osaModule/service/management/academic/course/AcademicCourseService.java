@@ -2,10 +2,15 @@ package com.attendease.backend.osaModule.service.management.academic.course;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osaModule.service.management.academic.section.AcademicSectionService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;
+
+import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.students.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,9 @@ public class AcademicCourseService {
     private final AcademicSectionService academicSectionService;
     private final CourseRepository courseRepository;
     private final ClustersRepository clusterRepository;
+    private final SectionsRepository sectionsRepository;
+    private final StudentRepository studentRepository;
+    private final EventSessionsRepository eventSessionsRepository;
 
     /**
      * Creates a new course under a specific cluster.
@@ -107,16 +115,49 @@ public class AcademicCourseService {
     }
 
     /**
-     * Deletes a course and all its referencing sections.
+     * Deletes a course by its ID, cascading to sections **only if sections have no dependencies**.
      *
-     * <p>Cascades deletion: sections are deleted first, then the course.</p>
+     * <p>Prevents deletion if event sessions reference the course directly. If sections exist, attempts to
+     * cascade deletion to each section (which individually checks for student/event dependencies). If any
+     * section cannot be deleted (e.g., has enrolled students or referenced events), throws a detailed exception
+     * from the section deletion. Counts dependencies and provides rationale.</p>
      *
      * @param id The unique ID of the course to delete.
      *
-     * @throws RuntimeException If the course is not found (implicit via repo).
+     * @throws RuntimeException If the course is not found.
+     * @throws IllegalStateException If direct event dependencies exist or cascade fails (with user-friendly message including student and event counts).
      */
     public void deleteCourse(String id) {
-        academicSectionService.deleteSectionsByCourse(id);
+        Courses course = getCourseById(id);
+        long eventCountById = eventSessionsRepository.countByEligibleStudentsCourseContaining(course.getId());
+        long eventCountByName = eventSessionsRepository.countByEligibleStudentsCourseNamesContaining(course.getCourseName());
+        long totalEventCount = eventCountById + eventCountByName;
+
+        long totalStudentCount = 0;
+        long sectionCount = sectionsRepository.countByCourse(course);
+        if (sectionCount > 0) {
+            List<Sections> sections = sectionsRepository.findByCourse(course);
+            for (Sections section : sections) {
+                totalStudentCount += studentRepository.countBySection(section);
+            }
+        }
+
+        if (eventCountById > 0 || eventCountByName > 0) {
+            String courseName = course.getCourseName();
+            String message = "Cannot delete course '" + courseName +
+                    "' as it is in use by " + totalEventCount + " event sessions (" +
+                    eventCountById + " by ID, " + eventCountByName + " by name; possible overlap)" +
+                    ") across " + sectionCount + " sections, potentially impacting " +
+                    totalStudentCount + " enrolled students overall (via section eligibility). " +
+                    "These events may restrict access for those students. To proceed, update event eligibility criteria first. This prevents data inconsistencies.";
+            throw new IllegalStateException(message);
+        }
+        if (sectionCount > 0) {
+            List<Sections> sections = sectionsRepository.findByCourse(course);
+            for (Sections section : sections) {
+                academicSectionService.deleteSection(section.getId());
+            }
+        }
         courseRepository.deleteById(id);
     }
 }

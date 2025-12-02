@@ -24,4 +24,6 @@ public interface CourseRepository extends MongoRepository<Courses, String> {
     List<Courses> findByClusterClusterIdIn(List<String> clusterIds);
 
     List<Courses> findByClusterClusterId(String clusterId);
+
+    Long countByCluster(Clusters cluster);
 }

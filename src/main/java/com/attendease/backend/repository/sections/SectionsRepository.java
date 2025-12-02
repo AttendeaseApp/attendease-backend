@@ -70,4 +70,6 @@ public interface SectionsRepository extends MongoRepository<Sections, String> {
     List<Sections> findByCourseIdIn(List<String> course);
 
     List<Sections> findByCourseId(String id);
+
+    Long countByCourse(Courses course);
 }

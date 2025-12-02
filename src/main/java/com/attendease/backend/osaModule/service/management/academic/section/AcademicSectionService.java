@@ -3,7 +3,9 @@ package com.attendease.backend.osaModule.service.management.academic.section;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.repository.course.CourseRepository;
+import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.students.StudentRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,8 @@ public class AcademicSectionService {
 
     private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
+    private final EventSessionsRepository eventSessionsRepository;
+    private final StudentRepository studentsRepository;
 
     /**
      * Creates a new section under a specific course.
@@ -116,13 +120,33 @@ public class AcademicSectionService {
     }
 
     /**
-     * Deletes a section by its ID.
+     * Deletes a section by its ID **only if no dependencies exist**.
+     *
+     * <p>Prevents deletion if event sessions or students reference the section. Counts dependencies
+     * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
      *
      * @param id The unique ID of the section to delete.
      *
-     * @throws RuntimeException If the section is not found (implicit via repo).
+     * @throws RuntimeException If the section is not found or dependencies exist (with detailed message including counts).
      */
     public void deleteSection(String id) {
+        Sections section = getSectionById(id);
+        Long studentCount = studentsRepository.countBySection(section);
+        Long eventCountById = eventSessionsRepository.countByEligibleStudentsSectionsContaining(section.getId());
+        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getName());
+        Long totalEventCount = eventCountById + eventCountByName;
+
+        if (studentCount > 0 || eventCountById > 0 || eventCountByName > 0) {
+            String sectionName = section.getName();
+            StringBuilder message = new StringBuilder("You cannot delete section '" + sectionName + "' due to existing dependencies (").append(studentCount).append(" students");
+            if (eventCountById > 0 || eventCountByName > 0) {
+                message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
+            } else {
+                message.append(")");
+            }
+            message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., re-enroll students or update event eligibility criteria).");
+            throw new RuntimeException(message.toString());
+        }
         sectionsRepository.deleteById(id);
     }
 
@@ -144,20 +168,6 @@ public class AcademicSectionService {
                 createSection(course.getId(), defaultSection);
             }
         }
-    }
-
-    /**
-     * Deletes all sections for a specific course.
-     *
-     * <p>Bulk delete operation; used for cascading on course deletion.</p>
-     *
-     * @param courseId The ID of the parent course.
-     *
-     * @throws RuntimeException If the course is not found.
-     */
-    public void deleteSectionsByCourse(String courseId) {
-        List<Sections> sections = getSectionsByCourse(courseId);
-        sectionsRepository.deleteAll(sections);
     }
 
     /**

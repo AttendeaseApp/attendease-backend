@@ -116,16 +116,4 @@ public class AcademicSectionController {
         academicSectionService.deleteSection(id);
         return ResponseEntity.noContent().build();
     }
-
-    /**
-     * Deletes all sections for a specific course (admin-only, use with caution).
-     *
-     * @param courseId The ID of the course.
-     * @return No content (204).
-     */
-    @DeleteMapping("/courses/{courseId}")
-    public ResponseEntity<Void> deleteSectionsByCourse(@PathVariable String courseId) {
-        academicSectionService.deleteSectionsByCourse(courseId);
-        return ResponseEntity.noContent().build();
-    }
 }
