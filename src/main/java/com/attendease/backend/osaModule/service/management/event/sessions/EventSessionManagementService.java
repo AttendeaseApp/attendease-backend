@@ -86,6 +86,7 @@ public class EventSessionManagementService {
             EventLocations location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
             eventSession.setEventLocation(location);
         }
+        checkLocationConflict(eventSession, null);
         EventSessions savedEvent = eventSessionRepository.save(eventSession);
         log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
         return mapToEventCreationResponse(savedEvent);
@@ -248,7 +249,7 @@ public class EventSessionManagementService {
         }
 
         existingEvent.setUpdatedAt(LocalDateTime.now());
-
+        checkLocationConflict(existingEvent, eventId);
         EventSessions updatedEvent = eventSessionRepository.save(existingEvent);
         log.info("Successfully updated event session with ID: {}", eventId);
         return updatedEvent;
@@ -272,6 +273,30 @@ public class EventSessionManagementService {
     /**
      * PRIVATE HELPERS
      */
+
+    private void checkLocationConflict(EventSessions eventSession, String excludeEventId) {
+        if (eventSession.getEventLocationId() == null) {
+            return;
+        }
+        List<EventSessions> allEvents = eventSessionRepository.findAll();
+        List<EventSessions> conflicts = allEvents.stream()
+                .filter(e -> !e.getEventId().equals(excludeEventId))
+                .filter(e -> e.getEventStatus() != EventStatus.CANCELLED && e.getEventStatus() != EventStatus.CONCLUDED && e.getEventStatus() != EventStatus.FINALIZED)
+                .filter(e -> e.getEventLocationId() != null)
+                .filter(e -> e.getEventLocationId().equals(eventSession.getEventLocationId()))
+                .filter(e -> hasTimeOverlap(eventSession.getStartDateTime(), eventSession.getEndDateTime(), e.getStartDateTime(), e.getEndDateTime()))
+                .toList();
+        if (!conflicts.isEmpty()) {
+            String conflictNames = conflicts.stream()
+                    .map(EventSessions::getEventName)
+                    .collect(Collectors.joining(", "));
+            throw new IllegalStateException("The selected location is already in use during the specified time by the following event(s): " + conflictNames);
+        }
+    }
+
+    private boolean hasTimeOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
+        return start1.isBefore(end2) && end1.isAfter(start2);
+    }
 
     private void setStatusBasedOnCurrentTime(EventSessions event) {
         LocalDateTime now = LocalDateTime.now();

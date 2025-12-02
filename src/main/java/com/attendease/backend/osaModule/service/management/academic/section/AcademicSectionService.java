@@ -127,7 +127,7 @@ public class AcademicSectionService {
      *
      * @param id The unique ID of the section to delete.
      *
-     * @throws RuntimeException If the section is not found or dependencies exist (with detailed message including counts).
+     * @throws IllegalStateException If the section is not found or dependencies exist (with detailed message including counts).
      */
     public void deleteSection(String id) {
         Sections section = getSectionById(id);
@@ -145,7 +145,7 @@ public class AcademicSectionService {
                 message.append(")");
             }
             message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., re-enroll students or update event eligibility criteria).");
-            throw new RuntimeException(message.toString());
+            throw new IllegalStateException(message.toString());
         }
         sectionsRepository.deleteById(id);
     }
