@@ -45,8 +45,19 @@ public class AcademicSectionService {
      * @throws IllegalArgumentException If the name format is invalid or mismatches the course.
      */
     public Sections createSection(String courseId, Sections section) {
-        Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
-        validateFullSectionName(section.getName(), course.getCourseName());
+        Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
+        String newSectionName = section.getSectionName().trim();
+
+        if (newSectionName.isEmpty()) {
+            throw new IllegalArgumentException("Section name cannot be blank");
+        }
+
+        if (sectionsRepository.findBySectionName(newSectionName).isPresent()) {
+            throw new IllegalArgumentException("Section with name '" + newSectionName + "' already exists");
+        }
+
+        validateFullSectionName(newSectionName, course.getCourseName());
+        section.setSectionName(newSectionName);
         section.setCourse(course);
         return sectionsRepository.save(section);
     }
@@ -97,7 +108,7 @@ public class AcademicSectionService {
      */
     public Optional<Sections> getSectionByFullName(String fullName) {
         validateFullCourseSectionFormat(fullName);
-        return sectionsRepository.findByName(fullName);
+        return sectionsRepository.findBySectionName(fullName);
     }
 
     /**
@@ -114,10 +125,27 @@ public class AcademicSectionService {
      */
     public Sections updateSection(String id, Sections updatedSection) {
         Sections existing = getSectionById(id);
-        validateFullSectionName(updatedSection.getName(), existing.getCourse().getCourseName());
-        existing.setName(updatedSection.getName());
+        String updatedSectionName = updatedSection.getSectionName().trim();
+
+        if (updatedSectionName.isEmpty()) {
+            throw new IllegalArgumentException("Section name cannot be blank");
+        }
+
+        if (existing.getSectionName().equals(updatedSectionName)) {
+            return existing;
+        }
+
+        sectionsRepository.findBySectionName(updatedSectionName).ifPresent(s -> {
+            if (!s.getId().equals(existing.getId())) {
+                throw new IllegalArgumentException("A section with the name '" + updatedSectionName + "' already exists. " + "Each section name must be unique.");
+            }
+        });
+
+        validateFullSectionName(updatedSectionName, existing.getCourse().getCourseName());
+        existing.setSectionName(updatedSectionName);
         return sectionsRepository.save(existing);
     }
+
 
     /**
      * Deletes a section by its ID **only if no dependencies exist**.
@@ -133,11 +161,11 @@ public class AcademicSectionService {
         Sections section = getSectionById(id);
         Long studentCount = studentsRepository.countBySection(section);
         Long eventCountById = eventSessionsRepository.countByEligibleStudentsSectionsContaining(section.getId());
-        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getName());
+        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
         Long totalEventCount = eventCountById + eventCountByName;
 
         if (studentCount > 0 || eventCountById > 0 || eventCountByName > 0) {
-            String sectionName = section.getName();
+            String sectionName = section.getSectionName();
             StringBuilder message = new StringBuilder("You cannot delete section '" + sectionName + "' due to existing dependencies (").append(studentCount).append(" students");
             if (eventCountById > 0 || eventCountByName > 0) {
                 message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
@@ -163,8 +191,8 @@ public class AcademicSectionService {
         String coursePrefix = course.getCourseName() + "-";
         for (String sectionNumber : defaultSectionNumbers) {
             String fullSectionName = coursePrefix + sectionNumber;
-            if (sectionsRepository.findByName(fullSectionName).isEmpty()) {
-                Sections defaultSection = Sections.builder().name(fullSectionName).course(course).build();
+            if (sectionsRepository.findBySectionName(fullSectionName).isEmpty()) {
+                Sections defaultSection = Sections.builder().sectionName(fullSectionName).course(course).build();
                 createSection(course.getId(), defaultSection);
             }
         }
@@ -185,8 +213,8 @@ public class AcademicSectionService {
         List<Sections> sections = getSectionsByCourse(courseId);
         String newPrefix = newCourseName + "-";
         for (Sections section : sections) {
-            String oldNumber = section.getName().substring(course.getCourseName().length() + 1);
-            section.setName(newPrefix + oldNumber);
+            String oldNumber = section.getSectionName().substring(course.getCourseName().length() + 1);
+            section.setSectionName(newPrefix + oldNumber);
             sectionsRepository.save(section);
         }
     }
@@ -202,7 +230,11 @@ public class AcademicSectionService {
      */
     public void validateFullCourseSectionFormat(String fullIdentifier) {
         if (fullIdentifier == null || !fullIdentifier.matches("^[A-Z0-9]+-[0-9]{3}$")) {
-            throw new IllegalArgumentException("Invalid format. Expected: COURSE_NAME-SECTION_NUMBER (e.g., BSECE-101). " + "COURSE_NAME: uppercase letters/digits; SECTION_NUMBER: exactly 3 digits.");
+            throw new IllegalArgumentException(
+                    "Invalid section format. Expected format: COURSE-XXX (e.g., BSIT-101). " +
+                            "COURSE must be uppercase letters or numbers, and section number must be exactly 3 digits."
+            );
+
         }
     }
 
@@ -218,13 +250,23 @@ public class AcademicSectionService {
      */
     private void validateFullSectionName(String fullSectionName, String courseName) {
         validateFullCourseSectionFormat(fullSectionName);
+        final String sectionNumber = getString(fullSectionName, courseName);
+        if (!Arrays.asList("101", "201", "301", "401", "501", "601", "701", "801").contains(sectionNumber)) {
+            throw new IllegalArgumentException(
+                    "Invalid section number. Allowed section numbers are: 101, 201, 301, 401, 501, 601, 701, 801."
+            );
+        }
+    }
+
+    private String getString(String fullSectionName, String courseName) {
         String expectedPrefix = courseName + "-";
         if (!fullSectionName.startsWith(expectedPrefix)) {
-            throw new IllegalArgumentException("Section name must start with '" + expectedPrefix + "' (e.g., '" + expectedPrefix + "101'). Mismatch detected.");
+            throw new IllegalArgumentException(
+                    "Section name '" + fullSectionName + "' does not belong to course '" + courseName + "'. " +
+                            "All section names for this course must start with '" + expectedPrefix + "'. " +
+                            "Example: " + expectedPrefix + "101"
+            );
         }
-        String sectionNumber = fullSectionName.substring(expectedPrefix.length());
-        if (!Arrays.asList("101", "201", "301", "401", "501", "601", "701", "801").contains(sectionNumber)) {
-            throw new IllegalArgumentException("Section number must be one of: 101,201,301,401,501,601,701,801.");
-        }
+        return fullSectionName.substring(expectedPrefix.length());
     }
 }

@@ -91,7 +91,7 @@ public class UserInformationManagementService {
 
     private UserStudentResponse buildUserStudentResponse(Users user, Students student) {
         Sections section = student.getSection();
-        String sectionName = (section != null) ? section.getName() : null;
+        String sectionName = (section != null) ? section.getSectionName() : null;
         String courseName = null;
         String clusterName = null;
         if (section != null) {

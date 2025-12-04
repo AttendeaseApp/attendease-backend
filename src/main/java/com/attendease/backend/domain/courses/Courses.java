@@ -35,7 +35,7 @@ public class Courses {
     private String id;
 
     @NotBlank(message = "Course name is required")
-    @Indexed
+    @Indexed(unique = true)
     private String courseName;
 
     @DBRef
