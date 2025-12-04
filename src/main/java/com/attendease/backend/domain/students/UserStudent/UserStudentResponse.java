@@ -27,6 +27,9 @@ public class UserStudentResponse {
     private String studentId;
     private String studentNumber;
     private String section;
+    private String sectionId;
     private String course;
+    private String courseId;
     private String cluster;
+    private String clusterId;
 }
