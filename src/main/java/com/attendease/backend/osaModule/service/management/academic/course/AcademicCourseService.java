@@ -11,6 +11,7 @@ import java.util.List;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ public class AcademicCourseService {
     private final SectionsRepository sectionsRepository;
     private final StudentRepository studentRepository;
     private final EventSessionsRepository eventSessionsRepository;
+    private final UserValidator userValidator;
 
     /**
      * Creates a new course under a specific cluster.
@@ -57,7 +59,7 @@ public class AcademicCourseService {
             throw new IllegalArgumentException("Course name cannot be empty.");
         }
 
-        validateCourseNameFormat(courseName);
+        userValidator.validateCourseNameFormat(courseName);
 
         if (courseRepository.findByCourseName(courseName).isPresent()) {
             throw new IllegalArgumentException("Course name '" + courseName + "' already exists.");
@@ -123,7 +125,7 @@ public class AcademicCourseService {
             throw new IllegalArgumentException("Course name cannot be empty.");
         }
 
-        validateCourseNameFormat(newCourseName);
+        userValidator.validateCourseNameFormat(newCourseName);
 
         courseRepository.findByCourseName(newCourseName).filter(c -> !c.getId().equals(id)).ifPresent(c -> {
                     throw new IllegalArgumentException("Course name '" + newCourseName + "' already exists.");});
@@ -178,17 +180,5 @@ public class AcademicCourseService {
             }
         }
         courseRepository.deleteById(id);
-    }
-
-    /**
-     *  PRIVATE HELPERS
-     */
-
-    private void validateCourseNameFormat(String name) {
-        if (!name.matches("^[A-Z0-9-]+$")) {
-            throw new IllegalArgumentException(
-                    "Invalid course name '" + name + "'. Only uppercase letters, digits, and dashes are allowed, without spaces."
-            );
-        }
     }
 }

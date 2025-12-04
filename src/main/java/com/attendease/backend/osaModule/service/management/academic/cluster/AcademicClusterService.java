@@ -4,6 +4,7 @@ import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class AcademicClusterService {
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
     private final EventSessionsRepository eventSessionsRepository;
+    private final UserValidator userValidator;
 
     /**
      * Creates a new cluster with validation.
@@ -43,7 +45,7 @@ public class AcademicClusterService {
             throw new IllegalArgumentException("Cluster name cannot be empty.");
         }
 
-        validateClusterNameFormat(name);
+        userValidator.validateClusterNameFormat(name);
 
         if (clusterRepository.findByClusterName(name).isPresent()) {
             throw new IllegalArgumentException("Cluster name '" + name + "' already exists. Please choose a unique name.");
@@ -91,7 +93,7 @@ public class AcademicClusterService {
             throw new IllegalArgumentException("Cluster name cannot be empty.");
         }
 
-        validateClusterNameFormat(newClusterName);
+        userValidator.validateClusterNameFormat(newClusterName);
 
         clusterRepository.findByClusterName(newClusterName).filter(c -> !c.getClusterId().equals(id)).ifPresent(c -> {
                     throw new IllegalArgumentException("Cluster name '" + newClusterName + "' is already in use. Please choose a unique name.");});
@@ -130,21 +132,5 @@ public class AcademicClusterService {
             throw new IllegalStateException(message.toString());
         }
         clusterRepository.deleteById(id);
-    }
-
-    /**
-     * Validates cluster name format.
-     *
-     * <p>Cluster names must be uppercase letters, digits, and optionally dashes. Spaces are not allowed.</p>
-     *
-     * @param name Cluster name to validate.
-     * @throws IllegalArgumentException if invalid.
-     */
-    public void validateClusterNameFormat(String name) {
-        if (!name.matches("^[A-Z0-9-]+$")) {
-            throw new IllegalArgumentException(
-                    "Invalid cluster name '" + name + "'. Only uppercase letters, digits, and dashes are allowed, without spaces."
-            );
-        }
     }
 }

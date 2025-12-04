@@ -7,8 +7,6 @@ import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.repository.clusters.ClustersRepository;
-import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -26,8 +24,6 @@ public class StudentRegistrationService {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
-    private final ClustersRepository clustersRepository;
-    private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
     private final PasswordValidation passwordValidation;
     private final PasswordEncoder passwordEncoder;

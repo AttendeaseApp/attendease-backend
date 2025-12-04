@@ -24,7 +24,7 @@ public class UserInformationManagementController {
     /**
      * Allows OSA to permanently delete all students along with their associated biometrics data.
      */
-    @DeleteMapping("/students")
+    @DeleteMapping("/students/remove-all")
     public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() {
         long deletedCount = userInformationManagementService.deleteAllStudentsAndAssociatedUserAndFacialData();
         return ResponseEntity.ok("Successfully deleted " + deletedCount + " students.");

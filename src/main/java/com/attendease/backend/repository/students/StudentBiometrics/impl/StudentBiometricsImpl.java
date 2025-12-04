@@ -6,8 +6,11 @@ import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import com.attendease.backend.repository.students.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -21,17 +24,23 @@ import org.springframework.stereotype.Repository;
 public class StudentBiometricsImpl implements StudentBiometrics {
 
     private final MongoTemplate mongoTemplate;
+    private final StudentRepository studentRepository;
 
     @Override
     public Long deleteAllStudentsAndAssociatedUserAndFacialData() {
-        List<Students> allStudents = mongoTemplate.findAll(Students.class);
+        List<Students> allStudents = studentRepository.findAll();
 
         if (allStudents.isEmpty()) {
             log.info("There are no students to delete.");
             return 0L;
         }
 
-        List<String> userIdsToDelete = allStudents.stream().map(student -> student.getUser().getUserId()).toList();
+        List<String> userIdsToDelete = allStudents.stream()
+                .map(Students::getUser)
+                .filter(Objects::nonNull)
+                .map(Users::getUserId)
+                .toList();
+
         List<String> biometricIdsToDelete = allStudents.stream().filter(s -> s.getFacialData() != null).map(s -> s.getFacialData().getFacialId()).toList();
 
         if (!biometricIdsToDelete.isEmpty()) {
