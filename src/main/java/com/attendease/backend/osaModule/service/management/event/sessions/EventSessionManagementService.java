@@ -149,7 +149,7 @@ public class EventSessionManagementService {
     /**
      * Deletes an event session by its unique identifier.
      * Performs data integrity checks: allows deletion for UPCOMING or CANCELLED events unconditionally.
-     * For REGISTRATION, ONGOING, CONCLUDED, or FINALIZED events, prevents deletion if attendance records exist (>= 0),
+     * For REGISTRATION, ONGOING, CONCLUDED, or FINALIZED events, prevents deletion if attendance records exist (> 0),
      * throwing a status-specific exception message.
      *
      * @param id the unique ID of the event session to delete
@@ -166,7 +166,7 @@ public class EventSessionManagementService {
         }
 
         long attendanceCount = attendanceRecordsRepository.countByEventEventId(id);
-        if (attendanceCount >= 0) {
+        if (attendanceCount > 0) {
             String eventName = event.getEventName();
             String message = switch (status) {
                 case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered students: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
