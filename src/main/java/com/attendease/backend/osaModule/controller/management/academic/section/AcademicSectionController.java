@@ -100,9 +100,20 @@ public class AcademicSectionController {
      * @return The updated section.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Sections> updateSection(@PathVariable String id, @RequestBody Sections updatedSection) {
-        Sections updated = academicSectionService.updateSection(id, updatedSection);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Sections updatedSection) {
+        try {
+            Sections updated = academicSectionService.updateSection(id, updatedSection);
+            if (updated.getName().equals(updatedSection.getName().trim())) {
+                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getName() + "'.");
+            }
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
     }
 
     /**
