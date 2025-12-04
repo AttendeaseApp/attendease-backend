@@ -240,7 +240,6 @@ public class UsersManagementService {
     private Users createUserAndStudent(CSVRowData data) {
         userValidator.validateFirstName(data.getFirstName(), "First name");
         userValidator.validateLastName(data.getLastName(), "Last name");
-        userValidator.validateEmail(data.getEmail());
         userValidator.validateContactNumber(data.getContactNumber());
         userValidator.validatePassword(data.getPassword());
         userValidator.validateStudentNumber(data.getStudentNumber());
