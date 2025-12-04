@@ -1,25 +1,24 @@
 package com.attendease.backend.osaModule.service.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.osaModule.service.management.academic.course.AcademicCourseService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
-import java.util.List;
-
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
- * {@code AcademicClusterService} is a service layer for managing academic clusters (e.g., clusters like "CETE" and "CBAM").
+ * {@code AcademicClusterService} is a service layer for managing academic clusters (e.g., "CETE", "CBAM").
  *
- * <p>This service provides CRUD operations for clusters, including uniqueness validation
- * on cluster names. It integrates with {@link ClustersRepository} for data access.</p>
+ * <p>Provides CRUD operations with strict validation:
+ * - Cluster names must be unique and non-blank.
+ * - Prevents deletion if courses or event sessions reference the cluster.
+ * - Descriptive error messages for invalid operations.</p>
  *
- * @author jakematthewviado204@gmail.com
- * @since 2025-09-19
+ * @author ...
+ * @since 2025-12-04
  */
 @Service
 @RequiredArgsConstructor
@@ -28,12 +27,9 @@ public class AcademicClusterService {
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
     private final EventSessionsRepository eventSessionsRepository;
-    private final AcademicCourseService academicCourseService;
 
     /**
-     * Creates a new cluster.
-     *
-     * <p>Validates uniqueness of the cluster name before saving. If duplicate, throws an exception.</p>
+     * Creates a new cluster with validation.
      *
      * @param cluster The {@link Clusters} entity to create (must have a non-blank {@code clusterName}).
      * @return The saved {@link Clusters} entity (with auto-generated ID and timestamps).
@@ -41,9 +37,19 @@ public class AcademicClusterService {
      * @throws IllegalArgumentException If a cluster with the same name already exists.
      */
     public Clusters createCluster(Clusters cluster) {
-        if (clusterRepository.findByClusterName(cluster.getClusterName()).isPresent()) {
-            throw new IllegalArgumentException("Cluster already exists.");
+        String name = cluster.getClusterName().trim();
+
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("Cluster name cannot be empty.");
         }
+
+        validateClusterNameFormat(name);
+
+        if (clusterRepository.findByClusterName(name).isPresent()) {
+            throw new IllegalArgumentException("Cluster name '" + name + "' already exists. Please choose a unique name.");
+        }
+
+        cluster.setClusterName(name);
         return clusterRepository.save(cluster);
     }
 
@@ -65,11 +71,11 @@ public class AcademicClusterService {
      * @throws RuntimeException If the cluster is not found.
      */
     public Clusters getClusterById(String id) {
-        return clusterRepository.findById(id).orElseThrow(() -> new RuntimeException("Cluster not found."));
+        return clusterRepository.findById(id).orElseThrow(() -> new RuntimeException("Cluster not found with ID: " + id));
     }
 
     /**
-     * Updates an existing cluster by ID.
+     * Updates an existing cluster.
      *
      * @param id The unique ID of the cluster to update.
      * @param updatedCluster The updated details (only {@code clusterName} is applied).
@@ -79,15 +85,23 @@ public class AcademicClusterService {
      */
     public Clusters updateCluster(String id, Clusters updatedCluster) {
         Clusters existing = getClusterById(id);
-        existing.setClusterName(updatedCluster.getClusterName());
+        String newClusterName = updatedCluster.getClusterName().trim();
+
+        if (newClusterName.isEmpty()) {
+            throw new IllegalArgumentException("Cluster name cannot be empty.");
+        }
+
+        validateClusterNameFormat(newClusterName);
+
+        clusterRepository.findByClusterName(newClusterName).filter(c -> !c.getClusterId().equals(id)).ifPresent(c -> {
+                    throw new IllegalArgumentException("Cluster name '" + newClusterName + "' is already in use. Please choose a unique name.");});
+
+        existing.setClusterName(newClusterName);
         return clusterRepository.save(existing);
     }
 
     /**
-     * Deletes a cluster by its ID **only if no dependencies exist**.
-     *
-     * <p>Prevents deletion if courses or event sessions reference the cluster. Counts dependencies
-     * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
+     * Deletes a cluster only if no dependencies exist.
      *
      * @param id The unique ID of the cluster to delete.
      *
@@ -95,22 +109,42 @@ public class AcademicClusterService {
      */
     public void deleteCluster(String id) {
         Clusters cluster = getClusterById(id);
-        Long courseCount = courseRepository.countByCluster(cluster);
-        Long eventCountById = eventSessionsRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
-        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
-        Long totalEventCount = eventCountById + eventCountByName;
+        long courseCount = courseRepository.countByCluster(cluster);
+        long eventCountById = eventSessionsRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
+        long eventCountByName = eventSessionsRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
+        long totalEventCount = eventCountById + eventCountByName;
 
-        if (courseCount > 0 || eventCountById > 0 || eventCountByName > 0) {
-            String clusterName = cluster.getClusterName();
-            StringBuilder message = new StringBuilder("You cannot delete cluster '" + clusterName + "' due to existing dependencies (").append(courseCount).append(" courses");
-            if (eventCountById > 0 || eventCountByName > 0) {
-                message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
-            } else {
-                message.append(")");
+        if (courseCount > 0 || totalEventCount > 0) {
+            StringBuilder message = new StringBuilder(
+                    "Cannot delete cluster '" + cluster.getClusterName() + "' due to existing dependencies: "
+            ).append(courseCount).append(" course(s)");
+
+            if (totalEventCount > 0) {
+                message.append(", ").append(totalEventCount)
+                        .append(" event session(s) (")
+                        .append(eventCountById).append(" by ID, ")
+                        .append(eventCountByName).append(" by name; possible overlap)")
+                        .append(")");
             }
-            message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., update courses or event eligibility criteria).");
+            message.append(". Remove dependencies first if you wish to proceed.");
             throw new IllegalStateException(message.toString());
         }
         clusterRepository.deleteById(id);
+    }
+
+    /**
+     * Validates cluster name format.
+     *
+     * <p>Cluster names must be uppercase letters, digits, and optionally dashes. Spaces are not allowed.</p>
+     *
+     * @param name Cluster name to validate.
+     * @throws IllegalArgumentException if invalid.
+     */
+    public void validateClusterNameFormat(String name) {
+        if (!name.matches("^[A-Z0-9-]+$")) {
+            throw new IllegalArgumentException(
+                    "Invalid cluster name '" + name + "'. Only uppercase letters, digits, and dashes are allowed, without spaces."
+            );
+        }
     }
 }
