@@ -1,6 +1,5 @@
 package com.attendease.backend.osaModule.service.management.student.registration;
 
-import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
@@ -104,7 +103,7 @@ public class StudentRegistrationService {
             if (isValidId(sectionValue)) {
                 derivedSection = sectionsRepository.findById(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section ID not found: " + sectionValue));
             } else {
-                derivedSection = sectionsRepository.findByName(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section name not found: " + sectionValue));
+                derivedSection = sectionsRepository.findBySectionName(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section name not found: " + sectionValue));
             }
             student.setSection(derivedSection);
 

@@ -143,7 +143,7 @@ public class UsersManagementService {
      */
     public void deleteStudentsBySection(String sectionName) {
         validateSectionFormat(sectionName);
-        Optional<Sections> optSection = sectionsRepository.findByName(sectionName);
+        Optional<Sections> optSection = sectionsRepository.findBySectionName(sectionName);
         if (optSection.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName);
         }
@@ -281,7 +281,7 @@ public class UsersManagementService {
 
         validateSectionFormat(data.getSection());
 
-        Optional<Sections> optSection = sectionsRepository.findByName(data.getSection());
+        Optional<Sections> optSection = sectionsRepository.findBySectionName(data.getSection());
         if (optSection.isEmpty()) {
             throw new IllegalArgumentException("Section not found: " + data.getSection());
         }
@@ -309,7 +309,7 @@ public class UsersManagementService {
                 .updatedAt(user.getUpdatedAt())
                 .studentId(optStudent.map(Students::getId).orElse(null))
                 .studentNumber(optStudent.map(Students::getStudentNumber).orElse(null))
-                .section(optSection.map(Sections::getName).orElse(null))
+                .section(optSection.map(Sections::getSectionName).orElse(null))
                 .course(optCourse.map(Courses::getCourseName).orElse(null))
                 .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
                 .build();

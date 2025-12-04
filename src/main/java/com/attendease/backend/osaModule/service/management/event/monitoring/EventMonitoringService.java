@@ -68,7 +68,7 @@ public class EventMonitoringService {
     private AttendeesResponse mapToAttendeeResponse(AttendanceRecords record) {
         var student = record.getStudent();
         var user = student.getUser();
-        String sectionName = (student.getSection() != null) ? student.getSection().getName() : "";
+        String sectionName = (student.getSection() != null) ? student.getSection().getSectionName() : "";
 
         return AttendeesResponse.builder()
             .userId(user.getUserId())

@@ -125,7 +125,7 @@ public class EventAttendanceRecordsManagementService {
                 var student = record.getStudent();
                 var user = student.getUser();
                 var section = student.getSection();
-                String sectionName = (section != null) ? section.getName() : "";
+                String sectionName = (section != null) ? section.getSectionName() : "";
                 String courseName = (section != null && section.getCourse() != null) ? section.getCourse().getCourseName() : "";
                 String clusterName = (section != null && section.getCourse() != null && section.getCourse().getCluster() != null) ? section.getCourse().getCluster().getClusterName() : "";
 

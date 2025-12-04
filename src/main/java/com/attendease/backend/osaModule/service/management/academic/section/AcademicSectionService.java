@@ -10,9 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * {@code AcademicSectionService} is a service layer for managing academic sections (e.g., "BSIT-101", "BSA-101", "BSECE-101").
@@ -48,18 +46,18 @@ public class AcademicSectionService {
      */
     public Sections createSection(String courseId, Sections section) {
         Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-        String newName = section.getName().trim();
+        String newSectionName = section.getSectionName().trim();
 
-        if (newName.isEmpty()) {
+        if (newSectionName.isEmpty()) {
             throw new IllegalArgumentException("Section name cannot be blank");
         }
 
-        if (sectionsRepository.findByName(newName).isPresent()) {
-            throw new IllegalArgumentException("Section with name '" + newName + "' already exists");
+        if (sectionsRepository.findBySectionName(newSectionName).isPresent()) {
+            throw new IllegalArgumentException("Section with name '" + newSectionName + "' already exists");
         }
 
-        validateFullSectionName(newName, course.getCourseName());
-        section.setName(newName);
+        validateFullSectionName(newSectionName, course.getCourseName());
+        section.setSectionName(newSectionName);
         section.setCourse(course);
         return sectionsRepository.save(section);
     }
@@ -110,7 +108,7 @@ public class AcademicSectionService {
      */
     public Optional<Sections> getSectionByFullName(String fullName) {
         validateFullCourseSectionFormat(fullName);
-        return sectionsRepository.findByName(fullName);
+        return sectionsRepository.findBySectionName(fullName);
     }
 
     /**
@@ -127,24 +125,24 @@ public class AcademicSectionService {
      */
     public Sections updateSection(String id, Sections updatedSection) {
         Sections existing = getSectionById(id);
-        String newName = updatedSection.getName().trim();
+        String updatedSectionName = updatedSection.getSectionName().trim();
 
-        if (newName.isEmpty()) {
+        if (updatedSectionName.isEmpty()) {
             throw new IllegalArgumentException("Section name cannot be blank");
         }
 
-        if (existing.getName().equals(newName)) {
+        if (existing.getSectionName().equals(updatedSectionName)) {
             return existing;
         }
 
-        sectionsRepository.findByName(newName).ifPresent(s -> {
+        sectionsRepository.findBySectionName(updatedSectionName).ifPresent(s -> {
             if (!s.getId().equals(existing.getId())) {
-                throw new IllegalArgumentException("A section with the name '" + newName + "' already exists. " + "Each section name must be unique.");
+                throw new IllegalArgumentException("A section with the name '" + updatedSectionName + "' already exists. " + "Each section name must be unique.");
             }
         });
 
-        validateFullSectionName(newName, existing.getCourse().getCourseName());
-        existing.setName(newName);
+        validateFullSectionName(updatedSectionName, existing.getCourse().getCourseName());
+        existing.setSectionName(updatedSectionName);
         return sectionsRepository.save(existing);
     }
 
@@ -163,11 +161,11 @@ public class AcademicSectionService {
         Sections section = getSectionById(id);
         Long studentCount = studentsRepository.countBySection(section);
         Long eventCountById = eventSessionsRepository.countByEligibleStudentsSectionsContaining(section.getId());
-        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getName());
+        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
         Long totalEventCount = eventCountById + eventCountByName;
 
         if (studentCount > 0 || eventCountById > 0 || eventCountByName > 0) {
-            String sectionName = section.getName();
+            String sectionName = section.getSectionName();
             StringBuilder message = new StringBuilder("You cannot delete section '" + sectionName + "' due to existing dependencies (").append(studentCount).append(" students");
             if (eventCountById > 0 || eventCountByName > 0) {
                 message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
@@ -193,8 +191,8 @@ public class AcademicSectionService {
         String coursePrefix = course.getCourseName() + "-";
         for (String sectionNumber : defaultSectionNumbers) {
             String fullSectionName = coursePrefix + sectionNumber;
-            if (sectionsRepository.findByName(fullSectionName).isEmpty()) {
-                Sections defaultSection = Sections.builder().name(fullSectionName).course(course).build();
+            if (sectionsRepository.findBySectionName(fullSectionName).isEmpty()) {
+                Sections defaultSection = Sections.builder().sectionName(fullSectionName).course(course).build();
                 createSection(course.getId(), defaultSection);
             }
         }
@@ -215,8 +213,8 @@ public class AcademicSectionService {
         List<Sections> sections = getSectionsByCourse(courseId);
         String newPrefix = newCourseName + "-";
         for (Sections section : sections) {
-            String oldNumber = section.getName().substring(course.getCourseName().length() + 1);
-            section.setName(newPrefix + oldNumber);
+            String oldNumber = section.getSectionName().substring(course.getCourseName().length() + 1);
+            section.setSectionName(newPrefix + oldNumber);
             sectionsRepository.save(section);
         }
     }

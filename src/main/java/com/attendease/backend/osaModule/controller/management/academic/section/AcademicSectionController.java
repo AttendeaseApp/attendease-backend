@@ -38,7 +38,6 @@ public class AcademicSectionController {
     /**
      * Retrieves a section by its ID or all.
      * @param sectionId The ID of the section (query param).
-     *
      * get specific section with id: {{localhost}}/api/sections?sectionId=6922c12a5034077d9784abaa
      * to get all sections: {{localhost}}/api/sections
      *
@@ -103,8 +102,8 @@ public class AcademicSectionController {
     public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Sections updatedSection) {
         try {
             Sections updated = academicSectionService.updateSection(id, updatedSection);
-            if (updated.getName().equals(updatedSection.getName().trim())) {
-                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getName() + "'.");
+            if (updated.getSectionName().equals(updatedSection.getSectionName().trim())) {
+                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getSectionName() + "'.");
             }
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException ex) {

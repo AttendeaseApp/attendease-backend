@@ -21,41 +21,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SectionsRepository extends MongoRepository<Sections, String> {
     /**
-     * Finds a section by its full name and the course name (e.g., name="BSIT-101", courseName="BSIT").
-     *
-     * @param name The full section name (e.g., "BSIT-101").
-     * @param courseName The name of the parent course (e.g., "BSIT").
-     * @return An {@link Optional} containing the matching {@link Sections} if found.
-     */
-    Optional<Sections> findByNameAndCourse(String name, String courseName);
-
-    /**
-     * Finds a section by its full name and the course ID.
-     *
-     * @param name The full section name (e.g., "BSIT-101").
-     * @param courseId The ID of the parent course.
-     * @return An {@link Optional} containing the matching {@link Sections} if found.
-     */
-    Optional<Sections> findByNameAndCourseId(String name, String courseId);
-
-    /**
-     * Finds a section by the parent {@link Courses} entity and section name.
-     *
-     * @param course The parent {@link Courses} entity (loaded via @DBRef).
-     * @param name The full section name (e.g., "BSIT-101").
-     * @return An {@link Optional} containing the matching {@link Sections} if found.
-     */
-    Optional<Sections> findByCourseAndName(Courses course, String name);
-
-    /**
      * Finds a section by its full name globally.
      *
      * <p>Assumes section names are unique across the system (e.g., no two "BSIT-101" from different courses).</p>
      *
-     * @param name The full section name (e.g., "BSIT-101").
+     * @param sectionName The full section name (e.g., "BSIT-101").
      * @return An {@link Optional} containing the matching {@link Sections} if found.
      */
-    Optional<Sections> findByName(String name);
+    Optional<Sections> findBySectionName(String sectionName);
 
     /**
      * Finds all sections associated with a specific {@link Courses} entity.

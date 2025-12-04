@@ -34,7 +34,7 @@ public class Sections {
     private String id;
 
     @Indexed(unique = true)
-    private String name;
+    private String sectionName;
 
     @DBRef
     private Courses course;
