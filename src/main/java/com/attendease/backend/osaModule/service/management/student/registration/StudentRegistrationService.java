@@ -7,13 +7,10 @@ import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.repository.clusters.ClustersRepository;
-import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.service.utils.PasswordValidation;
-import java.util.UUID;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,11 +23,9 @@ public class StudentRegistrationService {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
-    private final ClustersRepository clustersRepository;
-    private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
-    private final PasswordValidation passwordValidation;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
     /**
      * Registers a new student account using separate request DTO
@@ -39,10 +34,15 @@ public class StudentRegistrationService {
      * @return Success message
      */
     public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) {
-        validateRegistrationRequest(registrationRequest);
+        userValidator.validateFirstName(registrationRequest.getFirstName(), "First name");
+        userValidator.validateLastName(registrationRequest.getLastName(), "Last name");
+        userValidator.validatePassword(registrationRequest.getPassword());
+        userValidator.validateEmail(registrationRequest.getEmail());
+        userValidator.validateContactNumber(registrationRequest.getContactNumber());
+        userValidator.validateStudentNumber(registrationRequest.getStudentNumber());
 
         if (studentRepository.existsByStudentNumber(registrationRequest.getStudentNumber())) {
-            throw new IllegalArgumentException("Student number already exists.");
+            throw new IllegalArgumentException("Student with this student number already exists.");
         }
 
         Users user = createUserFromRegistrationRequest(registrationRequest);
@@ -61,26 +61,8 @@ public class StudentRegistrationService {
      * PRIVATE HELPERS
      */
 
-    private void validateRegistrationRequest(StudentRegistrationRequest request) {
-        if (request.getStudentNumber() == null || request.getStudentNumber().trim().isEmpty()) {
-            throw new IllegalArgumentException("Student number is required");
-        }
-        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) {
-            throw new IllegalArgumentException("First name is required");
-        }
-        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Last name is required");
-        }
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Password is required");
-        }
-
-        passwordValidation.validatePassword(request.getPassword());
-    }
-
     private Users createUserFromRegistrationRequest(StudentRegistrationRequest request) {
         Users user = new Users();
-        user.setUserId(UUID.randomUUID().toString());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());

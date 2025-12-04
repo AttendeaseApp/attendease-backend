@@ -1,5 +1,6 @@
 package com.attendease.backend.exceptions.handling;
 
+import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -66,5 +67,15 @@ public class ExceptionHandling {
         response.put("timestamp", System.currentTimeMillis());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(CsvImportException.class)
+    public ResponseEntity<Map<String, Object>> handleCSVImportException(CsvImportException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "BadRequest");
+        body.put("message", ex.getMessage());
+        body.put("details", ex.getErrors());
+        body.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }

@@ -13,8 +13,8 @@ import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -32,8 +32,9 @@ public class UserInformationManagementService {
     private final SectionsRepository sectionsRepository;
     private final StudentBiometrics studentBiometrics;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
-    public long deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
+    public long deleteAllStudentsAndAssociatedUserAndFacialData() {
         return studentBiometrics.deleteAllStudentsAndAssociatedUserAndFacialData();
     }
 
@@ -51,37 +52,37 @@ public class UserInformationManagementService {
     public UpdateResultResponse osaUpdateUserInfo(String userId, UpdateUserRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
         Users user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
 
-        updateIfPresent(request.getFirstName(), user::setFirstName);
-        updateIfPresent(request.getLastName(), user::setLastName);
-        if (request.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
-        updateIfPresent(request.getContactNumber(), user::setContactNumber);
-        updateIfPresent(request.getEmail(), user::setEmail);
-
-        user.setUpdatedBy(updatedByUserId);
-        Users updatedUser = userRepository.save(user);
+        updateUserFields(user, request, updatedByUserId);
 
         UserStudentResponse studentResponse = null;
-        if (updatedUser.getUserType() == UserType.STUDENT) {
-            Students student = studentRepository.findByUserId(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
-            if (request.getStudentNumber() != null) {
-                student.setStudentNumber(request.getStudentNumber());
-            }
-            if (request.getSectionId() != null) {
-                Sections section = sectionsRepository.findById(request.getSectionId())
-                        .orElseThrow(ChangeSetPersister.NotFoundException::new);
-                student.setSection(section);
-            }
-            Students updatedStudent = studentRepository.save(student);
-            studentResponse = buildUserStudentResponse(updatedUser, updatedStudent);
+
+        if (user.getUserType() == UserType.STUDENT) {
+            studentResponse = handleStudentUpdate(userId, request, user);
         }
-        return UpdateResultResponse.builder().user(updatedUser).studentResponse(studentResponse).build();
+
+        return UpdateResultResponse.builder().user(user).studentResponse(studentResponse).build();
     }
 
     /**
      * PRIVATE HELPERS
      */
+
+    private void updateUserFields(Users user, UpdateUserRequest request, String updatedByUserId) {
+        updateIfPresent(request.getFirstName(), user::setFirstName);
+        updateIfPresent(request.getLastName(), user::setLastName);
+
+        if (request.getPassword() != null) {
+            userValidator.validatePassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        updateIfPresent(request.getContactNumber(), user::setContactNumber);
+        updateIfPresent(request.getEmail(), user::setEmail);
+
+        user.setUpdatedBy(updatedByUserId);
+        userRepository.save(user);
+    }
+
 
     private <T> void updateIfPresent(T value, Consumer<T> setter) {
         if (value != null) {
@@ -89,11 +90,36 @@ public class UserInformationManagementService {
         }
     }
 
+    private UserStudentResponse handleStudentUpdate(String userId, UpdateUserRequest request, Users updatedUser) throws ChangeSetPersister.NotFoundException {
+        Students student = studentRepository.findByUserId(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
+
+        if (request.getStudentNumber() != null && !request.getStudentNumber().equals(student.getStudentNumber())) {
+            validateUniqueStudentNumber(request.getStudentNumber());
+            student.setStudentNumber(request.getStudentNumber());
+        }
+
+        if (request.getSectionId() != null) {
+            Sections section = sectionsRepository.findById(request.getSectionId()).orElseThrow(ChangeSetPersister.NotFoundException::new);
+            student.setSection(section);
+        }
+
+        Students updatedStudent = studentRepository.save(student);
+        return buildUserStudentResponse(updatedUser, updatedStudent);
+    }
+
+    private void validateUniqueStudentNumber(String newStudentNumber) {
+        studentRepository.findByStudentNumber(newStudentNumber).ifPresent(existing -> {throw new IllegalArgumentException(
+                    "Student number '" + newStudentNumber + "' is already assigned to another student."
+            );
+        });
+    }
+
     private UserStudentResponse buildUserStudentResponse(Users user, Students student) {
         Sections section = student.getSection();
         String sectionName = (section != null) ? section.getSectionName() : null;
         String courseName = null;
         String clusterName = null;
+
         if (section != null) {
             Courses course = section.getCourse();
             Clusters cluster = section.getCourse().getCluster();

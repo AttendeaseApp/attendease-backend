@@ -1,9 +1,11 @@
 package com.attendease.backend.osaModule.service.management.osa.registration;
 
+import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
+import com.attendease.backend.validation.UserValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +19,15 @@ public class OsaRegistrationService {
 
     private final UserRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
-    public String registerNewOsaAccount(@Valid OsaRegistrationRequest request) {
-        usersRepository
-                .findByEmail(request.getEmail())
+    public String registerNewOsaAccount(OsaRegistrationRequest request) {
+        userValidator.validateFirstName(request.getFirstName(), "First name");
+        userValidator.validateLastName(request.getLastName(), "Last name");
+        userValidator.validatePassword(request.getPassword());
+        userValidator.validateEmail(request.getEmail());
+        userValidator.validateContactNumber(request.getContactNumber());
+        usersRepository.findByEmail(request.getEmail())
                 .ifPresent(existingUser -> {
                     log.warn("WARNING: An account with this email already exists.");
                     throw new IllegalArgumentException("An account with this email already exists.");
@@ -33,6 +40,7 @@ public class OsaRegistrationService {
                 .contactNumber(request.getContactNumber())
                 .email(request.getEmail())
                 .userType(UserType.OSA)
+                .accountStatus(AccountStatus.ACTIVE)
                 .build();
 
         Users savedUser = usersRepository.save(newUser);

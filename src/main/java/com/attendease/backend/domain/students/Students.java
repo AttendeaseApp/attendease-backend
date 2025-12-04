@@ -1,8 +1,6 @@
 package com.attendease.backend.domain.students;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.users.Users;
 import jakarta.validation.constraints.NotBlank;

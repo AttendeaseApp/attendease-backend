@@ -5,22 +5,21 @@ import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.domain.students.CSV.CSVRowData;
+import com.attendease.backend.domain.users.CSV.CSVRowData;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
+import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
+import com.attendease.backend.validation.UserValidator;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +38,7 @@ public class UsersManagementService {
     private final UserRepository userRepository;
     private final SectionsRepository sectionsRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
     private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
 
@@ -61,6 +61,7 @@ public class UsersManagementService {
                     rowNumber++;
                     try {
                         CSVRowData rowData = parseCSVRow(header, row);
+
                         if (!isValidRowData(rowData)) {
                             log.warn("Skipping row {} due to missing required fields", rowNumber);
                             errors.add("Row " + rowNumber + ": Missing required fields");
@@ -87,8 +88,15 @@ public class UsersManagementService {
             }
 
             if (!errors.isEmpty()) {
-                log.warn("CSV import completed with {} errors: {}", errors.size(), errors);
-                throw new IllegalArgumentException("CSV import completed with errors: " + String.join("; ", errors));
+                List<CsvImportError> errorDetails = errors.stream()
+                        .map(err -> {
+                            String[] parts = err.split(": ", 2);
+                            int row = Integer.parseInt(parts[0].replace("Row ", ""));
+                            String message = parts[1];
+                            return new CsvImportError(row, List.of(message));
+                        })
+                        .collect(Collectors.toList());
+                throw new CsvImportException("CSV import completed with errors", errorDetails);
             }
 
             log.info("Successfully imported {} out of {} rows from CSV", importedUsers.size(), rowNumber);
@@ -104,29 +112,21 @@ public class UsersManagementService {
      */
     public List<UserStudentResponse> retrieveUsersWithStudents() {
         List<Users> users = userRepository.findAll();
-        log.info("Retrieved {} users", users.size());
-
         List<Students> students = studentRepository.findByUserIn(users);
-        log.info("Retrieved {} students", students.size());
 
+        log.info("Retrieved {} students and user {}", students.size(), users.size());
         Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
-
-        return users
-            .stream()
-            .map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId())))
-            .collect(Collectors.toList());
+        return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
 
     /**
      * retrieves all students
      */
     public List<Students> retrieveAllStudent() {
-        List<Students> students = studentRepository.findAll();
-        log.info("Retrieved {} students from repository", students.size());
-        return students;
+        return studentRepository.findAll();
     }
 
-    public void deleteUserById(String userId) throws ExecutionException, InterruptedException {
+    public void deleteUserById(String userId) {
         boolean exists = userRepository.existsById(userId);
         if (!exists) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found: " + userId);
@@ -142,18 +142,24 @@ public class UsersManagementService {
      * @throws ResponseStatusException if the section is not found
      */
     public void deleteStudentsBySection(String sectionName) {
-        validateSectionFormat(sectionName);
+        userValidator.validateFullCourseSectionFormat(sectionName);
         Optional<Sections> optSection = sectionsRepository.findBySectionName(sectionName);
+
         if (optSection.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName);
         }
+
         Sections section = optSection.get();
+
         List<Students> students = studentRepository.findBySection(section);
+
         if (students.isEmpty()) {
             log.info("No students found in section: {}", sectionName);
             return;
         }
+
         List<String> userIds = students.stream().map(student -> student.getUser().getUserId()).collect(Collectors.toList());
+
         userRepository.deleteAllById(userIds);
         studentRepository.deleteAll(students);
         log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
@@ -163,14 +169,11 @@ public class UsersManagementService {
      * PRIVATE HELPERS
      */
 
-    private void validateSectionFormat(String section) {
-        if (section == null || section.trim().isEmpty()) {
-            throw new IllegalArgumentException("Section is required and cannot be blank");
-        }
-        String trimmed = section.trim();
-        if (!trimmed.matches("[A-Z]+-[0-9]+")) {
-            throw new IllegalArgumentException("Invalid section format. Expected: COURSE_NAME-NUMBER (e.g., BSIT-101), got: " + trimmed);
-        }
+    private boolean isValidRowData(CSVRowData data) {
+        return data.getFirstName() != null &&
+                data.getLastName() != null &&
+                data.getStudentNumber() != null &&
+                data.getPassword() != null;
     }
 
     private void validateCSVFile(MultipartFile file) {
@@ -190,9 +193,7 @@ public class UsersManagementService {
         }
 
         Set<String> headerSet = Set.of(header);
-        List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream()
-                .filter(col -> !headerSet.contains(col))
-                .collect(Collectors.toList());
+        List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream().filter(col -> !headerSet.contains(col)).collect(Collectors.toList());
 
         if (!missingColumns.isEmpty()) {
             throw new IllegalArgumentException("Missing required columns: " + String.join(", ", missingColumns));
@@ -222,7 +223,7 @@ public class UsersManagementService {
                     data.setStudentNumber(value);
                     break;
                 case "section":
-                    data.setSection(value);
+                    data.setSectionName(value);
                     break;
                 case "contactnumber":
                     data.setContactNumber(value);
@@ -236,59 +237,37 @@ public class UsersManagementService {
         return data;
     }
 
-    private boolean isValidRowData(CSVRowData data) {
-        return data.getFirstName() != null && data.getLastName() != null && data.getStudentNumber() != null && data.getPassword() != null;
-    }
-
     private Users createUserAndStudent(CSVRowData data) {
-        Users user = createUserFromRowData(data);
-        userRepository.save(user);
-        log.info("Saved user: {}", user.getUserId());
+        userValidator.validateFirstName(data.getFirstName(), "First name");
+        userValidator.validateLastName(data.getLastName(), "Last name");
+        userValidator.validateEmail(data.getEmail());
+        userValidator.validateContactNumber(data.getContactNumber());
+        userValidator.validatePassword(data.getPassword());
+        userValidator.validateStudentNumber(data.getStudentNumber());
+        userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
-        Students student = createStudentFromRowData(data, user);
-        studentRepository.save(student);
-        log.info("Saved student for user: {}", user.getUserId());
+        Sections section = sectionsRepository.findBySectionName(data.getSectionName()).orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
-        return user;
-    }
-
-    private Users createUserFromRowData(CSVRowData data) {
         Users user = new Users();
-        user.setUserId(UUID.randomUUID().toString());
         user.setUserType(UserType.STUDENT);
         user.setAccountStatus(AccountStatus.ACTIVE);
         user.setUpdatedBy(String.valueOf(UserType.SYSTEM));
-
         user.setFirstName(data.getFirstName());
         user.setLastName(data.getLastName());
         user.setEmail(data.getEmail());
         user.setContactNumber(data.getContactNumber());
+        user.setPassword(passwordEncoder.encode(data.getPassword()));
 
-        LocalDateTime now = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC);
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
-
-        if (data.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(data.getPassword()));
-        }
-        return user;
-    }
-
-    private Students createStudentFromRowData(CSVRowData data, Users user) {
         Students student = new Students();
         student.setUser(user);
         student.setStudentNumber(data.getStudentNumber());
+        student.setSection(section);
 
-        validateSectionFormat(data.getSection());
+        userRepository.save(user);
+        studentRepository.save(student);
 
-        Optional<Sections> optSection = sectionsRepository.findBySectionName(data.getSection());
-        if (optSection.isEmpty()) {
-            throw new IllegalArgumentException("Section not found: " + data.getSection());
-        }
-        student.setSection(optSection.get());
-        log.info("Assigned existing section '{}' to student '{}'", data.getSection(), data.getStudentNumber());
-
-        return student;
+        log.info("Imported student saved: {}", user.getUserId());
+        return user;
     }
 
     public UserStudentResponse mapToResponseDTO(Users user, Students student) {

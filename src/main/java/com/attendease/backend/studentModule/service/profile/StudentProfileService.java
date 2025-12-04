@@ -4,8 +4,8 @@ import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.studentModule.service.utils.PasswordValidation;
 import java.util.Optional;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class StudentProfileService {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PasswordValidation passwordValidation;
+    private final UserValidator userValidator;
 
     /**
      * Retrieves a student's personal profile using the associated user's ID.
@@ -67,7 +67,7 @@ public class StudentProfileService {
             throw new IllegalArgumentException("New password is required.");
         }
 
-        passwordValidation.validatePassword(newPassword);
+        userValidator.validatePassword(newPassword);
 
         Students student = studentRepository.findByUserId(id).orElseThrow(() -> new IllegalArgumentException("Student not found."));
         Users user = student.getUser();

@@ -9,6 +9,8 @@ import com.attendease.backend.repository.students.StudentRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ public class AcademicSectionService {
     private final SectionsRepository sectionsRepository;
     private final EventSessionsRepository eventSessionsRepository;
     private final StudentRepository studentsRepository;
+    private final UserValidator userValidator;
 
     /**
      * Creates a new section under a specific course.
@@ -107,7 +110,7 @@ public class AcademicSectionService {
      * @throws IllegalArgumentException If the name format is invalid.
      */
     public Optional<Sections> getSectionByFullName(String fullName) {
-        validateFullCourseSectionFormat(fullName);
+        userValidator.validateFullCourseSectionFormat(fullName);
         return sectionsRepository.findBySectionName(fullName);
     }
 
@@ -220,25 +223,6 @@ public class AcademicSectionService {
     }
 
     /**
-     * Validates the full course-section identifier format.
-     *
-     * <p>Regex: Uppercase alphanum prefix + "-" + exactly 3 digits.</p>
-     *
-     * @param fullIdentifier The full identifier to validate (e.g., "BSIT-101").
-     *
-     * @throws IllegalArgumentException If the format is invalid.
-     */
-    public void validateFullCourseSectionFormat(String fullIdentifier) {
-        if (fullIdentifier == null || !fullIdentifier.matches("^[A-Z0-9]+-[0-9]{3}$")) {
-            throw new IllegalArgumentException(
-                    "Invalid section format. Expected format: COURSE-XXX (e.g., BSIT-101). " +
-                            "COURSE must be uppercase letters or numbers, and section number must be exactly 3 digits."
-            );
-
-        }
-    }
-
-    /**
      * Validates the full section name against the course name and default numbers.
      *
      * <p>Private helper; checks prefix match and allowed section numbers (101-801).</p>
@@ -249,7 +233,7 @@ public class AcademicSectionService {
      * @throws IllegalArgumentException If prefix mismatches, number invalid, or format wrong.
      */
     private void validateFullSectionName(String fullSectionName, String courseName) {
-        validateFullCourseSectionFormat(fullSectionName);
+        userValidator.validateFullCourseSectionFormat(fullSectionName);
         final String sectionNumber = getString(fullSectionName, courseName);
         if (!Arrays.asList("101", "201", "301", "401", "501", "601", "701", "801").contains(sectionNumber)) {
             throw new IllegalArgumentException(

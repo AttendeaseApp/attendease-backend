@@ -61,7 +61,7 @@ public class UsersManagementController {
      */
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable String userId) throws Exception {
+    public void deleteUser(@PathVariable String userId) {
         userManagementService.deleteUserById(userId);
     }
 
