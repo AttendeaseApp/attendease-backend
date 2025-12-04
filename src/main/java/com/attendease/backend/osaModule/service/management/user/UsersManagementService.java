@@ -288,7 +288,10 @@ public class UsersManagementService {
                 .studentId(optStudent.map(Students::getId).orElse(null))
                 .studentNumber(optStudent.map(Students::getStudentNumber).orElse(null))
                 .section(optSection.map(Sections::getSectionName).orElse(null))
+                .sectionId(optSection.map(Sections::getId).orElse(null))
                 .course(optCourse.map(Courses::getCourseName).orElse(null))
+                .courseId(optCourse.map(Courses::getId).orElse(null))
+                .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
                 .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
                 .build();
     }
