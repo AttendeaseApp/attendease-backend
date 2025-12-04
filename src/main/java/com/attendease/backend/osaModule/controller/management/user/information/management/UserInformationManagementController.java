@@ -3,10 +3,8 @@ package com.attendease.backend.osaModule.controller.management.user.information.
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.users.Information.Management.Request.UpdateUserRequest;
 import com.attendease.backend.domain.users.Information.Management.Response.UpdateResultResponse;
-import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.osaModule.service.management.user.information.management.UserInformationManagementService;
 import jakarta.validation.Valid;
-import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +25,7 @@ public class UserInformationManagementController {
      * Allows OSA to permanently delete all students along with their associated biometrics data.
      */
     @DeleteMapping("/students")
-    public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
+    public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() {
         long deletedCount = userInformationManagementService.deleteAllStudentsAndAssociatedUserAndFacialData();
         return ResponseEntity.ok("Successfully deleted " + deletedCount + " students.");
     }

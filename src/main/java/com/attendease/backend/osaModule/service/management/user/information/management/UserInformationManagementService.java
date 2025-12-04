@@ -13,7 +13,6 @@ import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,7 @@ public class UserInformationManagementService {
     private final StudentBiometrics studentBiometrics;
     private final PasswordEncoder passwordEncoder;
 
-    public long deleteAllStudentsAndAssociatedUserAndFacialData() throws ExecutionException, InterruptedException {
+    public long deleteAllStudentsAndAssociatedUserAndFacialData() {
         return studentBiometrics.deleteAllStudentsAndAssociatedUserAndFacialData();
     }
 
