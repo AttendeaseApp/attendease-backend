@@ -52,10 +52,18 @@ public class AcademicCourseService {
     public Courses createCourse(String clusterId, Courses course) {
         Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
 
-        if (courseRepository.findByCourseNameAndCluster(course.getCourseName(), cluster).isPresent()) {
-            throw new IllegalArgumentException("Course name '" + course.getCourseName() + "' already exists in this cluster.");
+        String courseName = course.getCourseName().trim();
+        if (courseName.isEmpty()) {
+            throw new IllegalArgumentException("Course name cannot be empty.");
         }
 
+        validateCourseNameFormat(courseName);
+
+        if (courseRepository.findByCourseName(courseName).isPresent()) {
+            throw new IllegalArgumentException("Course name '" + courseName + "' already exists.");
+        }
+
+        course.setCourseName(courseName);
         course.setCluster(cluster);
         Courses savedCourse = courseRepository.save(course);
         academicSectionService.createDefaultSections(savedCourse);
@@ -109,8 +117,19 @@ public class AcademicCourseService {
      */
     public Courses updateCourse(String id, Courses updatedCourse) {
         Courses existing = getCourseById(id);
-        existing.setCourseName(updatedCourse.getCourseName());
-        academicSectionService.updateSectionsForCourseNameChange(existing.getId(), existing.getCourseName());
+        String newCourseName = updatedCourse.getCourseName().trim();
+
+        if (newCourseName.isEmpty()) {
+            throw new IllegalArgumentException("Course name cannot be empty.");
+        }
+
+        validateCourseNameFormat(newCourseName);
+
+        courseRepository.findByCourseName(newCourseName).filter(c -> !c.getId().equals(id)).ifPresent(c -> {
+                    throw new IllegalArgumentException("Course name '" + newCourseName + "' already exists.");});
+
+        existing.setCourseName(newCourseName);
+        academicSectionService.updateSectionsForCourseNameChange(existing.getId(), newCourseName);
         return courseRepository.save(existing);
     }
 
@@ -159,5 +178,17 @@ public class AcademicCourseService {
             }
         }
         courseRepository.deleteById(id);
+    }
+
+    /**
+     *  PRIVATE HELPERS
+     */
+
+    private void validateCourseNameFormat(String name) {
+        if (!name.matches("^[A-Z0-9-]+$")) {
+            throw new IllegalArgumentException(
+                    "Invalid course name '" + name + "'. Only uppercase letters, digits, and dashes are allowed, without spaces."
+            );
+        }
     }
 }
