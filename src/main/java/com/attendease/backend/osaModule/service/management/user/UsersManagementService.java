@@ -238,18 +238,17 @@ public class UsersManagementService {
     }
 
     private Users createUserAndStudent(CSVRowData data) {
-        UserValidator.validateFirstName(data.getFirstName(), "First name");
-        UserValidator.validateLastName(data.getLastName(), "Last name");
-        UserValidator.validateEmail(data.getEmail());
-        UserValidator.validateContactNumber(data.getContactNumber());
-        UserValidator.validatePassword(data.getPassword());
-        UserValidator.validateStudentNumber(data.getStudentNumber());
+        userValidator.validateFirstName(data.getFirstName(), "First name");
+        userValidator.validateLastName(data.getLastName(), "Last name");
+        userValidator.validateEmail(data.getEmail());
+        userValidator.validateContactNumber(data.getContactNumber());
+        userValidator.validatePassword(data.getPassword());
+        userValidator.validateStudentNumber(data.getStudentNumber());
         userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
         Sections section = sectionsRepository.findBySectionName(data.getSectionName()).orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
         Users user = new Users();
-        user.setUserId(UUID.randomUUID().toString());
         user.setUserType(UserType.STUDENT);
         user.setAccountStatus(AccountStatus.ACTIVE);
         user.setUpdatedBy(String.valueOf(UserType.SYSTEM));

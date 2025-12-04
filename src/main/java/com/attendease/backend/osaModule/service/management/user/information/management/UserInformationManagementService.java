@@ -14,6 +14,7 @@ import com.attendease.backend.repository.students.StudentBiometrics.StudentBiome
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import java.util.function.Consumer;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -31,6 +32,7 @@ public class UserInformationManagementService {
     private final SectionsRepository sectionsRepository;
     private final StudentBiometrics studentBiometrics;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
     public long deleteAllStudentsAndAssociatedUserAndFacialData() {
         return studentBiometrics.deleteAllStudentsAndAssociatedUserAndFacialData();
@@ -70,6 +72,7 @@ public class UserInformationManagementService {
         updateIfPresent(request.getLastName(), user::setLastName);
 
         if (request.getPassword() != null) {
+            userValidator.validatePassword(request.getPassword());
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
