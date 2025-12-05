@@ -2,7 +2,7 @@ package com.attendease.backend.osa.controller.profile;
 
 import com.attendease.backend.domain.users.Profiles.OsaAccountPasswordUpdateRequest;
 import com.attendease.backend.domain.users.Profiles.Profile;
-import com.attendease.backend.osa.service.profile.OsaProfileService;
+import com.attendease.backend.osa.service.profile.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class OsaProfileController {
+public class ProfileServiceController {
 
-    private final OsaProfileService profileService;
+    private final ProfileService profileService;
 
     /**
      * Use this to retrieve the profile of an authenticated OSA.

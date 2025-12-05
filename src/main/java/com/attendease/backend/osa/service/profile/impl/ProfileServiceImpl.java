@@ -1,28 +1,25 @@
-package com.attendease.backend.osa.service.profile;
+package com.attendease.backend.osa.service.profile.impl;
 
 import com.attendease.backend.domain.users.Profiles.Profile;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.osa.service.profile.ProfileService;
 import com.attendease.backend.repository.users.UserRepository;
+import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-public class OsaProfileService {
+public class ProfileServiceImpl implements ProfileService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidator userValidator;
 
-    /**
-     *  Used to retrieve relevant data for OSA profile.
-     *  Builds profile dto from User domain
-     *
-     * @return Profile object
-     * */
+    @Override
     public Optional<Profile> getOsaProfileByUserId(String userId) {
         return userRepository.findById(userId)
                 .map(user -> Profile.builder()
@@ -39,15 +36,7 @@ public class OsaProfileService {
                 );
     }
 
-
-    /**
-     * Updates OSA password
-     *
-     * @param userId The student number
-     * @param oldPassword   Current password for verification
-     * @param newPassword   New password to set
-     * @return Success message
-     */
+    @Override
     public String updatePassword(String userId, String oldPassword, String newPassword) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("User id is required.");
@@ -61,7 +50,7 @@ public class OsaProfileService {
 
         Users user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        validatePassword(newPassword);
+        userValidator.validatePassword(newPassword);
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("Old password is incorrect.");
@@ -72,20 +61,4 @@ public class OsaProfileService {
 
         return "Password updated successfully.";
     }
-
-    private void validatePassword(String password) {
-        if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("Password cannot be empty");
-        }
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters long");
-        }
-        if (password.length() > 128) {
-            throw new IllegalArgumentException("Password cannot exceed 128 characters");
-        }
-        if (!Pattern.compile("[A-Za-z]").matcher(password).find()) {
-            throw new IllegalArgumentException("Password must contain at least one letter");
-        }
-    }
-
 }
