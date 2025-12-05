@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * {@code ManagementAcademicClusterController} id used for managing cluster courses.
+ * {@code ManagementAcademicClusterController} is used for managing cluster courses.
  *
  * <p>This controller provides CRUD operations for clusters, ensuring that all endpoints are secured
  * for OSA (Office of Student Affairs) role users only.</p>

@@ -5,8 +5,9 @@ import com.attendease.backend.domain.attendance.History.Response.FinalizedAttend
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Request.UpdateAttendanceRequest;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.osa.service.management.attendance.records.EventAttendanceRecordsManagementService;
 import java.util.List;
+
+import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,20 +16,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Controller for managing attendance records of students for finalized or ongoing events.
- * <p>
- * Accessible only by users with the OSA role.
- * <p>
+ * {@code ManagementAttendanceRecordsController} is used for managing attendance records of students.
  *
- * Authored: jakematthewviado204@gmail.com
+ * <p>This controller provides CRUD operations for attendance records management, ensuring that all endpoints are secured
+ * for OSA (Office of Student Affairs) role users only.</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Nov-11
  */
 @RestController
 @RequestMapping("/api/attendance/records")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class EventAttendanceRecordsManagementController {
+public class ManagementAttendanceRecordsController {
 
-    private final EventAttendanceRecordsManagementService attendanceService;
+    private final ManagementAttendanceRecordsService managementAttendanceRecordsService;
 
     /**
      * Retrieves all events with EventStatus.FINALIZED.
@@ -37,7 +39,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @GetMapping("/event/finalized")
     public List<FinalizedAttendanceRecordsResponse> getAllEventsWithFinalizedStatus() {
-        return attendanceService.getFinalizedEvents();
+        return managementAttendanceRecordsService.getFinalizedEvents();
     }
 
     /**
@@ -49,7 +51,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @GetMapping("/attendees/event/{eventId}")
     public EventAttendeesResponse getAttendeesByEvent(@PathVariable String eventId) {
-        return attendanceService.getAttendeesByEvent(eventId);
+        return managementAttendanceRecordsService.getAttendeesByEvent(eventId);
     }
 
     /**
@@ -61,7 +63,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @GetMapping("/event/{id}")
     public EventSessions getEventById(@PathVariable String id) {
-        return attendanceService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
+        return managementAttendanceRecordsService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
     }
 
     /**
@@ -72,7 +74,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
-        List<AttendanceRecords> records = attendanceService.getAttendanceRecordsByStudentId(studentId);
+        List<AttendanceRecords> records = managementAttendanceRecordsService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
     }
 
@@ -90,7 +92,7 @@ public class EventAttendanceRecordsManagementController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
 
-        AttendanceRecords updatedRecord = attendanceService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
+        AttendanceRecords updatedRecord = managementAttendanceRecordsService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
 
         return ResponseEntity.ok(updatedRecord);
     }
@@ -102,7 +104,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @GetMapping
     public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
-        List<AttendanceRecords> records = attendanceService.getAllAttendanceRecords();
+        List<AttendanceRecords> records = managementAttendanceRecordsService.getAllAttendanceRecords();
         return ResponseEntity.ok(records);
     }
 
@@ -115,7 +117,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @DeleteMapping("/{recordId}")
     public ResponseEntity<Void> deleteAttendanceRecordById(@PathVariable String recordId) {
-        attendanceService.deleteAttendanceRecordById(recordId);
+        managementAttendanceRecordsService.deleteAttendanceRecordById(recordId);
         return ResponseEntity.noContent().build();
     }
 
@@ -127,7 +129,7 @@ public class EventAttendanceRecordsManagementController {
      */
     @DeleteMapping
     public ResponseEntity<Void> deleteAllAttendanceRecords() {
-        attendanceService.deleteAllAttendanceRecords();
+        managementAttendanceRecordsService.deleteAllAttendanceRecords();
         return ResponseEntity.noContent().build();
     }
 }

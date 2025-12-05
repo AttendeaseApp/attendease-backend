@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.attendance.records;
+package com.attendease.backend.osa.service.management.attendance.records.impl;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
@@ -7,6 +7,7 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import java.util.*;
@@ -14,37 +15,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-/**
- * {@link EventAttendanceRecordsManagementService} is a service used for managing attendance records of students.
- *
- * <p>Provides methods to retrieve ongoing and finalized events, fetch attendee details, and update attendance statuses
- * with audit logging support.</p>
- *
- * @author jakematthewviado204@gmail.com
- * @since 2025-11-11
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EventAttendanceRecordsManagementService {
+public class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
 
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
-    /**
-     * Retrieves all ongoing event sessions.
-     *
-     * @return a list of {@link EventSessions} with status {@link EventStatus#ONGOING}
-     */
+    @Override
     public List<EventSessions> getOngoingEvents() {
         return eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.ONGOING));
     }
 
-    /**
-     * Retrieves all finalized event sessions with attendees per attendance status.
-     *
-     * @return a list of {@link EventSessions} with status {@link EventStatus#FINALIZED}
-     */
+    @Override
     public List<FinalizedAttendanceRecordsResponse> getFinalizedEvents() {
         List<EventSessions> finalizedEvents = eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
         List<FinalizedAttendanceRecordsResponse> responses = new ArrayList<>();
@@ -89,32 +73,17 @@ public class EventAttendanceRecordsManagementService {
         return responses;
     }
 
-    /**
-     * Retrieves all event sessions sorted by creation date in descending order.
-     *
-     * @return a list of {@link EventSessions} ordered by {@code createdAt} descending
-     */
+    @Override
     public List<EventSessions> getAllSortedByCreatedAt() {
         return eventSessionsRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    /**
-     * Retrieves an event session by its unique identifier.
-     *
-     * @param id the unique ID of the event session
-     * @return an {@link Optional} containing the {@link EventSessions} if found, otherwise empty
-     */
+    @Override
     public Optional<EventSessions> findById(String id) {
         return eventSessionsRepository.findById(id);
     }
 
-    /**
-     * Retrieves all attendees for a specific event, including student information, attendance status,
-     * and reasons for absence or tardiness.
-     *
-     * @param eventId the unique identifier of the event session
-     * @return an {@link EventAttendeesResponse} containing the total number of attendees and their details
-     */
+    @Override
     public EventAttendeesResponse getAttendeesByEvent(String eventId) {
         List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
         List<AttendeesResponse> attendees = records
@@ -156,27 +125,12 @@ public class EventAttendanceRecordsManagementService {
         return EventAttendeesResponse.builder().totalAttendees(attendees.size()).attendees(attendees).build();
     }
 
-    /**
-     * Retrieves all attendance records for a specific student.
-     *
-     * @param studentId the unique identifier of the student
-     * @return a list of {@link AttendanceRecords} associated with the student
-     */
+    @Override
     public List<AttendanceRecords> getAttendanceRecordsByStudentId(String studentId) {
         return attendanceRecordsRepository.findByStudentId(studentId);
     }
 
-    /**
-     * Updates the attendance status for a student's record in a specific event.
-     * Enforces audit logging by setting updatedByUserId and relying on @LastModifiedDate for updatedAt.
-     *
-     * @param studentId The ID of the student.
-     * @param eventId The ID of the event session.
-     * @param status The new attendance status.
-     * @param reason Optional reason for the status change (can be null).
-     * @param updatedByUserId The ID of the user performing the update (for audit).
-     * @return The updated AttendanceRecords entity, or throws RuntimeException if not found.
-     */
+    @Override
     public AttendanceRecords updateAttendanceStatus(String studentId, String eventId, AttendanceStatus status, String reason, String updatedByUserId) {
         Optional<AttendanceRecords> optionalRecord = attendanceRecordsRepository.findByStudentIdAndEventEventId(studentId, eventId);
         if (optionalRecord.isEmpty()) {
@@ -193,21 +147,12 @@ public class EventAttendanceRecordsManagementService {
         return attendanceRecordsRepository.save(record);
     }
 
-    /**
-     * Retrieves all attendance records.
-     *
-     * @return a list of all {@link AttendanceRecords}
-     */
+    @Override
     public List<AttendanceRecords> getAllAttendanceRecords() {
         return attendanceRecordsRepository.findAll();
     }
 
-    /**
-     * Deletes an attendance record by its unique identifier.
-     *
-     * @param recordId the unique ID of the attendance record to delete
-     * @throws RuntimeException if the record is not found
-     */
+    @Override
     public void deleteAttendanceRecordById(String recordId) {
         if (!attendanceRecordsRepository.existsById(recordId)) {
             throw new RuntimeException("Attendance record not found: " + recordId);
@@ -216,10 +161,7 @@ public class EventAttendanceRecordsManagementService {
         log.info("Deleted attendance record: {}", recordId);
     }
 
-    /**
-     * Deletes all attendance records.
-     * <p><strong>Warning:</strong> This operation is irreversible and will remove all attendance data.</p>
-     */
+    @Override
     public void deleteAllAttendanceRecords() {
         long count = attendanceRecordsRepository.count();
         if (count > 0) {
