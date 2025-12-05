@@ -1,9 +1,10 @@
-package com.attendease.backend.osa.service.management.osa.registration;
+package com.attendease.backend.osa.service.management.osa.registration.impl;
 
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.osa.service.management.osa.registration.OSARegistrationService;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OsaRegistrationService {
+public class OSARegistrationServiceImpl implements OSARegistrationService {
 
     private final UserRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
+    @Override
     public String registerNewOsaAccount(OsaRegistrationRequest request) {
         userValidator.validateFirstName(request.getFirstName(), "First name");
         userValidator.validateLastName(request.getLastName(), "Last name");
