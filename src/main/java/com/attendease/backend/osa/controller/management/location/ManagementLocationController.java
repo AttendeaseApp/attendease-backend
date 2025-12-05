@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.management.location;
 
-import com.attendease.backend.osa.service.management.location.LocationsManagementService;
+import com.attendease.backend.osa.service.management.location.ManagementLocationService;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,21 +11,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * {@code LocationManagementController} is used for managing event locations, providing endpoints for CRUD operations on event locations.
+ * {@code ManagementLocationController} is used for managing event locations, providing endpoints for CRUD operations on event locations.
  * All endpoints are secured and accessible only to users with the 'OSA' role.
  *
  * <p>Handles requests related to creating, updating, retrieving, and deleting event locations with geospatial data.</p>
  *
- * <p>Authored: jakematthewviado204@gmail.com</p>
+ * @author jakematthewviado204@gmail.com
  * @since 2025-09-16
  */
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class LocationManagementController {
+public class ManagementLocationController {
 
-    private final LocationsManagementService locationsService;
+    private final ManagementLocationService managementLocationService;
 
     /**
      * Creates a new event location based on the provided request data.
@@ -40,7 +40,7 @@ public class LocationManagementController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LocationResponse createLocation(@RequestBody EventLocationRequest request) {
-        return locationsService.createLocation(request);
+        return managementLocationService.createNewLocation(request);
     }
 
     /**
@@ -56,7 +56,7 @@ public class LocationManagementController {
      */
     @PatchMapping("/{locationId}")
     public LocationResponse updateLocation(@PathVariable String locationId, @RequestBody EventLocationRequest request) {
-        return locationsService.updateLocation(locationId, request);
+        return managementLocationService.updateLocation(locationId, request);
     }
 
     /**
@@ -69,7 +69,7 @@ public class LocationManagementController {
      */
     @GetMapping
     public List<LocationResponse> getAllLocations() {
-        return locationsService.getAllLocations();
+        return managementLocationService.getAllLocations();
     }
 
     /**
@@ -82,7 +82,7 @@ public class LocationManagementController {
     @DeleteMapping("/{locationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLocation(@PathVariable String locationId) {
-        locationsService.deleteLocationById(locationId);
+        managementLocationService.deleteLocationById(locationId);
     }
 }
 

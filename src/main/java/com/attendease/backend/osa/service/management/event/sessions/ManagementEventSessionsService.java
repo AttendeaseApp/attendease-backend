@@ -15,7 +15,8 @@ import java.util.List;
  * <p>Provides methods to handle event lifecycle operations such as creating upcoming events, updating details,
  * canceling events, and querying by status or date ranges. Ensures date validations and location references are properly handled.</p>
  *
- * <p>Authored: jakematthewviado204@gmail.com</p>
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Sep-16
  */
 public interface ManagementEventSessionsService {
 

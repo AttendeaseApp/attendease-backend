@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.location;
+package com.attendease.backend.osa.service.management.location.impl;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
@@ -6,6 +6,7 @@ import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.locations.Geofencing.Geometry;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
+import com.attendease.backend.osa.service.management.location.ManagementLocationService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import com.attendease.backend.repository.locations.LocationRepository;
@@ -25,34 +26,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * {@link LocationsManagementService} is a service for managing event locations, including creation, retrieval,
- * and deletion of location entities with geospatial data support.
- *
- * <p>Handles operations on {@link EventLocations} such as building GeoJson polygons from requests,
- * calculating centroids for response DTOs, and enforcing validation on geometry types.</p>
- *
- * <p>Authored: jakematthewviado204@gmail.com</p>
- * @since 2025-09-16
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LocationsManagementService {
+public class ManagementLocationServiceImpl implements ManagementLocationService {
 
     private final LocationRepository locationRepository;
     private final EventSessionsRepository eventSessionsRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
-    /**
-     * Creates a new event location based on the provided request.
-     * Converts the geometry to a GeoJsonPolygon and sets initial timestamps.
-     *
-     * @param request the {@link EventLocationRequest} containing location details and geometry
-     * @return a {@link LocationResponse} representing the created location with computed centroid
-     * @throws ResponseStatusException if the geometry is invalid or not a Polygon
-     */
-    public LocationResponse createLocation(EventLocationRequest request) {
+    @Override
+    public LocationResponse createNewLocation(EventLocationRequest request) {
         if (request.getLocationName() == null || request.getLocationName().trim().isEmpty()) {
             throw new IllegalArgumentException("Location name is required and cannot be blank");
         }
@@ -83,15 +67,7 @@ public class LocationsManagementService {
         return convertToResponseDTO(location);
     }
 
-    /**
-     * Updates an existing event location based on the provided request.
-     * Supports partial updates for name, type, and geometry. Updates the updatedAt timestamp.
-     *
-     * @param locationId the unique ID of the location to update
-     * @param request the {@link EventLocationRequest} containing updated location details and optional geometry
-     * @return a {@link LocationResponse} representing the updated location with computed centroid
-     * @throws ResponseStatusException if the location is not found, or if the geometry is invalid or not a Polygon
-     */
+    @Override
     public LocationResponse updateLocation(String locationId, EventLocationRequest request) {
         Optional<EventLocations> optLocation = locationRepository.findById(locationId);
         if (optLocation.isEmpty()) {
@@ -149,21 +125,13 @@ public class LocationsManagementService {
         return convertToResponseDTO(location);
     }
 
-    /**
-     * Retrieves all event locations.
-     *
-     * @return a list of {@link LocationResponse} DTOs for all locations, including computed centroids
-     */
+    @Override
     public List<LocationResponse> getAllLocations() {
         List<EventLocations> locations = locationRepository.findAll();
         return locations.stream().map(this::convertToResponseDTO).toList();
     }
 
-    /**
-     * Deletes an event location by its unique identifier.
-     *
-     * @param locationId the unique ID of the location to delete
-     */
+    @Override
     public void deleteLocationById(String locationId) {
         boolean exists = locationRepository.existsById(locationId);
         if (!exists) {
