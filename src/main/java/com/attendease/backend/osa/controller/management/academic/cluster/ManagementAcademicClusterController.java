@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * {@code AcademicClusterController} id used for managing cluster courses.
+ * {@code ManagementAcademicClusterController} id used for managing cluster courses.
  *
  * <p>This controller provides CRUD operations for clusters, ensuring that all endpoints are secured
  * for OSA (Office of Student Affairs) role users only.</p>
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/clusters")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class AcademicClusterController {
+public class ManagementAcademicClusterController {
 
     private final ManagementAcademicClusterService managementAcademicClusterService;
 
