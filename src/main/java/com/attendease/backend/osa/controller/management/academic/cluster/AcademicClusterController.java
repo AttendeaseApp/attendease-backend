@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.controller.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.osa.service.management.academic.cluster.AcademicClusterService;
+import com.attendease.backend.osa.service.management.academic.cluster.ManagementAcademicClusterService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * for OSA (Office of Student Affairs) role users only.</p>
  *
  * @author jakematthewviado204@gmail.com
- * @since 2025-09-19
+ * @since 2025-Sep-19
  */
 @RestController
 @RequestMapping("/api/clusters")
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('OSA')")
 public class AcademicClusterController {
 
-    private final AcademicClusterService clusterService;
+    private final ManagementAcademicClusterService managementAcademicClusterService;
 
     /**
      * Creates a new cluster.
@@ -42,8 +42,8 @@ public class AcademicClusterController {
      * @throws IllegalArgumentException If the cluster name already exists.
      */
     @PostMapping
-    public ResponseEntity<Clusters> create(@RequestBody @Valid Clusters cluster) {
-        return ResponseEntity.ok(clusterService.createCluster(cluster));
+    public ResponseEntity<Clusters> createNewCluster(@RequestBody @Valid Clusters cluster) {
+        return ResponseEntity.ok(managementAcademicClusterService.createNewCluster(cluster));
     }
 
     /**
@@ -52,21 +52,21 @@ public class AcademicClusterController {
      * @return A list of all {@link Clusters} (HTTP 200 OK).
      */
     @GetMapping
-    public ResponseEntity<List<Clusters>> getAll() {
-        return ResponseEntity.ok(clusterService.getAllClusters());
+    public ResponseEntity<List<Clusters>> getAllClusters() {
+        return ResponseEntity.ok(managementAcademicClusterService.getAllClusters());
     }
 
     /**
      * Retrieves a specific cluster by its ID.
      *
-     * @param id The unique ID of the cluster.
+     * @param clusterId The unique ID of the cluster.
      * @return The {@link Clusters} entity (HTTP 200 OK).
      *
      * @throws RuntimeException If the cluster is not found.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<Clusters> getById(@PathVariable String id) {
-        return ResponseEntity.ok(clusterService.getClusterById(id));
+    @GetMapping("/{clusterId}")
+    public ResponseEntity<Clusters> getClusterById(@PathVariable String clusterId) {
+        return ResponseEntity.ok(managementAcademicClusterService.getClusterByClusterId(clusterId));
     }
 
     /**
@@ -81,16 +81,16 @@ public class AcademicClusterController {
      * }
      * }</pre>
      *
-     * @param id The unique ID of the cluster to update.
+     * @param clusterId The unique ID of the cluster to update.
      * @param cluster The updated cluster details (only {@code clusterName} is applied).
      * @return The updated {@link Clusters} entity (HTTP 200 OK).
      *
      * @throws RuntimeException If the cluster is not found.
      * @throws IllegalArgumentException If the new name already exists.
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<Clusters> update(@PathVariable String id, @RequestBody Clusters cluster) {
-        return ResponseEntity.ok(clusterService.updateCluster(id, cluster));
+    @PutMapping("/{clusterId}")
+    public ResponseEntity<Clusters> updateClusterById(@PathVariable String clusterId, @RequestBody Clusters cluster) {
+        return ResponseEntity.ok(managementAcademicClusterService.updateCluster(clusterId, cluster));
     }
 
     /**
@@ -99,14 +99,14 @@ public class AcademicClusterController {
      * <p>This performs a full cascading delete: courses under the cluster are deleted first
      * (including their sections), then the cluster.</p>
      *
-     * @param id The unique ID of the cluster to delete.
+     * @param clusterId The unique ID of the cluster to delete.
      * @return No content (HTTP 204 No Content).
      *
      * @throws RuntimeException If the cluster is not found.
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        clusterService.deleteCluster(id);
+    @DeleteMapping("/{clusterId}")
+    public ResponseEntity<Void> deleteById(@PathVariable String clusterId) {
+        managementAcademicClusterService.deleteCluster(clusterId);
         return ResponseEntity.noContent().build();
     }
 }

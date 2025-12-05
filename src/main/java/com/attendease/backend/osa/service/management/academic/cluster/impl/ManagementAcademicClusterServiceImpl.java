@@ -1,6 +1,7 @@
-package com.attendease.backend.osa.service.management.academic.cluster;
+package com.attendease.backend.osa.service.management.academic.cluster.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.osa.service.management.academic.cluster.ManagementAcademicClusterService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
@@ -10,35 +11,17 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * {@code AcademicClusterService} is a service layer for managing academic clusters (e.g., "CETE", "CBAM").
- *
- * <p>Provides CRUD operations with strict validation:
- * - Cluster names must be unique and non-blank.
- * - Prevents deletion if courses or event sessions reference the cluster.
- * - Descriptive error messages for invalid operations.</p>
- *
- * @author ...
- * @since 2025-12-04
- */
 @Service
 @RequiredArgsConstructor
-public class AcademicClusterService {
+public class ManagementAcademicClusterServiceImpl implements ManagementAcademicClusterService {
 
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
     private final EventSessionsRepository eventSessionsRepository;
     private final UserValidator userValidator;
 
-    /**
-     * Creates a new cluster with validation.
-     *
-     * @param cluster The {@link Clusters} entity to create (must have a non-blank {@code clusterName}).
-     * @return The saved {@link Clusters} entity (with auto-generated ID and timestamps).
-     *
-     * @throws IllegalArgumentException If a cluster with the same name already exists.
-     */
-    public Clusters createCluster(Clusters cluster) {
+    @Override
+    public Clusters createNewCluster(Clusters cluster) {
         String name = cluster.getClusterName().trim();
 
         if (name.isEmpty()) {
@@ -55,38 +38,19 @@ public class AcademicClusterService {
         return clusterRepository.save(cluster);
     }
 
-    /**
-     * Retrieves all clusters.
-     *
-     * @return A {@link List} of all {@link Clusters} entities.
-     */
+    @Override
     public List<Clusters> getAllClusters() {
         return clusterRepository.findAll();
     }
 
-    /**
-     * Retrieves a cluster by its ID.
-     *
-     * @param id The unique ID of the cluster.
-     * @return The {@link Clusters} entity if found.
-     *
-     * @throws RuntimeException If the cluster is not found.
-     */
-    public Clusters getClusterById(String id) {
-        return clusterRepository.findById(id).orElseThrow(() -> new RuntimeException("Cluster not found with ID: " + id));
+    @Override
+    public Clusters getClusterByClusterId(String clusterId) {
+        return clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found with ID: " + clusterId));
     }
 
-    /**
-     * Updates an existing cluster.
-     *
-     * @param id The unique ID of the cluster to update.
-     * @param updatedCluster The updated details (only {@code clusterName} is applied).
-     * @return The updated {@link Clusters} entity (with refreshed timestamps).
-     *
-     * @throws RuntimeException If the cluster is not found.
-     */
-    public Clusters updateCluster(String id, Clusters updatedCluster) {
-        Clusters existing = getClusterById(id);
+    @Override
+    public Clusters updateCluster(String clusterId, Clusters updatedCluster) {
+        Clusters existing = getClusterByClusterId(clusterId);
         String newClusterName = updatedCluster.getClusterName().trim();
 
         if (newClusterName.isEmpty()) {
@@ -95,22 +59,16 @@ public class AcademicClusterService {
 
         userValidator.validateClusterNameFormat(newClusterName);
 
-        clusterRepository.findByClusterName(newClusterName).filter(c -> !c.getClusterId().equals(id)).ifPresent(c -> {
+        clusterRepository.findByClusterName(newClusterName).filter(c -> !c.getClusterId().equals(clusterId)).ifPresent(c -> {
                     throw new IllegalArgumentException("Cluster name '" + newClusterName + "' is already in use. Please choose a unique name.");});
 
         existing.setClusterName(newClusterName);
         return clusterRepository.save(existing);
     }
 
-    /**
-     * Deletes a cluster only if no dependencies exist.
-     *
-     * @param id The unique ID of the cluster to delete.
-     *
-     * @throws IllegalStateException If the cluster is not found or dependencies exist (with detailed message including counts).
-     */
-    public void deleteCluster(String id) {
-        Clusters cluster = getClusterById(id);
+    @Override
+    public void deleteCluster(String clusterId) {
+        Clusters cluster = getClusterByClusterId(clusterId);
         long courseCount = courseRepository.countByCluster(cluster);
         long eventCountById = eventSessionsRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
         long eventCountByName = eventSessionsRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
@@ -131,6 +89,6 @@ public class AcademicClusterService {
             message.append(". Remove dependencies first if you wish to proceed.");
             throw new IllegalStateException(message.toString());
         }
-        clusterRepository.deleteById(id);
+        clusterRepository.deleteById(clusterId);
     }
 }
