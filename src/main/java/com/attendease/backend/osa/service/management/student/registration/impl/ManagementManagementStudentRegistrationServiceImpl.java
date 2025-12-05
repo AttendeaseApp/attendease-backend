@@ -7,7 +7,7 @@ import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.osa.service.management.student.registration.StudentRegistrationService;
+import com.attendease.backend.osa.service.management.student.registration.ManagementStudentRegistrationService;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 @Service
-public class StudentRegistrationServiceImpl implements StudentRegistrationService {
+public class ManagementManagementStudentRegistrationServiceImpl implements ManagementStudentRegistrationService {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;

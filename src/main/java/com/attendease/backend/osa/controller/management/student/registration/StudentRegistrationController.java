@@ -1,8 +1,7 @@
 package com.attendease.backend.osa.controller.management.student.registration;
 
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
-import com.attendease.backend.osa.service.management.student.registration.StudentRegistrationService;
-import com.attendease.backend.osa.service.management.student.registration.impl.StudentRegistrationServiceImpl;
+import com.attendease.backend.osa.service.management.student.registration.ManagementStudentRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('OSA')")
 public class StudentRegistrationController {
 
-    private final StudentRegistrationService studentRegistrationService;
+    private final ManagementStudentRegistrationService managementStudentRegistrationService;
 
     /**
      * Registers a new student account based on the provided request details.
@@ -41,11 +40,11 @@ public class StudentRegistrationController {
      * @param request the validated {@link StudentRegistrationRequest} object
      * @return {@link ResponseEntity} with status 200 and the registration success message
      * @throws IllegalArgumentException if validation fails, duplicate student number is detected, or section/course issues arise
-     * @see StudentRegistrationService#registerNewStudentAccount(StudentRegistrationRequest)
+     * @see ManagementStudentRegistrationService#registerNewStudentAccount(StudentRegistrationRequest)
      */
     @PostMapping("/register")
     public ResponseEntity<String> registerStudent(@Valid @RequestBody StudentRegistrationRequest request) {
-        String response = studentRegistrationService.registerNewStudentAccount(request);
+        String response = managementStudentRegistrationService.registerNewStudentAccount(request);
         return ResponseEntity.ok(response);
     }
 }

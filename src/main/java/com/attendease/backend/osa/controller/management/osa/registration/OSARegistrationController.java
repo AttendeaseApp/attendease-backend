@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.controller.management.osa.registration;
 
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
-import com.attendease.backend.osa.service.management.osa.registration.OSARegistrationService;
+import com.attendease.backend.osa.service.management.osa.registration.ManagementOSARegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('OSA')")
 public class OSARegistrationController {
 
-    private final OSARegistrationService osaRegistrationService;
+    private final ManagementOSARegistrationService managementOsaRegistrationService;
 
     /**
      * Registers a new OSA account based on the provided request details.
@@ -39,10 +39,10 @@ public class OSARegistrationController {
      * @param osaRegistrationRequest the validated {@link OsaRegistrationRequest} object
      * @return {@link ResponseEntity} with status 200 and the registration confirmation message
      * @throws IllegalArgumentException if validation fails or duplicate email is detected
-     * @see OSARegistrationService#registerNewOsaAccount(OsaRegistrationRequest)
+     * @see ManagementOSARegistrationService#registerNewOsaAccount(OsaRegistrationRequest)
      */
     @PostMapping("/register")
     public ResponseEntity<String> registerOsa(@Valid @RequestBody OsaRegistrationRequest osaRegistrationRequest) {
-        return ResponseEntity.ok(osaRegistrationService.registerNewOsaAccount(osaRegistrationRequest));
+        return ResponseEntity.ok(managementOsaRegistrationService.registerNewOsaAccount(osaRegistrationRequest));
     }
 }

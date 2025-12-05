@@ -4,7 +4,7 @@ import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.osa.service.management.osa.registration.OSARegistrationService;
+import com.attendease.backend.osa.service.management.osa.registration.ManagementOSARegistrationService;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OSARegistrationServiceImpl implements OSARegistrationService {
+public class ManagementManagementOSARegistrationServiceImpl implements ManagementOSARegistrationService {
 
     private final UserRepository usersRepository;
     private final PasswordEncoder passwordEncoder;

@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.user.information.management;
+package com.attendease.backend.osa.service.management.user.information.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -9,6 +9,7 @@ import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Information.Management.Request.UpdateUserRequest;
 import com.attendease.backend.domain.users.Information.Management.Response.UpdateResultResponse;
 import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.osa.service.management.user.information.ManagementUserInformationService;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 import com.attendease.backend.repository.students.StudentRepository;
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserInformationManagementService {
+public class ManagementUserInformationServiceImpl implements ManagementUserInformationService {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
@@ -34,26 +35,16 @@ public class UserInformationManagementService {
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
+    @Override
     public long deleteAllStudentsAndAssociatedUserAndFacialData() {
         return studentBiometrics.deleteAllStudentsAndAssociatedUserAndFacialData();
     }
 
-    /**
-     * Allows OSA to update user information (with optional student-specific fields).
-     * User field updates automatically propagate to referenced students via DBRef.
-     * Student-specific fields require explicit update to the Students collection.
-     *
-     * @param userId The ID of the user to update
-     * @param request The update request containing optional fields
-     * @param updatedByUserId The ID of the user performing the update
-     * @return The updated user
-     */
     @Transactional
+    @Override
     public UpdateResultResponse osaUpdateUserInfo(String userId, UpdateUserRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
         Users user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
-
         updateUserFields(user, request, updatedByUserId);
-
         UserStudentResponse studentResponse = null;
 
         if (user.getUserType() == UserType.STUDENT) {

@@ -3,17 +3,17 @@ package com.attendease.backend.osa.service.management.student.registration;
 import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
 
 /**
- * {@link StudentRegistrationService} is a service responsible for handling student account registrations.
+ * {@link ManagementStudentRegistrationService} is a service responsible for handling student account registrations.
  *
- * <p>Provides methods to create new student user accounts, including validation of user details, password encoding,
- * duplicate student number checks, and association with sections/courses. Ensures new accounts are set to
+ * <p>Provides methods to create new student user account, including validation of user details, password encoding,
+ * duplicate student number checks, and association with sections/courses. Ensures new account are set to
  * {@link com.attendease.backend.domain.enums.AccountStatus#ACTIVE} with {@link com.attendease.backend.domain.enums.UserType#STUDENT} type.
  * Links the student entity to a derived section and course if provided.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Dec-06
  */
-public interface StudentRegistrationService {
+public interface ManagementStudentRegistrationService {
 
     /**
      * {@code registerNewStudentAccount} is used to register a new student account using the provided request DTO.

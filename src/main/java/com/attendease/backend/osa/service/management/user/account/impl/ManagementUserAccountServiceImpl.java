@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.user;
+package com.attendease.backend.osa.service.management.user.account.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -11,6 +11,7 @@ import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
+import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -32,7 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UsersManagementService {
+public class ManagementUserAccountServiceImpl implements ManagementUserAccountService {
 
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
@@ -42,9 +43,7 @@ public class UsersManagementService {
 
     private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
 
-    /**
-     * Imports students from CSV with improved validation and error handling
-     */
+    @Override
     public List<Users> importStudentsViaCSV(MultipartFile file) {
         try {
             validateCSVFile(file);
@@ -107,9 +106,7 @@ public class UsersManagementService {
         }
     }
 
-    /**
-     * retrieves all users
-     */
+    @Override
     public List<UserStudentResponse> retrieveUsersWithStudents() {
         List<Users> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
@@ -119,13 +116,12 @@ public class UsersManagementService {
         return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
 
-    /**
-     * retrieves all students
-     */
+    @Override
     public List<Students> retrieveAllStudent() {
         return studentRepository.findAll();
     }
 
+    @Override
     public void deleteUserById(String userId) {
         boolean exists = userRepository.existsById(userId);
         if (!exists) {
@@ -135,12 +131,7 @@ public class UsersManagementService {
         userRepository.deleteById(userId);
     }
 
-    /**
-     * Deletes all student accounts (users and students) associated with the given section.
-     *
-     * @param sectionName the name of the section (e.g., "BSIT-401")
-     * @throws ResponseStatusException if the section is not found
-     */
+    @Override
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
         Optional<Sections> optSection = sectionsRepository.findBySectionName(sectionName);
@@ -162,7 +153,7 @@ public class UsersManagementService {
 
         userRepository.deleteAllById(userIds);
         studentRepository.deleteAll(students);
-        log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
+        log.info("Deleted {} students and their associated user account from section: {}", students.size(), sectionName);
     }
 
     /**

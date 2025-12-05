@@ -3,16 +3,16 @@ package com.attendease.backend.osa.service.management.osa.registration;
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
 
 /**
- * {@link OSARegistrationService} is a service responsible for handling Office of Student Affairs (OSA) account registrations.
+ * {@link ManagementOSARegistrationService} is a service responsible for handling Office of Student Affairs (OSA) account registrations.
  *
- * <p>Provides methods to create new OSA user accounts, including validation of user details, password encoding,
- * and duplicate email checks. Ensures new accounts are set to {@link com.attendease.backend.domain.enums.AccountStatus#ACTIVE}
+ * <p>Provides methods to create new OSA user account, including validation of user details, password encoding,
+ * and duplicate email checks. Ensures new account are set to {@link com.attendease.backend.domain.enums.AccountStatus#ACTIVE}
  * with {@link com.attendease.backend.domain.enums.UserType#OSA} type.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-26
  */
-public interface OSARegistrationService {
+public interface ManagementOSARegistrationService {
 
     /**
      * {@code registerNewOsaAccount} is used to register a new OSA account based on the provided request details.

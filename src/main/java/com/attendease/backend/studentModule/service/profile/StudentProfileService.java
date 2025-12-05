@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
  *
  * <p>This service interacts with both {@link UserRepository} and
  * {@link StudentRepository} to fetch and update data related to students
- * and their associated user accounts.</p>
+ * and their associated user account.</p>
  */
 @Service
 @RequiredArgsConstructor
