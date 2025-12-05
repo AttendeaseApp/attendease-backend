@@ -46,7 +46,7 @@ public interface StudentRepository extends MongoRepository<Students, String> {
     boolean existsByStudentNumber(String studentNumber);
 
     /**
-     * Finds all students whose user accounts are in the given list.
+     * Finds all students whose user account are in the given list.
      *
      * @param users a list of {@link Users} objects
      * @return a list of {@link Students} associated with the given users
