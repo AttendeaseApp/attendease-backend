@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.location;
+package com.attendease.backend.osa.service.management.location;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;

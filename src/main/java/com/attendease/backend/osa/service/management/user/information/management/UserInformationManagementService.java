@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.user.information.management;
+package com.attendease.backend.osa.service.management.user.information.management;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;

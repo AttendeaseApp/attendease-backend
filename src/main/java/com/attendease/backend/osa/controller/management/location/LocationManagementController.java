@@ -1,6 +1,6 @@
-package com.attendease.backend.osaModule.controller.management.location;
+package com.attendease.backend.osa.controller.management.location;
 
-import com.attendease.backend.osaModule.service.management.location.LocationsManagementService;
+import com.attendease.backend.osa.service.management.location.LocationsManagementService;
 import com.attendease.backend.domain.locations.Request.EventLocationRequest;
 import com.attendease.backend.domain.locations.Response.LocationResponse;
 import lombok.RequiredArgsConstructor;

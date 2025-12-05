@@ -1,8 +1,7 @@
-package com.attendease.backend.osaModule.controller.management.osa.registration;
+package com.attendease.backend.osa.controller.management.osa.registration;
 
 import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
-import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.osaModule.service.management.osa.registration.OsaRegistrationService;
+import com.attendease.backend.osa.service.management.osa.registration.OsaRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.academic.section;
+package com.attendease.backend.osa.service.management.academic.section;
 
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;

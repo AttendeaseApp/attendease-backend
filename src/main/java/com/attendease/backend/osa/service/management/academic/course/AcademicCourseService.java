@@ -1,9 +1,9 @@
-package com.attendease.backend.osaModule.service.management.academic.course;
+package com.attendease.backend.osa.service.management.academic.course;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osaModule.service.management.academic.section.AcademicSectionService;
+import com.attendease.backend.osa.service.management.academic.section.AcademicSectionService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;

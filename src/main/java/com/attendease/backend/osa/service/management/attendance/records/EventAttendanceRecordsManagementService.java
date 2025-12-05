@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.attendance.records;
+package com.attendease.backend.osa.service.management.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;

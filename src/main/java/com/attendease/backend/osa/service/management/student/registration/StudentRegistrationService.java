@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.student.registration;
+package com.attendease.backend.osa.service.management.student.registration;
 
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;

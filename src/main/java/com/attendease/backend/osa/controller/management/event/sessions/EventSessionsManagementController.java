@@ -1,10 +1,10 @@
-package com.attendease.backend.osaModule.controller.management.event.sessions;
+package com.attendease.backend.osa.controller.management.event.sessions;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
 import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
-import com.attendease.backend.osaModule.service.management.event.sessions.EventSessionManagementService;
+import com.attendease.backend.osa.service.management.event.sessions.EventSessionManagementService;
 import java.util.Date;
 import java.util.List;
 

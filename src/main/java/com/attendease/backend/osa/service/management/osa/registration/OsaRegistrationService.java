@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.osa.registration;
+package com.attendease.backend.osa.service.management.osa.registration;
 
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
@@ -6,7 +6,6 @@ import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrat
 import com.attendease.backend.domain.users.Users;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

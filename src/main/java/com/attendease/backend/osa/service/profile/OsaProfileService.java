@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.profile;
+package com.attendease.backend.osa.service.profile;
 
 import com.attendease.backend.domain.users.Profiles.Profile;
 import com.attendease.backend.domain.users.Users;

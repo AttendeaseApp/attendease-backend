@@ -1,9 +1,9 @@
-package com.attendease.backend.osaModule.controller.management.user;
+package com.attendease.backend.osa.controller.management.user;
 
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
 import com.attendease.backend.domain.users.Users;
-import com.attendease.backend.osaModule.service.management.user.UsersManagementService;
+import com.attendease.backend.osa.service.management.user.UsersManagementService;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

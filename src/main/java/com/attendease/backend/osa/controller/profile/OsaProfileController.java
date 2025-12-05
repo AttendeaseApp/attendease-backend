@@ -1,8 +1,8 @@
-package com.attendease.backend.osaModule.controller.profile;
+package com.attendease.backend.osa.controller.profile;
 
 import com.attendease.backend.domain.users.Profiles.OsaAccountPasswordUpdateRequest;
 import com.attendease.backend.domain.users.Profiles.Profile;
-import com.attendease.backend.osaModule.service.profile.OsaProfileService;
+import com.attendease.backend.osa.service.profile.OsaProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

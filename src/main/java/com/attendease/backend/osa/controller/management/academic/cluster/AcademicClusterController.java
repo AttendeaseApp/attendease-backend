@@ -1,7 +1,7 @@
-package com.attendease.backend.osaModule.controller.management.academic.cluster;
+package com.attendease.backend.osa.controller.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.osaModule.service.management.academic.cluster.AcademicClusterService;
+import com.attendease.backend.osa.service.management.academic.cluster.AcademicClusterService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

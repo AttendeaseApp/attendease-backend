@@ -1,7 +1,7 @@
-package com.attendease.backend.osaModule.controller.management.academic.course;
+package com.attendease.backend.osa.controller.management.academic.course;
 
 import com.attendease.backend.domain.courses.Courses;
-import com.attendease.backend.osaModule.service.management.academic.course.AcademicCourseService;
+import com.attendease.backend.osa.service.management.academic.course.AcademicCourseService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.attendease.backend.osaModule.service.management.academic.cluster;
+package com.attendease.backend.osa.service.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.repository.clusters.ClustersRepository;

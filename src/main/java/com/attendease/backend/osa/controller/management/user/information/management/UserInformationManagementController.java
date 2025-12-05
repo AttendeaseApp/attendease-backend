@@ -1,9 +1,9 @@
-package com.attendease.backend.osaModule.controller.management.user.information.management;
+package com.attendease.backend.osa.controller.management.user.information.management;
 
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.users.Information.Management.Request.UpdateUserRequest;
 import com.attendease.backend.domain.users.Information.Management.Response.UpdateResultResponse;
-import com.attendease.backend.osaModule.service.management.user.information.management.UserInformationManagementService;
+import com.attendease.backend.osa.service.management.user.information.management.UserInformationManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.crossstore.ChangeSetPersister;

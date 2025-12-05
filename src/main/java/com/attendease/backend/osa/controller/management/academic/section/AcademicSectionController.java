@@ -1,7 +1,7 @@
-package com.attendease.backend.osaModule.controller.management.academic.section;
+package com.attendease.backend.osa.controller.management.academic.section;
 
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osaModule.service.management.academic.section.AcademicSectionService;
+import com.attendease.backend.osa.service.management.academic.section.AcademicSectionService;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

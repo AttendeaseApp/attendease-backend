@@ -1,8 +1,8 @@
-package com.attendease.backend.osaModule.controller.management.event.monitoring;
+package com.attendease.backend.osa.controller.management.event.monitoring;
 
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.osaModule.service.management.event.monitoring.EventMonitoringService;
+import com.attendease.backend.osa.service.management.event.monitoring.EventMonitoringService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
