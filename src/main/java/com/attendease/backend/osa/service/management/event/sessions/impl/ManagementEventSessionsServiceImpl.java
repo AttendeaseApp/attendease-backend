@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.sessions;
+package com.attendease.backend.osa.service.management.event.sessions.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -9,6 +9,7 @@ import com.attendease.backend.domain.events.Session.Management.Request.EventSess
 import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
@@ -24,19 +25,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-/**
- * {@link EventSessionManagementService} is a service used for managing event sessions, including creation, retrieval,
- * updates, and deletion of events.
- *
- * <p>Provides methods to handle event lifecycle operations such as creating upcoming events, updating details,
- * canceling events, and querying by status or date ranges. Ensures date validations and location references are properly handled.</p>
- *
- * <p>Authored: jakematthewviado204@gmail.com</p>
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class EventSessionManagementService {
+public class ManagementEventSessionsServiceImpl implements ManagementEventSessionsService {
 
     private final LocationRepository locationRepository;
     private final SectionsRepository sectionsRepository;
@@ -45,15 +37,7 @@ public class EventSessionManagementService {
     private final EventSessionsRepository eventSessionRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
-    /**
-     * Creates a new event session with the provided details.
-     * Validates the date range and sets the initial status to {@link EventStatus#UPCOMING}.
-     * Associates the event with a location if provided.
-     *
-     * @param request the {@link EventSessions} object containing event details
-     * @return the saved {@link EventSessions} with generated ID and timestamps
-     * @throws IllegalArgumentException if date validations fail or location ID is invalid
-     */
+    @Override
     public EventCreationResponse createEvent(EventSessionRequest request) {
         EligibilityCriteria domainCriteria;
         EligibilityCriteria reqCriteria = request.getEligibleStudents();
@@ -92,69 +76,33 @@ public class EventSessionManagementService {
         return mapToEventCreationResponse(savedEvent);
     }
 
-    /**
-     * Retrieves an event session by its unique identifier.
-     *
-     * @param id the unique ID of the event session
-     * @return the {@link EventSessions} matching the ID
-     * @throws RuntimeException if no event is found with the provided ID
-     */
+    @Override
     public EventSessions getEventById(String id) {
         log.info("Retrieving event session with ID: {}", id);
         return eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
     }
 
-    /**
-     * Retrieves all event sessions (ordered by newest first).
-     *
-     * @return a list of all {@link EventSessions}
-     */
+    @Override
     public List<EventSessions> getAllEvents() {
         return eventSessionRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    /**
-     * Retrieves event sessions filtered by a specific status.
-     *
-     * @param status the {@link EventStatus} to filter by
-     * @return a list of {@link EventSessions} with the matching status
-     */
+    @Override
     public List<EventSessions> getEventsByStatus(EventStatus status) {
         return eventSessionRepository.findByEventStatus(status);
     }
 
-    /**
-     * Retrieves event sessions within a specified date range.
-     *
-     * @param from the start date (inclusive)
-     * @param to the end date (inclusive)
-     * @return a list of {@link EventSessions} within the date range
-     */
+    @Override
     public List<EventSessions> getEventsByDateRange(Date from, Date to) {
         return eventSessionRepository.findByDateRange(from, to);
     }
 
-    /**
-     * Retrieves event sessions filtered by status and within a specified date range.
-     *
-     * @param status the {@link EventStatus} to filter by
-     * @param from the start date (inclusive)
-     * @param to the end date (inclusive)
-     * @return a list of {@link EventSessions} matching the status and date range
-     */
+    @Override
     public List<EventSessions> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
         return eventSessionRepository.findByStatusAndDateRange(status, from, to);
     }
 
-    /**
-     * Deletes an event session by its unique identifier.
-     * Performs data integrity checks: allows deletion for UPCOMING or CANCELLED events unconditionally.
-     * For REGISTRATION, ONGOING, CONCLUDED, or FINALIZED events, prevents deletion if attendance records exist (> 0),
-     * throwing a status-specific exception message.
-     *
-     * @param id the unique ID of the event session to delete
-     * @throws RuntimeException if no event is found with the provided ID or if deletion is prevented due to data integrity constraints
-     */
+    @Override
     public void deleteEventById(String id) {
         EventSessions event = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
@@ -182,18 +130,7 @@ public class EventSessionManagementService {
         log.info("Deleted event with ID: {}", id);
     }
 
-    /**
-     * Updates an existing event session with new details.
-     * Validates location if provided and updates timestamps.
-     * Prevents updates for events that are CONCLUDED or FINALIZED to maintain attendance records integrity.
-     * Event status cannot be manually updated here; use dedicated methods like cancelEvent or rely on the scheduler for time-based changes.
-     *
-     * @param eventId the unique ID of the event to update
-     * @param updateEvent the {@link EventSessions} object containing updated fields
-     * @return the updated {@link EventSessions}
-     * @throws RuntimeException if no event is found with the provided ID or if update is prevented due to event status constraints
-     * @throws IllegalArgumentException if the location ID is invalid or if attempting to update event status
-     */
+    @Override
     public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
         EventSessions existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
@@ -255,13 +192,7 @@ public class EventSessionManagementService {
         return updatedEvent;
     }
 
-    /**
-     * Cancels an event session by setting its status to {@link EventStatus#CANCELLED}.
-     *
-     * @param id the unique ID of the event to cancel
-     * @return the updated {@link EventSessions} with cancelled status
-     * @throws RuntimeException if no event is found with the provided ID
-     */
+    @Override
     public EventSessions cancelEvent(String id) {
         EventSessions existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
