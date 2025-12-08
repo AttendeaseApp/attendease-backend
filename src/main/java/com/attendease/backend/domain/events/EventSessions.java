@@ -22,7 +22,14 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDateTime;
 
 /**
- * Class representing an event session.
+ * Domain entity representing a scheduled event session.
+ * <p>
+ * Captures event details like timing, location, and eligibility rules for student registration/attendance.
+ * Supports states (e.g., UPCOMING, ONGOING) and geofencing tracking. {@link EligibilityCriteria} defines
+ * target students (e.g., by section/course/cluster). Post-event, triggers attendance finalization.
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Sep-16
  */
 @Data
 @NoArgsConstructor
@@ -65,6 +72,10 @@ public class EventSessions {
     private LocalDateTime endDateTime;
 
     private EventStatus eventStatus;
+
+    @Field("facialVerificationEnabled")
+    @Builder.Default
+    private Boolean facialVerificationEnabled = true;
 
     private String createdByUserId;
 

@@ -23,7 +23,6 @@ import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.studentModule.service.utils.BiometricsVerificationClient;
 import com.attendease.backend.studentModule.service.utils.LocationValidator;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -91,24 +90,32 @@ public class EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (registrationRequest.getFaceImageBase64() == null) {
-            throw new IllegalStateException("Face image is required for check-in");
+        boolean facialVerified = false;
+        if (event.getFacialVerificationEnabled() == Boolean.TRUE) {
+            if (registrationRequest.getFaceImageBase64() == null) {
+                throw new IllegalStateException("Face image is required for check-in");
+            }
+            verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+            facialVerified = true;
+        } else {
+            if (registrationRequest.getFaceImageBase64() != null) {
+                log.warn("Ignoring provided face image as facial verification is disabled for this event.");
+            }
         }
-
-        verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
 
         AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
         AttendanceRecords record = AttendanceRecords.builder()
-            .student(student)
-            .event(event)
-            .location(location)
-            .timeIn(now)
-            .attendanceStatus(initialStatus)
-            .reason(now.isAfter(event.getStartDateTime()) ? "Late registration" : null)
-            .build();
+                .student(student)
+                .event(event)
+                .location(location)
+                .timeIn(now)
+                .attendanceStatus(initialStatus)
+                .reason(now.isAfter(event.getStartDateTime()) ? "Late registration" : null)
+                .build();
 
         attendanceRecordsRepository.save(record);
-        log.info("Student {} {}registered for event {} with facial verification.", student.getStudentNumber(), now.isAfter(event.getStartDateTime()) ? "late " : "", event.getEventId());
+        String verificationSuffix = facialVerified ? " with facial verification" : " without facial verification";
+        log.info("Student {} {}registered for event {}{}.", student.getStudentNumber(), now.isAfter(event.getStartDateTime()) ? "late " : "", event.getEventId(), verificationSuffix);
 
         return registrationRequest;
     }
@@ -135,9 +142,7 @@ public class EventRegistrationService {
 
     private void verifyStudentFace(String studentNumber, String faceImageBase64) {
         try {
-            BiometricData biometricData = biometricsRepository
-                .findByStudentNumber(studentNumber)
-                .orElseThrow(() -> new IllegalStateException("No biometric data found for student. Please register your face first."));
+            BiometricData biometricData = biometricsRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalStateException("No biometric data found for student. Please register your face first."));
 
             if (biometricData.getFacialEncoding() == null || biometricData.getFacialEncoding().isEmpty()) {
                 throw new IllegalStateException("Student's facial encoding is not registered");
@@ -166,8 +171,9 @@ public class EventRegistrationService {
     }
 
     private void isAlreadyRegistered(Students student, EventSessions event, EventLocations location) {
-        List<AttendanceRecords> existingRecords = attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.REGISTERED);
-        if (!existingRecords.isEmpty()) {
+        boolean alreadyRegistered = !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(
+                student, event, location, AttendanceStatus.REGISTERED).isEmpty() || !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.LATE).isEmpty();
+        if (alreadyRegistered) {
             throw new IllegalStateException("Student is already checked in for this event/location.");
         }
     }

@@ -20,7 +20,14 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * Class representing event locations with geospatial data.
+ * Domain entity representing physical or virtual event locations with geospatial support.
+ * <p>
+ * Stores venue details, including GeoJSON polygons for geofencing (e.g., campus buildings). Enables location-based
+ * attendance validation during events.
+ * </p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Sep-16
  */
 @Data
 @NoArgsConstructor
