@@ -25,7 +25,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class representing attendance records for students at events.
+ * Domain entity representing a student's attendance record for a specific event.
+ * <p>
+ * Tracks check-in/out times, status (e.g., PRESENT, ABSENT), reasons, and ping logs for geofence validation.
+ * Finalized post-event via ratio calculations (e.g., 70% inside time = PRESENT). Compound unique index
+ * on student+event prevents duplicates. Supports late detection and partial attendance (IDLE).
+ * </p>
+ * <p><b>Usage Notes:</b> Ping logs appended during ONGOING events. Use finalizer service after endDateTime.
+ * Indexes on student/event for efficient queries.</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Sep-16
+ * @see com.attendease.backend.utils.AttendanceRecordsFinalizer
  */
 @Data
 @NoArgsConstructor

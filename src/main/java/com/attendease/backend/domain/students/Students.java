@@ -15,7 +15,15 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Class representing a student.
+ * Domain entity representing a student in the Attendease system.
+ * <p>
+ * Links user profile, biometrics, and academic section for comprehensive student data.
+ * Used as the core entity for attendance, events, and eligibility checks. Unique index
+ * on {@code studentNumber} for institutional ID lookups.
+ * </p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Sep-16
  */
 @Data
 @NoArgsConstructor

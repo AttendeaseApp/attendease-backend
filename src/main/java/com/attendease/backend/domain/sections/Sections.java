@@ -15,13 +15,16 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Domain entity representing a course sections (e.g., "BSIT-101").
- *
- * <p>Sections are child entities of courses, representing year-level or specialized groups
- * (e.g., 101 for first year). Names use full format "COURSE_NAME-SECTION_NUMBER" (e.g., "BSIT-101").</p>
+ * Domain entity representing a course section (e.g., "BSIT-101") in the Attendease system.
+ * <p>
+ * Sections are the lowest-level grouping: children of {@link com.attendease.backend.domain.courses.Courses},
+ * representing year-level or specialized cohorts (e.g., 101 = first year). Full name format: "COURSE_NAME-SECTION_NUMBER".
+ * Used for precise eligibility in events (e.g., section-specific registrations).
+ * </p>
+ * <p><b>Usage Notes:</b> Unique index on {@code sectionName}. Auto-generated from parent course creation.</p>
  *
  * @author jakematthewviado204@gmail.com
- * @since 2025-11-23
+ * @since 2025-Sep-19
  */
 @Data
 @NoArgsConstructor

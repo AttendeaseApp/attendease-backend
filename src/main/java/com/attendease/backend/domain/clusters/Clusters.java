@@ -14,15 +14,15 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Domain entity representing a clusters.
- *
- * <p>Clusters serve as parent entities for courses, grouping related academic programs.
- * Each cluster has a unique name, and auditing timestamps are automatically managed
- * via Spring Data MongoDB (@CreatedDate, @LastModifiedDate). Enable {@code @EnableMongoAuditing}
- * in the application configuration for timestamp population.</p>
+ * Domain entity representing an academic cluster.
+ * <p>
+ * Clusters act as top-level groupings for related courses (e.g., "CETE" for engineering programs).
+ * They serve as parent entities to {@link com.attendease.backend.domain.courses.Courses}, enabling
+ * hierarchical organization for event eligibility (e.g., cluster-wide registrations).
+ * </p>
  *
  * @author jakematthewviado204@gmail.com
- * @since 2025-09-16
+ * @since 2025-Sep-16
  */
 @Data
 @NoArgsConstructor

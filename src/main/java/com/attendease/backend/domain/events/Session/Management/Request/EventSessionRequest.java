@@ -46,4 +46,6 @@ public class EventSessionRequest {
     private EventStatus eventStatus;
 
     private EligibilityCriteria eligibleStudents;
+
+    private Boolean facialVerificationEnabled;
 }

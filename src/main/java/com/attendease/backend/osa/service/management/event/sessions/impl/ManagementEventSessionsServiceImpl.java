@@ -55,6 +55,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
                 .startDateTime(request.getStartDateTime())
                 .endDateTime(request.getEndDateTime())
                 .eligibleStudents(domainCriteria)
+                .facialVerificationEnabled(request.getFacialVerificationEnabled() != null ? request.getFacialVerificationEnabled() : true)
                 .build();
 
         eventSession.setEventLocationId(request.getEventLocationId());
@@ -149,6 +150,10 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
         if (updateEvent.getDescription() != null) {
             existingEvent.setDescription(updateEvent.getDescription());
+        }
+
+        if (updateEvent.getFacialVerificationEnabled() != null) {
+            existingEvent.setFacialVerificationEnabled(updateEvent.getFacialVerificationEnabled());
         }
 
         boolean datesUpdated = false;
@@ -394,6 +399,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
                 .endDateTime(event.getEndDateTime())
                 .eventStatus(event.getEventStatus())
                 .allStudents(criteria == null || criteria.isAllStudents())
+                .facialVerificationEnabled(event.getFacialVerificationEnabled())
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {

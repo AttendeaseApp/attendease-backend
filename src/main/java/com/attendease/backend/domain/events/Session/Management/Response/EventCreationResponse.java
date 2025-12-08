@@ -47,4 +47,6 @@ public class EventCreationResponse {
 
     private List<String> clusterIDs;
     private List<String> clusterNames;
+
+    private Boolean facialVerificationEnabled;
 }

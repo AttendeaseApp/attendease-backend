@@ -16,13 +16,14 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Domain entity representing an academic course (e.g., "BSIT").
- *
- * <p>Courses are child entities of clusters and parent entities of sections.
- * Upon creation, default sections (e.g., "BSIT-101" to "BSIT-801") are automatically generated.</p>
+ * Domain entity representing an academic course in the Attendease system (e.g., "BSIT" for Bachelor of Science in Information Technology).
+ * <p>
+ * Courses are mid-level entities: children of {@link com.attendease.backend.domain.clusters.Clusters} and parents
+ * to {@link com.attendease.backend.domain.sections.Sections}. Upon creation, the system can auto-generate default
+ * sections (e.g., "BSIT-101" to "BSIT-801" for year levels). Used for fine-grained eligibility in events.
  *
  * @author jakematthewviado204@gmail.com
- * @since 2025-09-16
+ * @since 2025-Sep-16
  */
 @Data
 @NoArgsConstructor
