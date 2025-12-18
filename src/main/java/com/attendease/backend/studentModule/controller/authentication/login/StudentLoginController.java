@@ -5,6 +5,7 @@ import com.attendease.backend.domain.students.Login.Response.LoginResponse;
 import com.attendease.backend.studentModule.service.authentication.login.AuthenticationLoginService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

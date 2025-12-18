@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginResponse {
 
+    private boolean success;
     private String token;
     private boolean requiresFacialRegistration;
     private String message;
