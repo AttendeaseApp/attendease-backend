@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * {@code ManagementLocationController} is used for managing event locations, providing endpoints for CRUD operations on event locations.
- * All endpoints are secured and accessible only to users with the 'OSA' role.
+ * All endpoints are secured and accessible only to user with the 'osa' role.
  *
  * <p>Handles requests related to creating, updating, retrieving, and deleting event locations with geospatial data.</p>
  *
@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementLocationController {
 
     private final ManagementLocationService managementLocationService;

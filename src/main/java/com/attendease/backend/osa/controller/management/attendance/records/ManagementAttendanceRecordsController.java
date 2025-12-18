@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * {@code ManagementAttendanceRecordsController} is used for managing attendance records of students.
  *
  * <p>This controller provides CRUD operations for attendance records management, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only.</p>
+ * for osa (Office of Student Affairs) role user only.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-11
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/attendance/records")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementAttendanceRecordsController {
 
     private final ManagementAttendanceRecordsService managementAttendanceRecordsService;

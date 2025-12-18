@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code ManagementAcademicSectionController} id used for managing academic sections.
  *
  * <p>This controller provides CRUD operations for courses, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only</p>
+ * for osa (Office of Student Affairs) role user only</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-11-23
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/sections")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementAcademicSectionController {
 
     private final ManagementAcademicSectionService managementAcademicSectionService;

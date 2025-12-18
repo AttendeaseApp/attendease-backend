@@ -1,21 +1,21 @@
 package com.attendease.backend.osa.service.profile;
 
-import com.attendease.backend.domain.users.Profiles.Profile;
+import com.attendease.backend.domain.user.account.profile.UserAccountProfile;
 
 import java.util.Optional;
 
 public interface ProfileService {
 
     /**
-     * {@code getOsaProfileByUserId} is used to retrieve relevant data for OSA profile.
+     * {@code getOsaProfileByUserId} is used to retrieve relevant data for osa profile.
      * Builds profile dto from User domain
      *
-     * @return Profile object
+     * @return UserAccountProfile object
      */
-    Optional<Profile> getOsaProfileByUserId(String userId);
+    Optional<UserAccountProfile> getOsaProfileByUserId(String userId);
 
     /**
-     * {@code updatePassword} is used to update OSA own password
+     * {@code updatePassword} is used to update osa own password
      *
      * @param userId The student number
      * @param oldPassword   Current password for verification

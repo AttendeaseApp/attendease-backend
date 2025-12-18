@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * {@code ManagementAcademicCourseController} id used for managing academic courses.
  *
  * <p>This controller provides CRUD operations for courses, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only. Creating a course automatically generates
+ * for osa (Office of Student Affairs) role user only. Creating a course automatically generates
  * default sections (e.g., BSIT-101, BSIT-201, ..., BSIT-801) based on the course name.</p>
  *
  * @author jakematthewviado204@gmail.com
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementAcademicCourseController {
 
     private final ManagementAcademicCourseService managementAcademicCourseService;

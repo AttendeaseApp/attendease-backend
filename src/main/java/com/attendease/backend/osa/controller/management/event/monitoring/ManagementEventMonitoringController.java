@@ -14,7 +14,7 @@ import java.util.List;
  * {@code ManagementEventMonitoringController} is used for monitoring event sessions attendees.
  *
  * <p>This controller provides CRUD operations for event sessions monitoring, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only.</p>
+ * for osa (Office of Student Affairs) role user only.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-25
@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/events/monitoring")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementEventMonitoringController {
 
     private final ManagementEventMonitoringService managementEventMonitoringService;

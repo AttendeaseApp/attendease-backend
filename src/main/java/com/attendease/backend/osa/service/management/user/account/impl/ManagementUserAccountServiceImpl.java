@@ -5,10 +5,10 @@ import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.domain.users.CSV.CSVRowData;
+import com.attendease.backend.domain.user.account.management.users.csv.row.UserAccountManagementUsersCSVRowData;
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
@@ -44,10 +44,10 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
 
     @Override
-    public List<Users> importStudentsViaCSV(MultipartFile file) {
+    public List<User> importStudentsViaCSV(MultipartFile file) {
         try {
             validateCSVFile(file);
-            List<Users> importedUsers = new ArrayList<>();
+            List<User> importedUsers = new ArrayList<>();
             List<String> errors = new ArrayList<>();
             int rowNumber = 0;
 
@@ -59,7 +59,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 while ((row = csvReader.readNext()) != null) {
                     rowNumber++;
                     try {
-                        CSVRowData rowData = parseCSVRow(header, row);
+                        UserAccountManagementUsersCSVRowData rowData = parseCSVRow(header, row);
 
                         if (!isValidRowData(rowData)) {
                             log.warn("Skipping row {} due to missing required fields", rowNumber);
@@ -73,7 +73,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                             continue;
                         }
 
-                        Users imported = createUserAndStudent(rowData);
+                        User imported = createUserAndStudent(rowData);
                         importedUsers.add(imported);
                         log.info("Successfully imported student: {}", rowData.getStudentNumber());
                     } catch (IllegalArgumentException e) {
@@ -108,7 +108,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
 
     @Override
     public List<UserStudentResponse> retrieveUsersWithStudents() {
-        List<Users> users = userRepository.findAll();
+        List<User> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
 
         log.info("Retrieved {} students and user {}", students.size(), users.size());
@@ -160,7 +160,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
      * PRIVATE HELPERS
      */
 
-    private boolean isValidRowData(CSVRowData data) {
+    private boolean isValidRowData(UserAccountManagementUsersCSVRowData data) {
         return data.getFirstName() != null &&
                 data.getLastName() != null &&
                 data.getStudentNumber() != null &&
@@ -191,8 +191,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         }
     }
 
-    private CSVRowData parseCSVRow(String[] header, String[] row) {
-        CSVRowData data = new CSVRowData();
+    private UserAccountManagementUsersCSVRowData parseCSVRow(String[] header, String[] row) {
+        UserAccountManagementUsersCSVRowData data = new UserAccountManagementUsersCSVRowData();
 
         for (int i = 0; i < header.length && i < row.length; i++) {
             String value = (row[i] != null && !row[i].trim().isEmpty()) ? row[i].trim() : null;
@@ -228,7 +228,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         return data;
     }
 
-    private Users createUserAndStudent(CSVRowData data) {
+    private User createUserAndStudent(UserAccountManagementUsersCSVRowData data) {
         userValidator.validateFirstName(data.getFirstName(), "First name");
         userValidator.validateLastName(data.getLastName(), "Last name");
         userValidator.validateContactNumber(data.getContactNumber());
@@ -238,7 +238,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
 
         Sections section = sectionsRepository.findBySectionName(data.getSectionName()).orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
-        Users user = new Users();
+        User user = new User();
         user.setUserType(UserType.STUDENT);
         user.setAccountStatus(AccountStatus.ACTIVE);
         user.setUpdatedBy(String.valueOf(UserType.SYSTEM));
@@ -260,7 +260,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         return user;
     }
 
-    public UserStudentResponse mapToResponseDTO(Users user, Students student) {
+    public UserStudentResponse mapToResponseDTO(User user, Students student) {
         Optional<Students> optStudent = Optional.ofNullable(student);
         Optional<Sections> optSection = optStudent.map(Students::getSection);
         Optional<Courses> optCourse = optSection.map(Sections::getCourse);

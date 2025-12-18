@@ -2,7 +2,7 @@ package com.attendease.backend.domain.students;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.user.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -37,7 +37,7 @@ public class Students {
 
     @DBRef
     @NotNull(message = "User reference is required")
-    private Users user;
+    private User user;
 
     @DBRef
     private BiometricData facialData;

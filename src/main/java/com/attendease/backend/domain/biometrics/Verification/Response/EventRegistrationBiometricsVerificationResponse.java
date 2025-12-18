@@ -13,7 +13,7 @@ import lombok.Data;
  *     <li>{@code facialEncoding} — the extracted facial encoding represented as a list of floats</li>
  * </ul>
  *
- * <p>Used primarily by {@link com.attendease.backend.studentModule.service.utils.BiometricsVerificationClient}.</p>
+ * <p>Used primarily by {@link com.attendease.backend.student.service.utils.BiometricsVerificationClient}.</p>
  */
 @Data
 public class EventRegistrationBiometricsVerificationResponse {

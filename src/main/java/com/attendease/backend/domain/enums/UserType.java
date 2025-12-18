@@ -1,7 +1,7 @@
 package com.attendease.backend.domain.enums;
 
 /**
- * Enum representing different types of users in the system.
+ * Enum representing different types of user in the system.
  */
 public enum UserType {
     OSA,

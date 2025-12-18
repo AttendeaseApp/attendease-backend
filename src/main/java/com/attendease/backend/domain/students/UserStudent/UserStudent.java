@@ -1,11 +1,11 @@
 package com.attendease.backend.domain.students.UserStudent;
 
 import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.user.User;
 import lombok.Data;
 
 @Data
 public class UserStudent {
-    private Users user;
+    private User user;
     private Students student;
 }

@@ -2,7 +2,7 @@ package com.attendease.backend.osa.controller.management.user.account;
 
 import com.attendease.backend.domain.students.Students;
 import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import java.util.Collections;
@@ -19,26 +19,26 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * {@code ManagementUserAccountController} is used for managing user accounts, including imports, retrievals, and deletions.
  *
- * <p>This controller provides endpoints for OSA (Office of Student Affairs) users to handle bulk operations on student accounts,
- * retrieve user/student data, and perform targeted deletions. All endpoints are secured for OSA role users only.</p>
+ * <p>This controller provides endpoints for osa (Office of Student Affairs) user to handle bulk operations on student accounts,
+ * retrieve user/student data, and perform targeted deletions. All endpoints are secured for osa role user only.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Dec-06
  */
 @RestController
-@RequestMapping("/api/users/management")
+@RequestMapping("/api/user/management")
 @Slf4j
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementUserAccountController {
 
     private final ManagementUserAccountService managementUserAccountService;
 
     /**
-     * Retrieves all users (OSA and students) with their associated student details.
+     * Retrieves all user (osa and students) with their associated student details.
      *
-     * <p>This endpoint fetches a combined view of users and students, returning enriched responses for students
-     * (including section, course, cluster hierarchies). Returns an empty list with 404 status if no users exist.</p>
+     * <p>This endpoint fetches a combined view of user and students, returning enriched responses for students
+     * (including section, course, cluster hierarchies). Returns an empty list with 404 status if no user exist.</p>
      *
      * <p><strong>Response:</strong> List of {@link UserStudentResponse} objects.</p>
      *
@@ -58,28 +58,28 @@ public class ManagementUserAccountController {
      * Imports students from an uploaded CSV file, creating new user accounts and student entities.
      *
      * <p>This endpoint processes the CSV for bulk student onboarding, validating structure and content.
-     * Returns the list of successfully imported users; errors (e.g., duplicates, invalid rows) are handled via exceptions.</p>
+     * Returns the list of successfully imported user; errors (e.g., duplicates, invalid rows) are handled via exceptions.</p>
      *
      * <p><strong>Request Parameter:</strong> {@code file} - the {@link MultipartFile} CSV upload (required columns: firstName, lastName, studentNumber, password).</p>
      *
-     * <p><strong>Response:</strong> HTTP 200 with a list of created {@link Users} objects.</p>
+     * <p><strong>Response:</strong> HTTP 200 with a list of created {@link User} objects.</p>
      *
      * @param file the CSV {@link MultipartFile} to import
-     * @return {@link ResponseEntity} with status 200 and the list of imported users
+     * @return {@link ResponseEntity} with status 200 and the list of imported user
      * @throws IllegalArgumentException if the file is invalid (e.g., not CSV, missing headers)
      * @throws CsvImportException if import has row-specific errors
      * @see ManagementUserAccountService#importStudentsViaCSV(MultipartFile)
      */
     @PostMapping("/import")
     public ResponseEntity<?> importStudents(@RequestParam("file") MultipartFile file) {
-        List<Users> importedUsers = managementUserAccountService.importStudentsViaCSV(file);
+        List<User> importedUsers = managementUserAccountService.importStudentsViaCSV(file);
         return ResponseEntity.ok(importedUsers);
     }
 
     /**
      * Retrieves all student entities.
      *
-     * <p>This endpoint provides a dedicated view of all students, excluding non-student users.
+     * <p>This endpoint provides a dedicated view of all students, excluding non-student user.
      * Returns an empty list with 404 status if no students exist.</p>
      *
      * <p><strong>Response:</strong> List of {@link Students} objects.</p>
@@ -99,7 +99,7 @@ public class ManagementUserAccountController {
     /**
      * Permanently deletes a user account by its unique identifier.
      *
-     * <p>This endpoint allows administrative removal of any user (OSA or student), cascading to linked entities.
+     * <p>This endpoint allows administrative removal of any user (osa or student), cascading to linked entities.
      * Intended for targeted cleanups.</p>
      *
      * <p><strong>Path Variable:</strong> {@code userId} - the unique ID of the user to delete.</p>

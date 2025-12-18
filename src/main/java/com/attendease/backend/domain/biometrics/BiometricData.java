@@ -16,7 +16,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Domain entity representing biometric data for users (primarily students).
+ * Domain entity representing biometric data for user (primarily students).
  * <p>
  * This entity stores facial recognition encodings (as a fixed-size vector of 128 floats) for secure authentication.
  * It supports facial login during event registration and attendance tracking. Status tracks enrollment/validation.

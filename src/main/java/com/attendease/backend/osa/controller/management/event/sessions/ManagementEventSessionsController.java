@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * {@code ManagementEventSessionsController} is used for managing event sessions.
  *
  * <p>This controller provides CRUD operations for managing event sessions, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only.</p>
+ * for osa (Office of Student Affairs) role user only.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class ManagementEventSessionsController {
 
     private final ManagementEventSessionsService managementEventSessionsService;

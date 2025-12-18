@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * {@code StudentRegistrationController} is used for managing student account registrations.
  *
- * <p>This controller provides endpoints for registering new student users, secured for OSA (Office of Student Affairs) role users only.
+ * <p>This controller provides endpoints for registering new student user, secured for osa (Office of Student Affairs) role user only.
  * It handles request validation and delegates to the service layer for business logic, including entity creation and associations.</p>
  *
  * @author jakematthewviado204@gmail.com
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth/student")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('OSA')")
+@PreAuthorize("hasRole('osa')")
 public class StudentRegistrationController {
 
     private final ManagementStudentRegistrationService managementStudentRegistrationService;
@@ -29,7 +29,7 @@ public class StudentRegistrationController {
      * Registers a new student account based on the provided request details.
      *
      * <p>This endpoint validates the incoming request and creates a new student user account, including
-     * linking to a section and course if specified. It is intended for administrative use by OSA users
+     * linking to a section and course if specified. It is intended for administrative use by osa user
      * to onboard new students.</p>
      *
      * <p><strong>Request Body:</strong> {@link StudentRegistrationRequest} containing user details such as first name,

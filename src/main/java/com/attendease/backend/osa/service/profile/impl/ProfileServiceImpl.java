@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.profile.impl;
 
-import com.attendease.backend.domain.users.Profiles.Profile;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.user.account.profile.UserAccountProfile;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.osa.service.profile.ProfileService;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
@@ -20,9 +20,9 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserValidator userValidator;
 
     @Override
-    public Optional<Profile> getOsaProfileByUserId(String userId) {
+    public Optional<UserAccountProfile> getOsaProfileByUserId(String userId) {
         return userRepository.findById(userId)
-                .map(user -> Profile.builder()
+                .map(user -> UserAccountProfile.builder()
                         .userId(user.getUserId())
                         .firstName(user.getFirstName())
                         .lastName(user.getLastName())
@@ -48,7 +48,7 @@ public class ProfileServiceImpl implements ProfileService {
             throw new IllegalArgumentException("New password is required.");
         }
 
-        Users user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         userValidator.validatePassword(newPassword);
 

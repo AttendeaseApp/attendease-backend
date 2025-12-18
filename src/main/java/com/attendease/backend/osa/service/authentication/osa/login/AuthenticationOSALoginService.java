@@ -1,10 +1,10 @@
 package com.attendease.backend.osa.service.authentication.osa.login;
 
 /**
- * {@code AuthenticationOSALoginService } is a service responsible for handling OSA-specific login authentication requests.
+ * {@code AuthenticationOSALoginService } is a service responsible for handling osa-specific login authentication requests.
  *
  * <p>This service validates user credentials and generates
- * an authentication token for authorized users.</p>
+ * an authentication token for authorized user.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-25
@@ -12,11 +12,11 @@ package com.attendease.backend.osa.service.authentication.osa.login;
 public interface AuthenticationOSALoginService {
 
     /**
-     * {@code loginOSA} Attempts to authenticate an Office of Student Affairs (OSA) user using the provided email and password.
+     * {@code loginOSA} Attempts to authenticate an Office of Student Affairs (osa) user using the provided email and password.
      *
-     * @param email the email address of an Office of Student Affairs (OSA) user
-     * @param password the raw (unencrypted) password an Office of Student Affairs (OSA) user
-     * @return a JWT token and the email of the OSA if authentication succeeds
+     * @param email the email address of an Office of Student Affairs (osa) user
+     * @param password the raw (unencrypted) password an Office of Student Affairs (osa) user
+     * @return a JWT token and the email of the osa if authentication succeeds
      *
      * @throws IllegalArgumentException if the email does not exist or the password does not match
      */

@@ -1,6 +1,6 @@
 package com.attendease.backend.security.jwt.websocket;
 
-import com.attendease.backend.security.JwtTokenizationUtil;
+import com.attendease.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSocketAuthenticatorService {
 
-    private final JwtTokenizationUtil jwtService;
+    private final JwtTokenProvider jwtService;
 
     public UsernamePasswordAuthenticationToken getAuthenticatedOrFail(final String  jwt) throws AuthenticationException {
         if (jwt == null || jwt.trim().isEmpty()) {
