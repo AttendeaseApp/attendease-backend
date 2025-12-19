@@ -5,6 +5,7 @@ import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.locations.EventLocations;
 import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -36,7 +37,7 @@ import java.util.List;
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16
- * @see com.attendease.backend.utils.AttendanceRecordsFinalizer
+ * @see AttendanceRecordsFinalizer
  */
 @Data
 @NoArgsConstructor

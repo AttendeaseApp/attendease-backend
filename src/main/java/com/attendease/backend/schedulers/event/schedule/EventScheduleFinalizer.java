@@ -1,9 +1,11 @@
-package com.attendease.backend.utils;
+package com.attendease.backend.schedulers.event.schedule;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 import java.util.List;
+
+import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +20,7 @@ public class EventScheduleFinalizer {
     private final AttendanceRecordsFinalizer attendanceRecordsFinalizer;
 
     @Scheduled(fixedRate = 15000)
-    public void runScheduledFinalization() {
+    public void runScheduledFinalization() throws Exception {
         try {
             List<EventSessions> concludedEvents = eventSessionsRepository.findByEventStatus(EventStatus.CONCLUDED);
             for (EventSessions event : concludedEvents) {
@@ -32,7 +34,7 @@ public class EventScheduleFinalizer {
                 eventSessionsRepository.save(event);
             }
         } catch (Exception e) {
-            log.error("Error during scheduled attendance finalization", e);
+            throw new Exception("Error during scheduled attendance finalization" + e);
         }
     }
 }

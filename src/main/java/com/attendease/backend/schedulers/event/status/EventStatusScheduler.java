@@ -1,4 +1,4 @@
-package com.attendease.backend.utils;
+package com.attendease.backend.schedulers.event.status;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EventSessions;
