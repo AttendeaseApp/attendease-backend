@@ -1,6 +1,6 @@
 package com.attendease.backend.domain.attendance.AttendanceStatus;
 
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import lombok.Data;
 
 import java.util.List;

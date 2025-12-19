@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.students.UserStudent;
+package com.attendease.backend.domain.student.user.student;
 
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;

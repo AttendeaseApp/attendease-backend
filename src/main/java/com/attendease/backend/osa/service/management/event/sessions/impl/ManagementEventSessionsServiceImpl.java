@@ -118,10 +118,10 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         if (attendanceCount > 0) {
             String eventName = event.getEventName();
             String message = switch (status) {
-                case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered students: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
+                case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered student: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
                 case ONGOING -> "You cannot delete ongoing event '" + eventName + "' due to active attendance tracking (" + attendanceCount + " records). The event is currently in progress.";
                 case CONCLUDED -> "You cannot delete concluded event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed pre-attendance records data.";
-                case FINALIZED -> "You cannot delete finalized event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed finalized records for all students.";
+                case FINALIZED -> "You cannot delete finalized event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed finalized records for all student.";
                 default -> "Cannot delete event '" + eventName + "' with status " + status + " due to existing attendance records (" + attendanceCount + "). This protects data integrity.";
             };
             throw new RuntimeException(message);
@@ -380,7 +380,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         List<String> courseIds = criteria.getCourse();
         List<String> sectionIds = criteria.getSections();
         if ((clusterIds == null || clusterIds.isEmpty()) && (courseIds == null || courseIds.isEmpty()) && (sectionIds == null || sectionIds.isEmpty())) {
-            throw new IllegalArgumentException("At least one cluster, course, or section ID must be provided when not targeting all students.");
+            throw new IllegalArgumentException("At least one cluster, course, or section ID must be provided when not targeting all student.");
         }
         if ((clusterIds != null && clusterIds.stream().anyMatch(String::isBlank)) || (courseIds != null && courseIds.stream().anyMatch(String::isBlank)) || (sectionIds != null && sectionIds.stream().anyMatch(String::isBlank))) {
             throw new IllegalArgumentException("IDs cannot be blank.");

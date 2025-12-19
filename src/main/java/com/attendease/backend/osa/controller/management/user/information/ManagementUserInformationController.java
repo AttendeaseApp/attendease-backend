@@ -1,6 +1,7 @@
 package com.attendease.backend.osa.controller.management.user.information;
 
 import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
 import com.attendease.backend.domain.user.User;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * {@code ManagementUserInformationController} is used for managing user information updates and bulk deletions.
  *
  * <p>This controller provides endpoints for osa (Office of Student Affairs) user to update user details (including student-specific fields)
- * and perform administrative actions like deleting all students and associated data. All endpoints are secured for osa role user only.</p>
+ * and perform administrative actions like deleting all student and associated data. All endpoints are secured for osa role user only.</p>
  *
  * @author  jakematthewviado204@gmail.com
  * @since 2025-Nov-26
@@ -32,27 +33,27 @@ public class ManagementUserInformationController {
     private final ManagementUserInformationService managementUserInformationService;
 
     /**
-     * Permanently deletes all students along with their associated user accounts and facial biometrics data.
+     * Permanently deletes all student along with their associated user accounts and facial biometrics data.
      *
      * <p>This endpoint is for administrative cleanup, such as resetting the database during testing or migration.
      * It cascades deletions to linked entities (User, Students, and StudentBiometrics collections).
      * Use with extreme caution as it is irreversible.</p>
      *
-     * <p><strong>Response:</strong> HTTP 200 with a confirmation message including the count of deleted students.</p>
+     * <p><strong>Response:</strong> HTTP 200 with a confirmation message including the count of deleted student.</p>
      *
-     * @return {@link ResponseEntity} with status 200 and a success message (e.g., "Successfully deleted X students.")
+     * @return {@link ResponseEntity} with status 200 and a success message (e.g., "Successfully deleted X student.")
      * @see ManagementUserInformationService#deleteAllStudentsAndAssociatedUserAndFacialData()
      */
-    @DeleteMapping("/students/remove-all")
+    @DeleteMapping("/student/remove-all")
     public ResponseEntity<String> deleteAllStudentsAndAssociatedUserAndFacialData() {
         long deletedCount = managementUserInformationService.deleteAllStudentsAndAssociatedUserAndFacialData();
-        return ResponseEntity.ok("Successfully deleted " + deletedCount + " students.");
+        return ResponseEntity.ok("Successfully deleted " + deletedCount + " student.");
     }
 
     /**
      * Updates user information for a specified user, including optional student-specific fields if applicable.
      *
-     * <p>This endpoint allows osa user to modify user details like name, email, contact, password, and for students:
+     * <p>This endpoint allows osa user to modify user details like name, email, contact, password, and for student:
      * student number or section assignment. Updates propagate to linked entities (e.g., Students via DBRef).
      * The current authenticated osa user's ID is captured as the updater for audit trails.</p>
      *
@@ -63,7 +64,7 @@ public class ManagementUserInformationController {
      * <p><strong>Response:</strong>
      * <ul>
      * <li>For non-student user: HTTP 200 with the updated {@link User} object.</li>
-     * <li>For student user: HTTP 200 with the updated {@link com.attendease.backend.domain.students.UserStudent.UserStudentResponse} including section/course/cluster details.</li>
+     * <li>For student user: HTTP 200 with the updated {@link UserStudentResponse} including section/course/cluster details.</li>
      * </ul></p>
      *
      * @param userId the unique ID of the user to update

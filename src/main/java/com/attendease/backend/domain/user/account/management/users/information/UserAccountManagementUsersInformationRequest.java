@@ -22,10 +22,10 @@ public class UserAccountManagementUsersInformationRequest {
     @Pattern(regexp = "^[A-Za-zÀ-ÖØ-öø-ÿ'\\-\\s]+$", message = "Last name contains invalid characters")
     private String lastName;
 
-    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
+    @Size(min = 8, max = 128, message = "password must be between 8 and 128 characters")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,128}$",
-            message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and be 8-128 characters long"
+            message = "password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and be 8-128 characters long"
     )
     private String password;
 

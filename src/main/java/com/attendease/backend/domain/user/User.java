@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 /**
  * Domain entity representing a user account in the Attendease system.
  * <p>
- * Core entity for authentication and personalization, supporting students, or in future other admins.
+ * Core entity for authentication and personalization, supporting student, or in future other admins.
  * Includes validation for names, credentials, and contact info. Defaults to ACTIVE status.
  * Unique email index; auditing timestamps for compliance.
  * </p>

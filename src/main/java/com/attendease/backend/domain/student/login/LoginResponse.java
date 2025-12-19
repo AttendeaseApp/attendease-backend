@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.students.Login.Response;
+package com.attendease.backend.domain.student.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

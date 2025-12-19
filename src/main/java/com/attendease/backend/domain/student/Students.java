@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.students;
+package com.attendease.backend.domain.student;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.sections.Sections;
@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "students")
+@Document(collection = "student")
 public class Students {
 
     @Id

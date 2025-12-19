@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.service.management.student.registration;
 
-import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
+import com.attendease.backend.domain.student.registration.StudentRegistrationRequest;
 import com.attendease.backend.domain.user.User;
 
 /**
@@ -20,7 +20,7 @@ public interface ManagementStudentRegistrationService {
      * {@code registerNewStudentAccount} is used to register a new student account using the provided request DTO.
      * Performs validations on first name, last name, password, email, contact number, and student number.
      * Checks for existing student number to prevent duplicates. Encodes the password, creates and persists
-     * linked {@link User} and {@link com.attendease.backend.domain.students.Students} entities,
+     * linked {@link User} and {@link com.attendease.backend.domain.student.Students} entities,
      * and associates with a section/course if specified (by ID or name).
      *
      * @param registrationRequest the {@link StudentRegistrationRequest} containing student details (first name, last name, password, email,

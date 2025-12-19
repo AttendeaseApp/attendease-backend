@@ -111,13 +111,13 @@ public class ManagementAcademicCourseController {
      * Deletes a course, conditionally cascading to sections.
      *
      * <p>This performs a conditional cascading delete: First checks for direct event dependencies on the course—if any exist,
-     * deletion is prevented. If sections exist and have no dependencies (students or events), they are deleted first, then the course.
+     * deletion is prevented. If sections exist and have no dependencies (student or events), they are deleted first, then the course.
      * If any section has dependencies, deletion stops and throws a detailed integrity exception.</p>
      *
      * <p><strong>Responses:</strong></p>
      * <ul>
      *   <li><strong>204 No Content</strong>: Successful deletion (no dependencies or all resolved).</li>
-     *   <li><strong>409 Conflict</strong>: Deletion prevented due to dependencies (e.g., enrolled students, referenced events)—check logs/response body for details.</li>
+     *   <li><strong>409 Conflict</strong>: Deletion prevented due to dependencies (e.g., enrolled student, referenced events)—check logs/response body for details.</li>
      *   <li><strong>404 Not Found</strong>: Course not found.</li>
      * </ul>
      *

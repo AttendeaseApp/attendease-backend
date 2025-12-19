@@ -1,7 +1,7 @@
 package com.attendease.backend.student.controller.profile;
 
-import com.attendease.backend.domain.students.Password.Update.Request.PasswordUpdateRequest;
-import com.attendease.backend.domain.students.UserStudent.UserStudent;
+import com.attendease.backend.domain.student.password.update.PasswordUpdateRequest;
+import com.attendease.backend.domain.student.user.student.UserStudent;
 import com.attendease.backend.student.service.profile.StudentProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

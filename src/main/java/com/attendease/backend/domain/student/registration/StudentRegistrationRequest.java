@@ -1,7 +1,6 @@
-package com.attendease.backend.domain.students.Registration.Request;
+package com.attendease.backend.domain.student.registration;
 
 import jakarta.validation.constraints.*;
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

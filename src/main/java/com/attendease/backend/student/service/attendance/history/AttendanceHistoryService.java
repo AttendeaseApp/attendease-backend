@@ -2,7 +2,7 @@ package com.attendease.backend.student.service.attendance.history;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.AttendanceHistoryResponse;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.students.StudentRepository;

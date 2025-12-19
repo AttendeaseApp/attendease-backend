@@ -8,6 +8,6 @@ public class UserAccountOsaLoginRequest {
     @NotBlank(message = "Email cannot be empty!")
     private String email;
 
-    @NotBlank(message = "Password cannot be empty")
+    @NotBlank(message = "password cannot be empty")
     private String password;
 }

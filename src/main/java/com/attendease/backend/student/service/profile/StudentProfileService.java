@@ -1,6 +1,6 @@
 package com.attendease.backend.student.service.profile;
 
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
  * including retrieving profile information and updating passwords.
  *
  * <p>This service interacts with both {@link UserRepository} and
- * {@link StudentRepository} to fetch and update data related to students
+ * {@link StudentRepository} to fetch and update data related to student
  * and their associated user account.</p>
  */
 @Service
@@ -79,6 +79,6 @@ public class StudentProfileService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        return "Password updated successfully.";
+        return "password updated successfully.";
     }
 }

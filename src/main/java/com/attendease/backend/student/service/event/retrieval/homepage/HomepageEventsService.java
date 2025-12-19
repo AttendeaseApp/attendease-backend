@@ -23,7 +23,7 @@ public class HomepageEventsService {
      *     <li>REGISTRATION</li>
      * </ul>
      *
-     * <p>This is primarily used to display events that students may interact with.</p>
+     * <p>This is primarily used to display events that student may interact with.</p>
      *
      * @return a list of event sessions matching any of the allowed statuses
      */

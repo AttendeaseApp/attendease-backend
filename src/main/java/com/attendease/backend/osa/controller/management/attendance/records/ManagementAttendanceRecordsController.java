@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * {@code ManagementAttendanceRecordsController} is used for managing attendance records of students.
+ * {@code ManagementAttendanceRecordsController} is used for managing attendance records of student.
  *
  * <p>This controller provides CRUD operations for attendance records management, ensuring that all endpoints are secured
  * for osa (Office of Student Affairs) role user only.</p>

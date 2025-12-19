@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@link ManagementAttendanceRecordsService} is a service responsible for managing attendance records of students.
+ * {@link ManagementAttendanceRecordsService} is a service responsible for managing attendance records of student.
  *
  * <p>Provides methods to retrieve ongoing and finalized events, fetch attendee details, and update attendance statuses
  * with audit logging support.</p>

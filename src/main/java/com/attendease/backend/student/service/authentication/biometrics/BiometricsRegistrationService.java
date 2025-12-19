@@ -3,7 +3,7 @@ package com.attendease.backend.student.service.authentication.biometrics;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.biometrics.Registration.Response.BiometricsRegistrationResponse;
 import com.attendease.backend.domain.enums.BiometricStatus;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * BiometricsRegistrationService is responsible for registering and managing facial biometric data for students.
+ * BiometricsRegistrationService is responsible for registering and managing facial biometric data for student.
  * <p>
  * This service handles validation of uploaded images, communication with an external
  * facial recognition API, and persistence of biometric data to the database.

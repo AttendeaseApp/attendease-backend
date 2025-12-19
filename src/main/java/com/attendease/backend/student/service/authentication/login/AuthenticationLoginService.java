@@ -1,8 +1,8 @@
 package com.attendease.backend.student.service.authentication.login;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.students.Login.Response.LoginResponse;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.login.LoginResponse;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;

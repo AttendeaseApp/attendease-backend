@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * REST controller responsible for handling student facial biometric registration.
  * <p>
- * This controller exposes endpoints to allow authenticated students to upload their
+ * This controller exposes endpoints to allow authenticated student to upload their
  * facial images for biometric registration. The controller delegates the main
  * business logic to {@link BiometricsRegistrationService}.
  * </p>

@@ -1,7 +1,7 @@
 package com.attendease.backend.repository.students.StudentBiometrics.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 
@@ -29,7 +29,7 @@ public class StudentBiometricsImpl implements StudentBiometrics {
         List<Students> allStudents = studentRepository.findAll();
 
         if (allStudents.isEmpty()) {
-            log.info("There are no students to delete.");
+            log.info("There are no student to delete.");
             return 0L;
         }
 
@@ -56,7 +56,7 @@ public class StudentBiometricsImpl implements StudentBiometrics {
         Query studentQuery = new Query(Criteria.where("id").in(allStudents.stream().map(Students::getId).toList()));
         var studentResult = mongoTemplate.remove(studentQuery, Students.class);
         long studentsDeleted = studentResult.getDeletedCount();
-        log.info("Deleted {} students.", studentsDeleted);
+        log.info("Deleted {} student.", studentsDeleted);
 
         return studentsDeleted;
     }

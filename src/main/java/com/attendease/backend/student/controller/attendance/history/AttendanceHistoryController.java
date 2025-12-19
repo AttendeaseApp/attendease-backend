@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST controller for fetching attendance history of authenticated students.
+ * REST controller for fetching attendance history of authenticated student.
  * <p>
  * All endpoints in this controller are restricted to user with the 'STUDENT' role.
  * </p>

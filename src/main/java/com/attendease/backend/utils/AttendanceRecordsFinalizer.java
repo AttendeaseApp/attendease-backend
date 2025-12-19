@@ -7,7 +7,7 @@ import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
@@ -65,7 +65,7 @@ public class AttendanceRecordsFinalizer {
             }
         }
 
-        // mark missing students as ABSENT
+        // mark missing student as ABSENT
         for (Students student : expectedStudents) {
             if (!studentsWithRecords.contains(student.getId())) {
                 AttendanceRecords absentRecord = AttendanceRecords.builder()
@@ -155,7 +155,7 @@ public class AttendanceRecordsFinalizer {
         }
         if (!CollectionUtils.isEmpty(criteria.getSections())) {
             List<Students> expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
-            log.info("Total expected students for event {}: {} (from {} sections)",
+            log.info("Total expected student for event {}: {} (from {} sections)",
                     event.getEventId(), expectedStudents.size(), criteria.getSections().size());
             return expectedStudents;
         }
@@ -184,7 +184,7 @@ public class AttendanceRecordsFinalizer {
         }
 
         List<Students> expected = new ArrayList<>(uniqueStudents);
-        log.info("Total expected students for event {}: {} (fallback from courses/clusters)", event.getEventId(), expected.size());
+        log.info("Total expected student for event {}: {} (fallback from courses/clusters)", event.getEventId(), expected.size());
         return expected;
     }
 }

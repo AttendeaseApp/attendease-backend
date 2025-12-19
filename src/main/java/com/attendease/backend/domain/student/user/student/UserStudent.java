@@ -1,6 +1,6 @@
-package com.attendease.backend.domain.students.UserStudent;
+package com.attendease.backend.domain.student.user.student;
 
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import lombok.Data;
 

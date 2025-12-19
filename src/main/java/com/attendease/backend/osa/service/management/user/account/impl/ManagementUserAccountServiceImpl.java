@@ -6,8 +6,8 @@ import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.user.account.management.users.csv.row.UserAccountManagementUsersCSVRowData;
-import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
+import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
@@ -111,7 +111,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         List<User> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
 
-        log.info("Retrieved {} students and user {}", students.size(), users.size());
+        log.info("Retrieved {} student and user {}", students.size(), users.size());
         Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
         return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
@@ -145,7 +145,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         List<Students> students = studentRepository.findBySection(section);
 
         if (students.isEmpty()) {
-            log.info("No students found in section: {}", sectionName);
+            log.info("No student found in section: {}", sectionName);
             return;
         }
 
@@ -153,7 +153,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
 
         userRepository.deleteAllById(userIds);
         studentRepository.deleteAll(students);
-        log.info("Deleted {} students and their associated user account from section: {}", students.size(), sectionName);
+        log.info("Deleted {} student and their associated user account from section: {}", students.size(), sectionName);
     }
 
     /**

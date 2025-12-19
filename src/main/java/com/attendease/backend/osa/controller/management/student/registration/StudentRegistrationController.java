@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.management.student.registration;
 
-import com.attendease.backend.domain.students.Registration.Request.StudentRegistrationRequest;
+import com.attendease.backend.domain.student.registration.StudentRegistrationRequest;
 import com.attendease.backend.osa.service.management.student.registration.ManagementStudentRegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ public class StudentRegistrationController {
      *
      * <p>This endpoint validates the incoming request and creates a new student user account, including
      * linking to a section and course if specified. It is intended for administrative use by osa user
-     * to onboard new students.</p>
+     * to onboard new student.</p>
      *
      * <p><strong>Request Body:</strong> {@link StudentRegistrationRequest} containing user details such as first name,
      * last name, password, email, contact number, student number, and optional section (ID or name).</p>

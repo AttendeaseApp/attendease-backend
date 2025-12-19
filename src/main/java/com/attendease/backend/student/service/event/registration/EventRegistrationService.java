@@ -12,7 +12,7 @@ import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteri
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
 import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;

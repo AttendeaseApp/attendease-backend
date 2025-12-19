@@ -59,6 +59,6 @@ public class ProfileServiceImpl implements ProfileService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        return "Password updated successfully.";
+        return "password updated successfully.";
     }
 }

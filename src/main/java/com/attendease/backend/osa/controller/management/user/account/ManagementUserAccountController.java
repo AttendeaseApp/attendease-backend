@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.controller.management.user.account;
 
-import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
+import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
@@ -35,9 +35,9 @@ public class ManagementUserAccountController {
     private final ManagementUserAccountService managementUserAccountService;
 
     /**
-     * Retrieves all user (osa and students) with their associated student details.
+     * Retrieves all user (osa and student) with their associated student details.
      *
-     * <p>This endpoint fetches a combined view of user and students, returning enriched responses for students
+     * <p>This endpoint fetches a combined view of user and student, returning enriched responses for student
      * (including section, course, cluster hierarchies). Returns an empty list with 404 status if no user exist.</p>
      *
      * <p><strong>Response:</strong> List of {@link UserStudentResponse} objects.</p>
@@ -55,7 +55,7 @@ public class ManagementUserAccountController {
     }
 
     /**
-     * Imports students from an uploaded CSV file, creating new user accounts and student entities.
+     * Imports student from an uploaded CSV file, creating new user accounts and student entities.
      *
      * <p>This endpoint processes the CSV for bulk student onboarding, validating structure and content.
      * Returns the list of successfully imported user; errors (e.g., duplicates, invalid rows) are handled via exceptions.</p>
@@ -79,15 +79,15 @@ public class ManagementUserAccountController {
     /**
      * Retrieves all student entities.
      *
-     * <p>This endpoint provides a dedicated view of all students, excluding non-student user.
-     * Returns an empty list with 404 status if no students exist.</p>
+     * <p>This endpoint provides a dedicated view of all student, excluding non-student user.
+     * Returns an empty list with 404 status if no student exist.</p>
      *
      * <p><strong>Response:</strong> List of {@link Students} objects.</p>
      *
      * @return {@link ResponseEntity} with status 200 and the list, or 404 with empty list if none found
      * @see ManagementUserAccountService#retrieveAllStudent()
      */
-    @GetMapping("/students")
+    @GetMapping("/student")
     public ResponseEntity<List<Students>> retrieveAllStudents() {
         List<Students> students = managementUserAccountService.retrieveAllStudent();
         if (students.isEmpty()) {
@@ -119,7 +119,7 @@ public class ManagementUserAccountController {
     /**
      * Permanently deletes all student accounts associated with a specific section.
      *
-     * <p>This endpoint performs bulk deletion of students (and their user accounts) linked to the given section.
+     * <p>This endpoint performs bulk deletion of student (and their user accounts) linked to the given section.
      * Validates section format and existence before cascading deletions.</p>
      *
      * <p><strong>Path Variable:</strong> {@code sectionName} - the name of the section (e.g., "BSIT-401").</p>
