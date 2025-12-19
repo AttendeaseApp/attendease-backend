@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/events/monitoring")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementEventMonitoringController {
 
     private final ManagementEventMonitoringService managementEventMonitoringService;

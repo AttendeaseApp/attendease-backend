@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/sections")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementAcademicSectionController {
 
     private final ManagementAcademicSectionService managementAcademicSectionService;

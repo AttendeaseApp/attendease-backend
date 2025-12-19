@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ProfileServiceController {
 
     private final ProfileService profileService;

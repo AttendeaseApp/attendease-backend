@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth/student")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class StudentRegistrationController {
 
     private final ManagementStudentRegistrationService managementStudentRegistrationService;

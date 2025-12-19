@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementEventSessionsController {
 
     private final ManagementEventSessionsService managementEventSessionsService;

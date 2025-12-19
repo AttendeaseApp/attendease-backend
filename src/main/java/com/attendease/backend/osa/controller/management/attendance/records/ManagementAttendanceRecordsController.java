@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/attendance/records")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementAttendanceRecordsController {
 
     private final ManagementAttendanceRecordsService managementAttendanceRecordsService;

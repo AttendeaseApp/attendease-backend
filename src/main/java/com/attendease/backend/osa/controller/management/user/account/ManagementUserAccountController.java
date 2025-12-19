@@ -29,7 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/user/management")
 @Slf4j
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementUserAccountController {
 
     private final ManagementUserAccountService managementUserAccountService;

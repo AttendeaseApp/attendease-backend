@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('osa')")
+@PreAuthorize("hasRole('OSA')")
 public class ManagementLocationController {
 
     private final ManagementLocationService managementLocationService;

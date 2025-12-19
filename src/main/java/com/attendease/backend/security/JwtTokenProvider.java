@@ -45,7 +45,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(userId)
                 .claim("email", email)
-                .claim("role", userType)
+                .claim("role", userType.name())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
@@ -53,7 +53,11 @@ public class JwtTokenProvider {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(getSigningKey()).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public Boolean validateToken(String token, String userId) {
@@ -67,6 +71,10 @@ public class JwtTokenProvider {
 
     public String extractEmail(String token) {
         return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -89,8 +97,10 @@ public class JwtTokenProvider {
     }
 
     public List<GrantedAuthority> getAuthorities(String token) {
-        Claims claims = extractAllClaims(token);
-        String role = claims.get("role", String.class);
+        String role = extractRole(token);
+        if (role == null || role.isEmpty()) {
+            throw new IllegalStateException("No role found in token");
+        }
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
