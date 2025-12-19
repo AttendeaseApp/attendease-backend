@@ -2,7 +2,7 @@ package com.attendease.backend.student.controller.event.registration;
 
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
-import com.attendease.backend.student.service.attendance.tracking.AttendanceTrackingService;
+import com.attendease.backend.student.service.attendance.registration.tracking.AttendanceRegistrationTrackingService;
 import com.attendease.backend.student.service.event.registration.EventRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('STUDENT')")
 public class EventRegistrationController {
 
-    private final EventRegistrationService registrationService;
-    private final AttendanceTrackingService attendanceTrackingService;
+    private final EventRegistrationService eventRegistrationService;
+    private final AttendanceRegistrationTrackingService attendanceRegistrationTrackingService;
 
     /**
      * Endpoint for student event registration.
@@ -27,7 +27,7 @@ public class EventRegistrationController {
     @PostMapping
     public ResponseEntity<?> registerStudentToEvent(@RequestBody EventRegistrationRequest registrationRequest, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
-        EventRegistrationRequest response = registrationService.eventRegistration(authenticatedUserId, registrationRequest);
+        EventRegistrationRequest response = eventRegistrationService.eventRegistration(authenticatedUserId, registrationRequest);
         return ResponseEntity.ok(response);
     }
 
@@ -38,7 +38,7 @@ public class EventRegistrationController {
     @PostMapping("/ping")
     public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendanceTrackingResponse attendancePingLogs) {
         String authenticatedUserId = authentication.getName();
-        boolean isInside = attendanceTrackingService.attendanceMonitoringLocationPings(authenticatedUserId, attendancePingLogs);
+        boolean isInside = attendanceRegistrationTrackingService.attendanceRegistrationTracker(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
     }
 }

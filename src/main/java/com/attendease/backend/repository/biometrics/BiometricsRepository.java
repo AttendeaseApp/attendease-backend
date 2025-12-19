@@ -38,4 +38,6 @@ public interface BiometricsRepository extends MongoRepository<BiometricData, Str
      * @param studentNumber the unique identifier of the student whose biometric data should be deleted
      */
     void deleteByStudentNumber(String studentNumber);
+
+    boolean existsByStudentNumber(String studentNumber);
 }

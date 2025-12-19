@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth/student")
 @RequiredArgsConstructor
-public class StudentLoginController {
+public class AuthenticationLoginController {
 
-    private final AuthenticationLoginService authService;
+    private final AuthenticationLoginService authenticationLoginService;
 
     /**
      * login a student using student number and password
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginStudent(@RequestBody LoginRequest request) {
-        LoginResponse response = authService.loginStudent(request.getStudentNumber(), request.getPassword());
+        LoginResponse response = authenticationLoginService.loginStudent(request.getStudentNumber(), request.getPassword());
         return ResponseEntity.ok(response);
     }
 

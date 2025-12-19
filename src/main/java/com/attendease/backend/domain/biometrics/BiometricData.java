@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Domain entity representing biometric data for user (primarily student).
  * <p>
  * This entity stores facial recognition encodings (as a fixed-size vector of 128 floats) for secure authentication.
- * It supports facial login during event registration and attendance tracking. Status tracks enrollment/validation.
+ * It supports facial login during event registration and attendance verification. Status tracks enrollment/validation.
  * </p>
  *
  * @author jakematthewviado204@gmail.com

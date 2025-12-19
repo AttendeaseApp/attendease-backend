@@ -1,6 +1,6 @@
-package com.attendease.backend.student.controller.profile;
+package com.attendease.backend.student.controller.account.biometrics.management;
 
-import com.attendease.backend.student.service.profile.BiometricsManagementService;
+import com.attendease.backend.student.service.account.biometrics.management.AccountBiometricsManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 /**
  * REST controller for managing student facial biometrics.
@@ -24,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class BiometricsManagementController {
+public class AccountBiometricsManagementController {
 
-    private final BiometricsManagementService biometricsManagementService;
+    private final AccountBiometricsManagementService accountBiometricsManagementService;
 
     /**
      * GET endpoint to retrieve the current facial biometric status of the authenticated student.
@@ -35,9 +37,9 @@ public class BiometricsManagementController {
      * @return ResponseEntity with the biometric status message
      */
     @GetMapping("/status")
-    public ResponseEntity<String> getFacialStatus(Authentication authentication) {
-        String studentNumber = biometricsManagementService.getStudentNumberByUserId(authentication.getName());
-        return biometricsManagementService.getFacialStatus(studentNumber).map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus())).orElseGet(() -> ResponseEntity.ok("No biometric data found for student " + studentNumber));
+    public Optional<ResponseEntity<String>> getFacialStatus(Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        return accountBiometricsManagementService.getFacialStatus(authenticatedUserId).map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()));
     }
 
     /**
@@ -46,11 +48,11 @@ public class BiometricsManagementController {
      * @param authentication the Spring Security authentication object containing the user's details
      * @return ResponseEntity with success message
      */
-    @DeleteMapping("/recalibrate")
-    public ResponseEntity<String> recalibrateFacialData(Authentication authentication) {
-        String studentNumber = biometricsManagementService.getStudentNumberByUserId(authentication.getName());
-        biometricsManagementService.recalibrateFacialBiometrics(studentNumber);
-        return ResponseEntity.ok("Facial data recalibrated successfully");
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> delateFacialData(Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        accountBiometricsManagementService.deleteFacialData(authenticatedUserId);
+        return ResponseEntity.ok("Facial data deleted from database successfully");
     }
 
 }

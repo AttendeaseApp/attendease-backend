@@ -1,12 +1,9 @@
 package com.attendease.backend.student.service.event.retrieval;
 
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
 
+import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * Service responsible for retrieving event session data for the student module.
@@ -18,12 +15,7 @@ import org.springframework.stereotype.Service;
  * </ul>
  * </p>
  */
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class EventRetrievalService {
-
-    private final EventSessionsRepository eventSessionRepository;
+public interface EventRetrievalService {
 
     /**
      * Retrieves event details by its unique identifier.
@@ -31,7 +23,19 @@ public class EventRetrievalService {
      * @param id the ID of the event session
      * @return an {@link Optional} containing the event session if found, otherwise empty
      */
-    public Optional<EventSessions> getEventById(String id) {
-        return eventSessionRepository.findById(id);
-    }
+    Optional<EventSessions> getEventById(String id);
+
+    /**
+     * Retrieves all events that are either:
+     * <ul>
+     *     <li>ONGOING</li>
+     *     <li>UPCOMING</li>
+     *     <li>REGISTRATION</li>
+     * </ul>
+     *
+     * <p>This is primarily used to display events that student may interact with.</p>
+     *
+     * @return a list of event sessions matching any of the allowed statuses
+     */
+    List<EventSessions> getOngoingRegistrationAndActiveEvents();
 }

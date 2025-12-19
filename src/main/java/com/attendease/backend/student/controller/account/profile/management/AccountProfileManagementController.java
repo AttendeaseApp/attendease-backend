@@ -1,8 +1,8 @@
-package com.attendease.backend.student.controller.profile;
+package com.attendease.backend.student.controller.account.profile.management;
 
 import com.attendease.backend.domain.student.password.update.PasswordUpdateRequest;
 import com.attendease.backend.domain.student.user.student.UserStudent;
-import com.attendease.backend.student.service.profile.StudentProfileService;
+import com.attendease.backend.student.service.account.profile.management.AccountProfileManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class StudentProfileController {
+public class AccountProfileManagementController {
 
-    private final StudentProfileService studentProfileService;
+    private final AccountProfileManagementService accountProfileManagementService;
 
     /**
      * Retrieves the authenticated student's combined user and student profile details.
@@ -40,8 +40,8 @@ public class StudentProfileController {
     public ResponseEntity<UserStudent> getUserStudentProfile(Authentication authentication) {
         String authenticatedUserId = authentication.getName();
 
-        var userOpt = studentProfileService.getUserProfileByUserId(authenticatedUserId);
-        var studentOpt = studentProfileService.getStudentProfileByUserId(authenticatedUserId);
+        var userOpt = accountProfileManagementService.getUserProfileByUserId(authenticatedUserId);
+        var studentOpt = accountProfileManagementService.getStudentProfileByUserId(authenticatedUserId);
 
         if (userOpt.isEmpty() && studentOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -75,7 +75,7 @@ public class StudentProfileController {
     @PatchMapping("/update-password")
     public ResponseEntity<String> updatePassword(Authentication authentication, @RequestBody @Valid PasswordUpdateRequest request) {
         String id = authentication.getName();
-        String response = studentProfileService.updatePassword(id, request.getOldPassword(), request.getNewPassword());
+        String response = accountProfileManagementService.updatePassword(id, request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok(response);
     }
 }

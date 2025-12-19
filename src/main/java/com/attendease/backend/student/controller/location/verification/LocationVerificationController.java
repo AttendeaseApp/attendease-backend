@@ -1,8 +1,8 @@
-package com.attendease.backend.student.controller.location.tracking;
+package com.attendease.backend.student.controller.location.verification;
 
 import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
 import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
-import com.attendease.backend.student.service.location.tracking.LocationTrackingService;
+import com.attendease.backend.student.service.location.verification.LocationVerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @RequiredArgsConstructor
-public class LocationTrackingController {
+public class LocationVerificationController {
 
-    private final LocationTrackingService locationTrackingService;
+    private final LocationVerificationService locationVerificationService;
 
     /**
      * Receives the student's geolocation via WebSocket and returns whether
@@ -21,8 +21,8 @@ public class LocationTrackingController {
      * Each user receives only their own result (not broadcasted).
      */
     @MessageMapping("/observe-current-location")
-    @SendToUser("/queue/location-tracking")
+    @SendToUser("/queue/location-verification")
     public LocationTrackingResponse trackCurrentLocation(@Payload LocationTrackingRequest request) {
-        return locationTrackingService.trackCurrentLocation(request);
+        return locationVerificationService.trackCurrentLocation(request);
     }
 }

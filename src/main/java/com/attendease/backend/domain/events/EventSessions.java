@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
  * Domain entity representing a scheduled event session.
  * <p>
  * Captures event details like timing, location, and eligibility rules for student registration/attendance.
- * Supports states (e.g., UPCOMING, ONGOING) and geofencing tracking. {@link EligibilityCriteria} defines
+ * Supports states (e.g., UPCOMING, ONGOING) and geofencing verification. {@link EligibilityCriteria} defines
  * target student (e.g., by section/course/cluster). Post-event, triggers attendance finalization.
  *
  * @author jakematthewviado204@gmail.com

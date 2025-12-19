@@ -1,6 +1,7 @@
 package com.attendease.backend.student.controller.authentication.biometrics;
 
-import com.attendease.backend.student.service.authentication.biometrics.BiometricsRegistrationService;
+import com.attendease.backend.student.service.authentication.biometrics.registration.BiometricsRegistrationService;
+import com.attendease.backend.student.service.authentication.biometrics.registration.impl.BiometricsRegistrationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ import java.util.List;
  * <p>
  * This controller exposes endpoints to allow authenticated student to upload their
  * facial images for biometric registration. The controller delegates the main
- * business logic to {@link BiometricsRegistrationService}.
+ * business logic to {@link BiometricsRegistrationServiceImpl}.
  * </p>
  */
 @RestController
@@ -24,7 +25,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
-public class BiometricsRegistrationController {
+public class AuthenticationBiometricsRegistrationController {
 
     private final BiometricsRegistrationService biometricsRegistrationService;
 
@@ -41,7 +42,7 @@ public class BiometricsRegistrationController {
      */
     @PostMapping(value = "/register-face-image", consumes = "multipart/form-data")
     public ResponseEntity<String> registerFacialDataFromImage(Authentication authentication, @RequestParam("images") List<MultipartFile> images) {
-        String userId = authentication.getName();
-        return biometricsRegistrationService.registerFacialBiometrics(userId, images);
+        String authenticatedUserId = authentication.getName();
+        return biometricsRegistrationService.registerFacialBiometrics(authenticatedUserId, images);
     }
 }

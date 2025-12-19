@@ -119,7 +119,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
             String eventName = event.getEventName();
             String message = switch (status) {
                 case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered student: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
-                case ONGOING -> "You cannot delete ongoing event '" + eventName + "' due to active attendance tracking (" + attendanceCount + " records). The event is currently in progress.";
+                case ONGOING -> "You cannot delete ongoing event '" + eventName + "' due to active attendance verification (" + attendanceCount + " records). The event is currently in progress.";
                 case CONCLUDED -> "You cannot delete concluded event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed pre-attendance records data.";
                 case FINALIZED -> "You cannot delete finalized event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed finalized records for all student.";
                 default -> "Cannot delete event '" + eventName + "' with status " + status + " due to existing attendance records (" + attendanceCount + "). This protects data integrity.";
