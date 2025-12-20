@@ -1,7 +1,6 @@
 package com.attendease.backend.student.service.authentication.login.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.student.login.LoginResponse;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
@@ -24,47 +23,37 @@ public class AuthenticationLoginServiceImpl implements AuthenticationLoginServic
     private final BiometricsRepository biometricsRepository;
 
     @Override
-    public LoginResponse loginStudent(String studentNumber, String password) {
+    public LoginResult loginStudent(String studentNumber, String password) {
         try {
-            Students student = studentRepository.findByStudentNumber(studentNumber).orElseThrow(() -> new IllegalArgumentException("Invalid student number or password"));
+            Students student = studentRepository.findByStudentNumber(studentNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid student number. Please try again."));
 
             User user = student.getUser();
 
             if (!passwordEncoder.matches(password, user.getPassword())) {
-                return LoginResponse.builder()
-                        .success(false)
-                        .requiresFacialRegistration(false)
-                        .message("Invalid student number or password")
-                        .build();
+                return new LoginResult("Invalid password, try again with different one.", null);
             }
 
             Optional<BiometricData> biometricData = biometricsRepository.findByStudentNumber(studentNumber);
             boolean requiresFacialRegistration = biometricData.isEmpty();
 
-            String token = jwtTokenProvider.generateToken(user.getUserId(), user.getEmail(), user.getUserType());
+            String token = jwtTokenProvider.generateStudentToken(
+                    user.getUserId(),
+                    student.getStudentNumber(),
+                    user.getUserType(),
+                    requiresFacialRegistration
+            );
 
-            return LoginResponse.builder()
-                    .success(true)
-                    .token(token)
-                    .studentNumber(studentNumber)
-                    .requiresFacialRegistration(requiresFacialRegistration)
-                    .message(requiresFacialRegistration
-                            ? "login successful. Please complete facial registration."
-                            : "login successful.")
-                    .build();
+            String message = requiresFacialRegistration ?
+                    "Login successful. Please complete facial registration." : "Login successful.";
 
+            return new LoginResult(message, token);
         } catch (IllegalArgumentException e) {
-            return LoginResponse.builder()
-                    .success(false)
-                    .requiresFacialRegistration(false)
-                    .message(e.getMessage())
-                    .build();
+            return new LoginResult(e.getMessage(), null);
         } catch (Exception e) {
-            return LoginResponse.builder()
-                    .success(false)
-                    .requiresFacialRegistration(false)
-                    .message("An unexpected error occurred. Please try again.")
-                    .build();
+            return new LoginResult("An unexpected error occurred while logging in. Please try again.", null);
         }
     }
+
+    public record LoginResult(String message, String token) {}
 }

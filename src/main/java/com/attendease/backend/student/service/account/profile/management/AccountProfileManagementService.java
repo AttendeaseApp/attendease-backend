@@ -1,11 +1,9 @@
 package com.attendease.backend.student.service.account.profile.management;
 
-import com.attendease.backend.domain.student.Students;
-import com.attendease.backend.domain.user.User;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 
-import java.util.Optional;
 
 /**
  * Service class responsible for managing student personal profile operations,
@@ -18,20 +16,11 @@ import java.util.Optional;
 public interface AccountProfileManagementService {
 
     /**
-     * Retrieves a student's personal profile using the associated user's ID.
-     *
-     * @param userId the ID of the user whose student profile is requested
-     * @return an {@link Optional} containing the student profile if found, otherwise empty
+     * Retrieves a complete user-student profile by user ID
+     * @param userId the authenticated user's ID
+     * @return UserStudentResponse with all profile data, or null if not found
      */
-    Optional<Students> getStudentProfileByUserId(String userId);
-
-    /**
-     * Retrieves a user profile by user ID.
-     *
-     * @param userId the ID of the user
-     * @return an {@link Optional} containing the user profile if found, otherwise empty
-     */
-    Optional<User> getUserProfileByUserId(String userId);
+    UserStudentResponse getUserStudentProfile(String userId);
 
     /**
      * Updates student password

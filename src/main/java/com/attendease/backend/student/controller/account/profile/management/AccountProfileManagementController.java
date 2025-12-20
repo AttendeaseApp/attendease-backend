@@ -1,7 +1,7 @@
 package com.attendease.backend.student.controller.account.profile.management;
 
 import com.attendease.backend.domain.student.password.update.PasswordUpdateRequest;
-import com.attendease.backend.domain.student.user.student.UserStudent;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.student.service.account.profile.management.AccountProfileManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,35 +23,29 @@ public class AccountProfileManagementController {
     private final AccountProfileManagementService accountProfileManagementService;
 
     /**
-     * Retrieves the authenticated student's combined user and student profile details.
+     * Retrieves the authenticated student's profile with essential information only.
      *
-     * <p>This endpoint returns a {@link UserStudent} object, which contains both
-     * the associated {@code User} entity and the related {@code Students} entity.
-     * Only the fields found for the authenticated user are populated.</p>
+     * <p>This endpoint returns a {@link UserStudentResponse} containing:
+     * user details, student info, section/course/cluster data, and biometric status.</p>
      *
      * @param authentication the authentication object containing the authenticated user's ID
      * @return a {@link ResponseEntity} containing:
      * <ul>
-     *     <li>{@code 200 OK} and the {@link UserStudent} profile if found</li>
-     *     <li>{@code 404 Not Found} if both the user and student records are missing</li>
+     *     <li>{@code 200 OK} and the {@link UserStudentResponse} if found</li>
+     *     <li>{@code 404 Not Found} if the user profile is not found</li>
      * </ul>
      */
-    @GetMapping("/user-student/me")
-    public ResponseEntity<UserStudent> getUserStudentProfile(Authentication authentication) {
+    @GetMapping("/me")
+    public ResponseEntity<UserStudentResponse> getUserProfile(Authentication authentication) {
         String authenticatedUserId = authentication.getName();
 
-        var userOpt = accountProfileManagementService.getUserProfileByUserId(authenticatedUserId);
-        var studentOpt = accountProfileManagementService.getStudentProfileByUserId(authenticatedUserId);
+        UserStudentResponse profile = accountProfileManagementService.getUserStudentProfile(authenticatedUserId);
 
-        if (userOpt.isEmpty() && studentOpt.isEmpty()) {
+        if (profile == null) {
             return ResponseEntity.notFound().build();
         }
 
-        UserStudent userStudent = new UserStudent();
-        userOpt.ifPresent(userStudent::setUser);
-        studentOpt.ifPresent(userStudent::setStudent);
-
-        return ResponseEntity.ok(userStudent);
+        return ResponseEntity.ok(profile);
     }
 
     /**

@@ -52,6 +52,18 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generateStudentToken(String userId, String studentNumber, UserType userType, boolean requiresFacialRegistration) {
+        return Jwts.builder()
+                .subject(userId)
+                .claim("studentNumber", studentNumber)
+                .claim("requiresFacialRegistration", requiresFacialRegistration)
+                .claim("role", userType.name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
