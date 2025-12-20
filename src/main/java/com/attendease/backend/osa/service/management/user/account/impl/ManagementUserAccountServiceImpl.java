@@ -1,5 +1,6 @@
 package com.attendease.backend.osa.service.management.user.account.impl;
 
+import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AccountStatus;
@@ -12,6 +13,9 @@ import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
+import com.attendease.backend.repository.biometrics.BiometricsRepository;
+import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -27,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -38,6 +43,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final SectionsRepository sectionsRepository;
+    private final BiometricsRepository biometricsRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
@@ -107,53 +113,72 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     }
 
     @Override
-    public List<UserStudentResponse> retrieveUsersWithStudents() {
+    public List<UserStudentResponse> retrieveUsers() {
         List<User> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
 
-        log.info("Retrieved {} student and user {}", students.size(), users.size());
+        log.info("Retrieved {} students and {} users", students.size(), users.size());
+
         Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
+
         return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
 
     @Override
-    public List<Students> retrieveAllStudent() {
-        return studentRepository.findAll();
+    public List<UserStudentResponse> retrieveAllStudents() {
+        List<Students> students = studentRepository.findAll();
+
+        if (students.isEmpty()) {
+            log.info("No students found");
+            return Collections.emptyList();
+        }
+
+        List<String> userIds = students.stream().map(Students::getUserId).filter(Objects::nonNull).distinct().toList();
+
+        List<User> users = userRepository.findAllById(userIds);
+        Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, u -> u));
+
+        return students.stream().map(student -> mapToResponseDTO(userMap.get(student.getUserId()), student)).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public void deleteUserById(String userId) {
-        boolean exists = userRepository.existsById(userId);
-        if (!exists) {
+        if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found: " + userId);
         }
+
+        studentRepository.findByUser_UserId(userId).ifPresent(student -> {
+            if (student.getFacialData() != null) {
+                biometricsRepository.deleteById(student.getFacialData().getFacialId());
+            }
+            studentRepository.deleteById(student.getId());
+        });
 
         userRepository.deleteById(userId);
     }
 
     @Override
+    @Transactional
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
-        Optional<Sections> optSection = sectionsRepository.findBySectionName(sectionName);
-
-        if (optSection.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName);
-        }
-
-        Sections section = optSection.get();
+        Sections section = sectionsRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
 
         List<Students> students = studentRepository.findBySection(section);
 
         if (students.isEmpty()) {
-            log.info("No student found in section: {}", sectionName);
+            log.info("No students found in section: {}", sectionName);
             return;
         }
 
-        List<String> userIds = students.stream().map(student -> student.getUser().getUserId()).collect(Collectors.toList());
+        List<String> userIds = students.stream().map(Students::getUserId).toList();
 
-        userRepository.deleteAllById(userIds);
+        students.stream().filter(s -> s.getFacialData() != null).forEach(s -> biometricsRepository.deleteById(s.getFacialData().getFacialId()));
+
         studentRepository.deleteAll(students);
-        log.info("Deleted {} student and their associated user account from section: {}", students.size(), sectionName);
+        userRepository.deleteAllById(userIds);
+
+        log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
     }
 
     /**
@@ -236,28 +261,34 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         userValidator.validateStudentNumber(data.getStudentNumber());
         userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
-        Sections section = sectionsRepository.findBySectionName(data.getSectionName()).orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
+        Sections section = sectionsRepository.findBySectionName(data.getSectionName())
+                .orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
-        User user = new User();
-        user.setUserType(UserType.STUDENT);
-        user.setAccountStatus(AccountStatus.ACTIVE);
-        user.setUpdatedBy(String.valueOf(UserType.SYSTEM));
-        user.setFirstName(data.getFirstName());
-        user.setLastName(data.getLastName());
-        user.setEmail(data.getEmail());
-        user.setContactNumber(data.getContactNumber());
-        user.setPassword(passwordEncoder.encode(data.getPassword()));
+        User user = User.builder()
+                .userType(UserType.STUDENT)
+                .accountStatus(AccountStatus.ACTIVE)
+                .updatedBy(String.valueOf(UserType.SYSTEM))
+                .firstName(data.getFirstName())
+                .lastName(data.getLastName())
+                .email(data.getEmail())
+                .contactNumber(data.getContactNumber())
+                .password(passwordEncoder.encode(data.getPassword()))
+                .build();
 
-        Students student = new Students();
-        student.setUser(user);
-        student.setStudentNumber(data.getStudentNumber());
-        student.setSection(section);
+        User savedUser = userRepository.save(user);
 
-        userRepository.save(user);
+        Students student = Students.builder()
+                .user(savedUser)
+                .userId(savedUser.getUserId())
+                .studentNumber(data.getStudentNumber())
+                .section(section)
+                .sectionName(section.getSectionName())
+                .build();
+
         studentRepository.save(student);
 
-        log.info("Imported student saved: {}", user.getUserId());
-        return user;
+        log.info("Imported student saved: {}", savedUser.getUserId());
+        return savedUser;
     }
 
     public UserStudentResponse mapToResponseDTO(User user, Students student) {
@@ -265,25 +296,38 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         Optional<Sections> optSection = optStudent.map(Students::getSection);
         Optional<Courses> optCourse = optSection.map(Sections::getCourse);
         Optional<Clusters> optCluster = optCourse.map(Courses::getCluster);
+        Optional<BiometricData> optBiometric = optStudent.map(Students::getFacialData);
 
         return UserStudentResponse.builder()
-                .userId(user.getUserId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .contactNumber(user.getContactNumber())
-                .accountStatus(user.getAccountStatus())
-                .userType(user.getUserType())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
+                // parent data of USER/STUDENT
+                .userId(user != null ? user.getUserId() : null)
+                .firstName(user != null ? user.getFirstName() : null)
+                .lastName(user != null ? user.getLastName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .contactNumber(user != null ? user.getContactNumber() : null)
+                .accountStatus(user != null ? user.getAccountStatus() : null)
+                .userType(user != null ? user.getUserType() : null)
+                .createdAt(user != null ? user.getCreatedAt() : null)
+                .updatedAt(user != null ? user.getUpdatedAt() : null)
+
+                // basic data of STUDENT
                 .studentId(optStudent.map(Students::getId).orElse(null))
                 .studentNumber(optStudent.map(Students::getStudentNumber).orElse(null))
+
+                // academic data of STUDENT
                 .section(optSection.map(Sections::getSectionName).orElse(null))
                 .sectionId(optSection.map(Sections::getId).orElse(null))
                 .course(optCourse.map(Courses::getCourseName).orElse(null))
                 .courseId(optCourse.map(Courses::getId).orElse(null))
                 .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
-                .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
+                .clusterId(optCluster.map(Clusters::getClusterId).orElse(null))
+
+                // biometric data of STUDENT
+                .biometricId(optBiometric.map(BiometricData::getFacialId).orElse(null))
+                .biometricStatus(optBiometric.map(BiometricData::getBiometricsStatus).orElse(null))
+                .biometricCreatedAt(optBiometric.map(BiometricData::getCreatedAt).orElse(null))
+                .biometricLastUpdated(optBiometric.map(BiometricData::getLastUpdated).orElse(null))
+                .hasBiometricData(optBiometric.isPresent())
                 .build();
     }
 }

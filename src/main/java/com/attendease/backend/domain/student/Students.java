@@ -39,6 +39,9 @@ public class Students {
     @NotNull(message = "User reference is required")
     private User user;
 
+    @Indexed
+    private String userId;
+
     @DBRef
     private BiometricData facialData;
 
@@ -48,4 +51,8 @@ public class Students {
 
     @DBRef
     private Sections section;
+
+    private String sectionName;
+    private String courseName;
+    private String clusterName;
 }

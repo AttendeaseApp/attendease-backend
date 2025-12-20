@@ -37,12 +37,16 @@ public class AuthenticationBiometricsRegistrationController {
      * and saved in the database if successful.</p>
      *
      * @param authentication the {@link Authentication} object representing the logged-in student
-     * @param images         a list of multipart image files containing the student's face
-     * @return a {@link ResponseEntity} containing a success message or an error message if registration fails
+     * @param images a list of multipart image files containing the student's face
      */
     @PostMapping(value = "/register-face-image", consumes = "multipart/form-data")
     public ResponseEntity<String> registerFacialDataFromImage(Authentication authentication, @RequestParam("images") List<MultipartFile> images) {
         String authenticatedUserId = authentication.getName();
-        return biometricsRegistrationService.registerFacialBiometrics(authenticatedUserId, images);
+        try {
+            return biometricsRegistrationService.registerFacialBiometrics(authenticatedUserId, images);
+        } catch (Exception e) {
+            log.error("Error while registering facial biometric data for user {}", authenticatedUserId, e);
+            return ResponseEntity.internalServerError().body("Failed to register facial biometric data. Please try again later.");
+        }
     }
 }

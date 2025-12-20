@@ -43,11 +43,11 @@ public class ManagementUserAccountController {
      * <p><strong>Response:</strong> List of {@link UserStudentResponse} objects.</p>
      *
      * @return {@link ResponseEntity} with status 200 and the list, or 404 with empty list if none found
-     * @see ManagementUserAccountService#retrieveUsersWithStudents()
+     * @see ManagementUserAccountService#retrieveUsers()
      */
     @GetMapping
     public ResponseEntity<List<UserStudentResponse>> retrieveAllUsers() {
-        List<UserStudentResponse> users = managementUserAccountService.retrieveUsersWithStudents();
+        List<UserStudentResponse> users = managementUserAccountService.retrieveUsers();
         if (users.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }
@@ -85,11 +85,11 @@ public class ManagementUserAccountController {
      * <p><strong>Response:</strong> List of {@link Students} objects.</p>
      *
      * @return {@link ResponseEntity} with status 200 and the list, or 404 with empty list if none found
-     * @see ManagementUserAccountService#retrieveAllStudent()
+     * @see ManagementUserAccountService#retrieveAllStudents()
      */
     @GetMapping("/student")
-    public ResponseEntity<List<Students>> retrieveAllStudents() {
-        List<Students> students = managementUserAccountService.retrieveAllStudent();
+    public ResponseEntity<List<UserStudentResponse>> retrieveAllStudents() {
+        List<UserStudentResponse> students = managementUserAccountService.retrieveAllStudents();
         if (students.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
         }

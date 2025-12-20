@@ -44,14 +44,14 @@ public interface ManagementUserAccountService {
      *
      * @return a list of {@link UserStudentResponse} objects enriched with student information where relevant
      */
-    List<UserStudentResponse> retrieveUsersWithStudents();
+    List<UserStudentResponse> retrieveUsers();
 
     /**
      * {@code retrieveAllStudents} is used to retrieve all student entities from the database.
      *
      * @return a list of all {@link Students} objects
      */
-    List<Students> retrieveAllStudent();
+    List<UserStudentResponse> retrieveAllStudents();
 
     /**
      * {@code deleteUserById} is used to permanently deletes a user account by its unique identifier.
