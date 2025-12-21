@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.management.osa.registration;
 
-import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
+import com.attendease.backend.domain.user.account.osa.registration.UserAccountOsaRegistrationRequest;
 import com.attendease.backend.osa.service.management.osa.registration.ManagementOSARegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +9,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * {@code OSARegistrationController} is used for managing Office of Student Affairs (OSA) account registrations.
+ * {@code OSARegistrationController} is used for managing Office of Student Affairs (osa) account registrations.
  *
- * <p>This controller provides endpoints for registering new OSA users, secured for existing OSA role users only.
+ * <p>This controller provides endpoints for registering new osa user, secured for existing osa role user only.
  * It handles request validation and delegates to the service layer for business logic.</p>
  *
  * @author jakematthewviado204@gmail.com
@@ -26,23 +26,23 @@ public class OSARegistrationController {
     private final ManagementOSARegistrationService managementOsaRegistrationService;
 
     /**
-     * Registers a new OSA account based on the provided request details.
+     * Registers a new osa account based on the provided request details.
      *
-     * <p>This endpoint validates the incoming request and creates a new OSA user account.
-     * It is intended for administrative use by existing OSA users to onboard new team members.</p>
+     * <p>This endpoint validates the incoming request and creates a new osa user account.
+     * It is intended for administrative use by existing osa user to onboard new team members.</p>
      *
-     * <p><strong>Request Body:</strong> {@link OsaRegistrationRequest} containing user details such as first name,
+     * <p><strong>Request Body:</strong> {@link UserAccountOsaRegistrationRequest} containing user details such as first name,
      * last name, password, email, and contact number.</p>
      *
      * <p><strong>Response:</strong> HTTP 200 with a confirmation message including the generated user ID.</p>
      *
-     * @param osaRegistrationRequest the validated {@link OsaRegistrationRequest} object
+     * @param userAccountOsaRegistrationRequest the validated {@link UserAccountOsaRegistrationRequest} object
      * @return {@link ResponseEntity} with status 200 and the registration confirmation message
      * @throws IllegalArgumentException if validation fails or duplicate email is detected
-     * @see ManagementOSARegistrationService#registerNewOsaAccount(OsaRegistrationRequest)
+     * @see ManagementOSARegistrationService#registerNewOsaAccount(UserAccountOsaRegistrationRequest)
      */
     @PostMapping("/register")
-    public ResponseEntity<String> registerOsa(@Valid @RequestBody OsaRegistrationRequest osaRegistrationRequest) {
-        return ResponseEntity.ok(managementOsaRegistrationService.registerNewOsaAccount(osaRegistrationRequest));
+    public ResponseEntity<String> registerOsa(@Valid @RequestBody UserAccountOsaRegistrationRequest userAccountOsaRegistrationRequest) {
+        return ResponseEntity.ok(managementOsaRegistrationService.registerNewOsaAccount(userAccountOsaRegistrationRequest));
     }
 }

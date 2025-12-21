@@ -12,7 +12,7 @@ import lombok.Data;
  *     <li>{@code is_face_matched} — indicates whether the uploaded encoding matches the stored reference encoding</li>
  * </ul>
  *
- * <p>Used primarily by {@link com.attendease.backend.studentModule.service.utils.BiometricsVerificationClient}.</p>
+ * <p>Used primarily by {@link com.attendease.backend.student.service.utils.BiometricsVerificationClient}.</p>
  */
 @Data
 public class BiometricsVerificationResponse {

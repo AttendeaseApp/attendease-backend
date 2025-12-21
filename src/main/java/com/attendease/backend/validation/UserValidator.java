@@ -49,16 +49,16 @@ public class UserValidator {
 
     public void validatePassword(String value) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Password is required.");
+            throw new IllegalArgumentException("password is required.");
         }
         if (value.length() < PASSWORD_MIN || value.length() > PASSWORD_MAX) {
             throw new IllegalArgumentException(
-                    "Password must be between " + PASSWORD_MIN + " and " + PASSWORD_MAX + " characters."
+                    "password must be between " + PASSWORD_MIN + " and " + PASSWORD_MAX + " characters."
             );
         }
         if (!value.matches(UserValidationRules.PASSWORD_FORMAT_REGEX)) {
             throw new IllegalArgumentException(
-                    "Password must contain uppercase, lowercase, digit, special character."
+                    "password must contain uppercase, lowercase, digit, special character."
             );
         }
     }

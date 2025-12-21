@@ -1,11 +1,11 @@
 package com.attendease.backend.osa.service.management.osa.registration;
 
-import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrationRequest;
+import com.attendease.backend.domain.user.account.osa.registration.UserAccountOsaRegistrationRequest;
 
 /**
- * {@link ManagementOSARegistrationService} is a service responsible for handling Office of Student Affairs (OSA) account registrations.
+ * {@link ManagementOSARegistrationService} is a service responsible for handling Office of Student Affairs (osa) account registrations.
  *
- * <p>Provides methods to create new OSA user account, including validation of user details, password encoding,
+ * <p>Provides methods to create new osa user account, including validation of user details, password encoding,
  * and duplicate email checks. Ensures new account are set to {@link com.attendease.backend.domain.enums.AccountStatus#ACTIVE}
  * with {@link com.attendease.backend.domain.enums.UserType#OSA} type.</p>
  *
@@ -15,13 +15,13 @@ import com.attendease.backend.domain.users.OSA.Registration.Request.OsaRegistrat
 public interface ManagementOSARegistrationService {
 
     /**
-     * {@code registerNewOsaAccount} is used to register a new OSA account based on the provided request details.
+     * {@code registerNewOsaAccount} is used to register a new osa account based on the provided request details.
      * Performs validations on first name, last name, password, email, and contact number. Checks for existing
-     * email to prevent duplicates. Encodes the password and persists the user with ACTIVE status and OSA type.
+     * email to prevent duplicates. Encodes the password and persists the user with ACTIVE status and osa type.
      *
-     * @param request the {@link OsaRegistrationRequest} containing user details (first name, last name, password, email, contact number)
-     * @return a confirmation message including the generated user ID (e.g., "Added OSA with id: {userId}")
+     * @param request the {@link UserAccountOsaRegistrationRequest} containing user details (first name, last name, password, email, contact number)
+     * @return a confirmation message including the generated user ID (e.g., "Added osa with id: {userId}")
      * @throws IllegalArgumentException if validation fails (e.g., invalid fields or duplicate email)
      */
-    String registerNewOsaAccount(OsaRegistrationRequest request);
+    String registerNewOsaAccount(UserAccountOsaRegistrationRequest request);
 }

@@ -3,8 +3,8 @@ package com.attendease.backend.repository.attendanceRecords;
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.students.Students;
+import com.attendease.backend.domain.location.Location;
+import com.attendease.backend.domain.student.Students;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -30,7 +30,7 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @param status the attendance status to filter by (e.g., PRESENT, ABSENT)
      * @return a list of {@link AttendanceRecords} matching the given criteria
      */
-    List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, EventSessions event, EventLocations location, AttendanceStatus status);
+    List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, EventSessions event, Location location, AttendanceStatus status);
 
     /**
      * Retrieves a list of attendance records associated with a specific event ID.
@@ -48,7 +48,7 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @param location the event location associated with the attendance record
      * @return an {@link Optional} containing the {@link AttendanceRecords} if found, otherwise empty
      */
-    Optional<AttendanceRecords> findByStudentAndEventAndLocation(Students student, EventSessions event, EventLocations location);
+    Optional<AttendanceRecords> findByStudentAndEventAndLocation(Students student, EventSessions event, Location location);
 
     /**
      * Retrieves a list of attendance records for a specific student by their student ID.

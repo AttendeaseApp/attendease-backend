@@ -1,6 +1,8 @@
 package com.attendease.backend.repository.biometrics;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -38,4 +40,6 @@ public interface BiometricsRepository extends MongoRepository<BiometricData, Str
      * @param studentNumber the unique identifier of the student whose biometric data should be deleted
      */
     void deleteByStudentNumber(String studentNumber);
+
+    boolean existsByStudentNumber(String studentNumber);
 }

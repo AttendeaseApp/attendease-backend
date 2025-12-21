@@ -77,12 +77,12 @@ public interface ManagementAcademicCourseService {
      * {@code deleteCourse} is used to delete a course by its ID, cascading to sections **only if sections have no dependencies
      * to
      * {@link com.attendease.backend.domain.sections.Sections},
-     * {@link com.attendease.backend.domain.students.Students},
+     * {@link com.attendease.backend.domain.student.Students},
      * {@link com.attendease.backend.domain.events.EventSessions}**.
      *
      * <p>Prevents deletion if event sessions reference the course directly. If sections exist, attempts to
      * cascade deletion to each section (which individually checks for student/event dependencies). If any
-     * section cannot be deleted (e.g., has enrolled students or referenced events), throws a detailed exception
+     * section cannot be deleted (e.g., has enrolled student or referenced events), throws a detailed exception
      * from the section deletion. Counts dependencies and provides rationale.</p>
      *
      * @param id The unique ID of the course to delete.

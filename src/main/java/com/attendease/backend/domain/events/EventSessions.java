@@ -2,7 +2,7 @@ package com.attendease.backend.domain.events;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -25,8 +24,8 @@ import java.time.LocalDateTime;
  * Domain entity representing a scheduled event session.
  * <p>
  * Captures event details like timing, location, and eligibility rules for student registration/attendance.
- * Supports states (e.g., UPCOMING, ONGOING) and geofencing tracking. {@link EligibilityCriteria} defines
- * target students (e.g., by section/course/cluster). Post-event, triggers attendance finalization.
+ * Supports states (e.g., UPCOMING, ONGOING) and geofencing verification. {@link EligibilityCriteria} defines
+ * target student (e.g., by section/course/cluster). Post-event, triggers attendance finalization.
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16
@@ -46,7 +45,7 @@ public class EventSessions {
     private String eventName;
 
     @DBRef
-    private EventLocations eventLocation;
+    private Location eventLocation;
 
     @Field("eventLocationId")
     @Indexed

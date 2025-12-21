@@ -7,14 +7,14 @@ import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteri
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
 import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import com.attendease.backend.repository.locations.LocationRepository;
+import com.attendease.backend.repository.location.LocationRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -68,7 +68,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         eventSession.setUpdatedAt(LocalDateTime.now());
 
         if (eventSession.getEventLocationId() != null) {
-            EventLocations location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
+            Location location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
             eventSession.setEventLocation(location);
         }
         checkLocationConflict(eventSession, null);
@@ -118,10 +118,10 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         if (attendanceCount > 0) {
             String eventName = event.getEventName();
             String message = switch (status) {
-                case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered students: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
-                case ONGOING -> "You cannot delete ongoing event '" + eventName + "' due to active attendance tracking (" + attendanceCount + " records). The event is currently in progress.";
+                case REGISTRATION -> "You cannot delete event '" + eventName + "' because this event is about to start and there might be already registered student: (" + attendanceCount + "). This action is prevented because it may affect ongoing registrations. If you wish to adjust event details, consider cancelling or edit the event instead";
+                case ONGOING -> "You cannot delete ongoing event '" + eventName + "' due to active attendance verification (" + attendanceCount + " records). The event is currently in progress.";
                 case CONCLUDED -> "You cannot delete concluded event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed pre-attendance records data.";
-                case FINALIZED -> "You cannot delete finalized event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed finalized records for all students.";
+                case FINALIZED -> "You cannot delete finalized event '" + eventName + "' with attendance records (" + attendanceCount + "). This action is prevented because deleting would removed finalized records for all student.";
                 default -> "Cannot delete event '" + eventName + "' with status " + status + " due to existing attendance records (" + attendanceCount + "). This protects data integrity.";
             };
             throw new RuntimeException(message);
@@ -183,7 +183,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
 
         if (updateEvent.getEventLocationId() != null) {
-            EventLocations location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
+            Location location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
             existingEvent.setEventLocation(location);
             existingEvent.setEventLocationId(updateEvent.getEventLocationId());
         } else if (existingEvent.getEventLocationId() == null) {
@@ -380,7 +380,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         List<String> courseIds = criteria.getCourse();
         List<String> sectionIds = criteria.getSections();
         if ((clusterIds == null || clusterIds.isEmpty()) && (courseIds == null || courseIds.isEmpty()) && (sectionIds == null || sectionIds.isEmpty())) {
-            throw new IllegalArgumentException("At least one cluster, course, or section ID must be provided when not targeting all students.");
+            throw new IllegalArgumentException("At least one cluster, course, or section ID must be provided when not targeting all student.");
         }
         if ((clusterIds != null && clusterIds.stream().anyMatch(String::isBlank)) || (courseIds != null && courseIds.stream().anyMatch(String::isBlank)) || (sectionIds != null && sectionIds.stream().anyMatch(String::isBlank))) {
             throw new IllegalArgumentException("IDs cannot be blank.");

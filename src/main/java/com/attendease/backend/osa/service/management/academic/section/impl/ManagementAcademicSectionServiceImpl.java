@@ -100,13 +100,13 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
 
         if (studentCount > 0 || eventCountById > 0 || eventCountByName > 0) {
             String sectionName = section.getSectionName();
-            StringBuilder message = new StringBuilder("You cannot delete section '" + sectionName + "' due to existing dependencies (").append(studentCount).append(" students");
+            StringBuilder message = new StringBuilder("You cannot delete section '" + sectionName + "' due to existing dependencies (").append(studentCount).append(" student");
             if (eventCountById > 0 || eventCountByName > 0) {
                 message.append(", ").append(totalEventCount).append(" event sessions (").append(eventCountById).append(" by ID, ").append(eventCountByName).append(" by name; possible overlap)").append(")");
             } else {
                 message.append(")");
             }
-            message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., re-enroll students or update event eligibility criteria).");
+            message.append(". This action is prevented to protect data integrity and avoid orphaned references. ").append("Reassign or remove dependencies first (e.g., re-enroll student or update event eligibility criteria).");
             throw new IllegalStateException(message.toString());
         }
         sectionsRepository.deleteById(id);

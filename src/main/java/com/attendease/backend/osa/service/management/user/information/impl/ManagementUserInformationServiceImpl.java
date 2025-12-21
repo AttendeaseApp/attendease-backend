@@ -4,11 +4,11 @@ import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.domain.students.Students;
-import com.attendease.backend.domain.students.UserStudent.UserStudentResponse;
-import com.attendease.backend.domain.users.Information.Management.Request.UpdateUserRequest;
-import com.attendease.backend.domain.users.Information.Management.Response.UpdateResultResponse;
-import com.attendease.backend.domain.users.Users;
+import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.domain.student.user.student.UserStudentResponse;
+import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
+import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.osa.service.management.user.information.ManagementUserInformationService;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
@@ -42,8 +42,8 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
 
     @Transactional
     @Override
-    public UpdateResultResponse osaUpdateUserInfo(String userId, UpdateUserRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
-        Users user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
+    public UserAccountManagementUsersInformationResponse osaUpdateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
+        User user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
         updateUserFields(user, request, updatedByUserId);
         UserStudentResponse studentResponse = null;
 
@@ -51,14 +51,14 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
             studentResponse = handleStudentUpdate(userId, request, user);
         }
 
-        return UpdateResultResponse.builder().user(user).studentResponse(studentResponse).build();
+        return UserAccountManagementUsersInformationResponse.builder().user(user).studentResponse(studentResponse).build();
     }
 
     /**
      * PRIVATE HELPERS
      */
 
-    private void updateUserFields(Users user, UpdateUserRequest request, String updatedByUserId) {
+    private void updateUserFields(User user, UserAccountManagementUsersInformationRequest request, String updatedByUserId) {
         updateIfPresent(request.getFirstName(), user::setFirstName);
         updateIfPresent(request.getLastName(), user::setLastName);
 
@@ -81,7 +81,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         }
     }
 
-    private UserStudentResponse handleStudentUpdate(String userId, UpdateUserRequest request, Users updatedUser) throws ChangeSetPersister.NotFoundException {
+    private UserStudentResponse handleStudentUpdate(String userId, UserAccountManagementUsersInformationRequest request, User updatedUser) throws ChangeSetPersister.NotFoundException {
         Students student = studentRepository.findByUserId(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
 
         if (request.getStudentNumber() != null && !request.getStudentNumber().equals(student.getStudentNumber())) {
@@ -105,7 +105,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         });
     }
 
-    private UserStudentResponse buildUserStudentResponse(Users user, Students student) {
+    private UserStudentResponse buildUserStudentResponse(User user, Students student) {
         Sections section = student.getSection();
         String sectionName = (section != null) ? section.getSectionName() : null;
         String courseName = null;

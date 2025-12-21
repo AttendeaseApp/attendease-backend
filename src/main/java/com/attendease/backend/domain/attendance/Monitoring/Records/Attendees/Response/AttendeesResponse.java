@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- *  Used for retrieving attendance records of the students
+ *  Used for retrieving attendance records of the student
  * */
 @Data
 @Builder

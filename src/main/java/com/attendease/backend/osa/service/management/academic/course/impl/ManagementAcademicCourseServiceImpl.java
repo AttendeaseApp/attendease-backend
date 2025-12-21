@@ -107,8 +107,8 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
                     "' as it is in use by " + totalEventCount + " event sessions (" +
                     eventCountById + " by ID, " + eventCountByName + " by name; possible overlap)" +
                     ") across " + sectionCount + " sections, potentially impacting " +
-                    totalStudentCount + " enrolled students overall (via section eligibility). " +
-                    "These events may restrict access for those students. To proceed, update event eligibility criteria first. This prevents data inconsistencies.";
+                    totalStudentCount + " enrolled student overall (via section eligibility). " +
+                    "These events may restrict access for those student. To proceed, update event eligibility criteria first. This prevents data inconsistencies.";
             throw new IllegalStateException(message);
         }
         if (sectionCount > 0) {

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * {@code ManagementAcademicClusterController} is used for managing cluster courses.
  *
  * <p>This controller provides CRUD operations for clusters, ensuring that all endpoints are secured
- * for OSA (Office of Student Affairs) role users only.</p>
+ * for osa (Office of Student Affairs) role user only.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-19

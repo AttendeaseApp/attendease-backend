@@ -1,0 +1,28 @@
+package com.attendease.backend.student.controller.location.verification;
+
+import com.attendease.backend.domain.location.tracking.LocationTrackingRequest;
+import com.attendease.backend.domain.location.tracking.LocationTrackingResponse;
+import com.attendease.backend.student.service.location.verification.LocationVerificationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.stereotype.Controller;
+
+@Controller
+@RequiredArgsConstructor
+public class LocationVerificationController {
+
+    private final LocationVerificationService locationVerificationService;
+
+    /**
+     * Receives the student's geolocation via WebSocket and returns whether
+     * they are inside or outside the event boundary.
+     * Each user receives only their own result (not broadcasted).
+     */
+    @MessageMapping("/observe-current-location")
+    @SendToUser("/queue/location-verification")
+    public LocationTrackingResponse trackCurrentLocation(@Payload LocationTrackingRequest request) {
+        return locationVerificationService.trackCurrentLocation(request);
+    }
+}

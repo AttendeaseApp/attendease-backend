@@ -91,7 +91,7 @@ public interface ManagementAcademicSectionService {
     /**
      * {@code deleteSection} is used to delete a section by its ID **only if no dependencies exist**.
      *
-     * <p>Prevents deletion if event sessions or students reference the section. Counts dependencies
+     * <p>Prevents deletion if event sessions or student reference the section. Counts dependencies
      * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
      *
      * @param id The unique ID of the section to delete.
