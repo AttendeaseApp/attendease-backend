@@ -1,12 +1,18 @@
 package com.attendease.backend.exceptions.handling;
 
+import com.attendease.backend.domain.exception.error.ErrorResponse;
+import com.attendease.backend.domain.exception.error.csv.CsvImportErrorResponse;
+import com.attendease.backend.domain.exception.validation.ValidationErrorResponse;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
+import com.attendease.backend.exceptions.domain.Location.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,65 +23,120 @@ public class ExceptionHandling {
      * Handles general exceptions
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", ex.getClass().getSimpleName());
-        body.put("message", ex.getMessage());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    public ResponseEntity<ErrorResponse> handleAllGenericExceptions(Exception ex) {
+        ErrorResponse error = new ErrorResponse(
+                "ERROR_OCCURRED",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
     /**
      * Handles invalid arguments (thrown manually)
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", "BadRequest");
-        body.put("message", ex.getMessage());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_REQUEST",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     /**
      * Handles invalid state exceptions
      */
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", "IllegalState");
-        body.put("message", ex.getMessage());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "ILLEGAL_STATE",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     /**
      *  Handles validation errors thrown by @Valid annotated inputs
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, Object> errors = new HashMap<>();
-
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
+    public ResponseEntity<ValidationErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
         });
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "ValidationError");
-        response.put("message", "Input validation failed");
-        response.put("details", errors);
-        response.put("timestamp", System.currentTimeMillis());
-
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                "VALIDATION_ERROR",
+                "Request validation failed",
+                errors,
+                LocalDateTime.now()
+        );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(CsvImportException.class)
-    public ResponseEntity<Map<String, Object>> handleCSVImportException(CsvImportException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("error", "BadRequest");
-        body.put("message", ex.getMessage());
-        body.put("details", ex.getErrors());
-        body.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ResponseEntity<CsvImportErrorResponse> handleCsvImportException(CsvImportException ex) {
+        CsvImportErrorResponse error = new CsvImportErrorResponse(
+                "CSV_IMPORT_ERROR",
+                ex.getMessage(),
+                ex.getErrors(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(LocationAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleLocationAlreadyExists(LocationAlreadyExistsException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "LOCATION_EXISTS",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLocationNotFound(LocationNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "LOCATION_NOT_FOUND",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(LocationInUseException.class)
+    public ResponseEntity<ErrorResponse> handleLocationInUse(LocationInUseException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "LOCATION_IN_USE",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(LocationHasActiveEventsException.class)
+    public ResponseEntity<ErrorResponse> handleLocationHasActiveEvents(LocationHasActiveEventsException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "LOCATION_HAS_ACTIVE_EVENTS",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(InvalidGeometryException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidGeometry(InvalidGeometryException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_GEOMETRY",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }

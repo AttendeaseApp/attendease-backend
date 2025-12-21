@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.locations.Request;
+package com.attendease.backend.domain.location.tracking;
 
 import lombok.Data;
 

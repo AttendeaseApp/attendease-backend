@@ -1,8 +1,9 @@
-package com.attendease.backend.osa.controller.management.location;
+package com.attendease.backend.osa.controller.management.location.management;
 
-import com.attendease.backend.osa.service.management.location.ManagementLocationService;
-import com.attendease.backend.domain.locations.Request.EventLocationRequest;
-import com.attendease.backend.domain.locations.Response.LocationResponse;
+import com.attendease.backend.osa.service.management.location.management.LocationManagementService;
+import com.attendease.backend.domain.location.management.LocationManagementRequest;
+import com.attendease.backend.domain.location.management.LocationManagementResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,9 +24,9 @@ import java.util.List;
 @RequestMapping("/api/locations")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementLocationController {
+public class LocationManagementController {
 
-    private final ManagementLocationService managementLocationService;
+    private final LocationManagementService locationManagementService;
 
     /**
      * Creates a new event location based on the provided request data.
@@ -34,13 +35,13 @@ public class ManagementLocationController {
      * The geometry is validated to ensure it is a Polygon type. Upon success, the location is persisted
      * and a response is returned with computed centroid coordinates (latitude and longitude).</p>
      *
-     * @param request the {@link EventLocationRequest} containing details such as location name, type, and geometry
-     * @return the {@link LocationResponse} representing the newly created location, including centroid
+     * @param request the {@link LocationManagementRequest} containing details such as location name, type, and geometry
+     * @return the {@link LocationManagementResponse} representing the newly created location, including centroid
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LocationResponse createLocation(@RequestBody EventLocationRequest request) {
-        return managementLocationService.createNewLocation(request);
+    public LocationManagementResponse createLocation(@Valid @RequestBody LocationManagementRequest request) {
+        return locationManagementService.createNewLocation(request);
     }
 
     /**
@@ -51,12 +52,12 @@ public class ManagementLocationController {
      * timestamp is automatically set, and the response includes the recomputed centroid.</p>
      *
      * @param locationId the unique identifier of the event location to update
-     * @param request the {@link EventLocationRequest} containing the fields to update (partial updates supported)
-     * @return the {@link LocationResponse} representing the updated location, including centroid
+     * @param request the {@link LocationManagementRequest} containing the fields to update (partial updates supported)
+     * @return the {@link LocationManagementResponse} representing the updated location, including centroid
      */
     @PatchMapping("/{locationId}")
-    public LocationResponse updateLocation(@PathVariable String locationId, @RequestBody EventLocationRequest request) {
-        return managementLocationService.updateLocation(locationId, request);
+    public LocationManagementResponse updateLocation(@PathVariable String locationId, @Valid @RequestBody LocationManagementRequest request) {
+        return locationManagementService.updateLocation(locationId, request);
     }
 
     /**
@@ -65,11 +66,11 @@ public class ManagementLocationController {
      * <p>Returns a list of all locations with their details, including computed centroid coordinates for each.
      * Suitable for listing or dashboard views.</p>
      *
-     * @return a {@link List} of {@link LocationResponse} objects, each containing location details and centroid
+     * @return a {@link List} of {@link LocationManagementResponse} objects, each containing location details and centroid
      */
     @GetMapping
-    public List<LocationResponse> getAllLocations() {
-        return managementLocationService.getAllLocations();
+    public List<LocationManagementResponse> getAllLocations() {
+        return locationManagementService.getAllLocations();
     }
 
     /**
@@ -82,7 +83,7 @@ public class ManagementLocationController {
     @DeleteMapping("/{locationId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLocation(@PathVariable String locationId) {
-        managementLocationService.deleteLocationById(locationId);
+        locationManagementService.deleteLocationById(locationId);
     }
 }
 

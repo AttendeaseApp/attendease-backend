@@ -1,7 +1,10 @@
-package com.attendease.backend.domain.locations;
+package com.attendease.backend.domain.location;
 
+import com.attendease.backend.domain.enums.location.LocationEnvironment;
+import com.attendease.backend.domain.enums.location.LocationPurpose;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,18 +16,14 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
-
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
+
 /**
- * Domain entity representing physical or virtual event locations with geospatial support.
- * <p>
- * Stores venue details, including GeoJSON polygons for geofencing (e.g., campus buildings). Enables location-based
- * attendance validation during events.
- * </p>
+ * {@code Location} is a domain entity representing a location that can be used
+ * for a specific event registration area or the venue.
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16
@@ -33,8 +32,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "event_locations")
-public class EventLocations {
+@Document(collection = "location")
+public class Location {
 
     @Id
     private String locationId;
@@ -43,14 +42,18 @@ public class EventLocations {
     @Indexed
     private String locationName;
 
-    @NotBlank
-    private String locationType;
+    private String description;
 
-    private String geometryType;
+    @NotNull
+    private LocationEnvironment environment;
 
+    @NotNull
+    private LocationPurpose purpose;
+
+    @NotNull
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     @Field("geometry")
-    private GeoJsonPolygon geometry;
+    private GeoJsonPolygon locationGeometry;
 
     @CreatedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -60,4 +63,3 @@ public class EventLocations {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 }
-

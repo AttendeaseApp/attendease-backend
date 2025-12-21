@@ -1,7 +1,7 @@
 package com.attendease.backend.student.controller.location.verification;
 
-import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
-import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
+import com.attendease.backend.domain.location.tracking.LocationTrackingRequest;
+import com.attendease.backend.domain.location.tracking.LocationTrackingResponse;
 import com.attendease.backend.student.service.location.verification.LocationVerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;

@@ -3,12 +3,12 @@ package com.attendease.backend.student.service.attendance.registration.tracking.
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import com.attendease.backend.repository.locations.LocationRepository;
+import com.attendease.backend.repository.location.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.student.service.attendance.registration.tracking.AttendanceRegistrationTrackingService;
@@ -34,7 +34,7 @@ public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegi
         User user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         EventSessions event = eventSessionsRepository.findById(attendancePingLogs.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
-        EventLocations location = eventLocationsRepository.findById(attendancePingLogs.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
+        Location location = eventLocationsRepository.findById(attendancePingLogs.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(event.getStartDateTime()) || now.isAfter(event.getEndDateTime())) {

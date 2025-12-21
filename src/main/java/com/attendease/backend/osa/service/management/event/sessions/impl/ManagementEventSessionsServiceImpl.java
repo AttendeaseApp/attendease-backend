@@ -7,14 +7,14 @@ import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteri
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
 import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import com.attendease.backend.repository.locations.LocationRepository;
+import com.attendease.backend.repository.location.LocationRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -68,7 +68,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         eventSession.setUpdatedAt(LocalDateTime.now());
 
         if (eventSession.getEventLocationId() != null) {
-            EventLocations location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
+            Location location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
             eventSession.setEventLocation(location);
         }
         checkLocationConflict(eventSession, null);
@@ -183,7 +183,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
 
         if (updateEvent.getEventLocationId() != null) {
-            EventLocations location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
+            Location location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
             existingEvent.setEventLocation(location);
             existingEvent.setEventLocationId(updateEvent.getEventLocationId());
         } else if (existingEvent.getEventLocationId() == null) {

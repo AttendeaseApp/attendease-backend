@@ -1,6 +1,6 @@
 package com.attendease.backend.student.service.utils;
 
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Utility class for validating geographical locations and checking if a given point
- * lies within a defined polygon boundary of an {@link EventLocations} object.
+ * lies within a defined polygon boundary of an {@link Location} object.
  * <p>
  * This is primarily used to verify if a student's current location is within the
  * allowed event or campus boundaries.
@@ -25,13 +25,13 @@ public class LocationValidator {
     /**
      * Checks if a given latitude and longitude lies within the polygon boundary of an event location.
      *
-     * @param location the {@link EventLocations} object containing the polygon geometry
+     * @param location the {@link Location} object containing the polygon geometry
      * @param latitude the latitude of the point to check
      * @param longitude the longitude of the point to check
      * @return {@code true} if the point lies within the polygon boundary, {@code false} otherwise
      */
-    public boolean isWithinLocationBoundary(EventLocations location, double latitude, double longitude) {
-        GeoJsonPolygon polygon = location.getGeometry();
+    public boolean isWithinLocationBoundary(Location location, double latitude, double longitude) {
+        GeoJsonPolygon polygon = location.getLocationGeometry();
         if (polygon == null) {
             log.warn("No polygon geometry found for location: {}, {}", location.getLocationId(), location.getLocationName());
             return false;

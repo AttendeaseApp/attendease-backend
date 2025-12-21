@@ -3,7 +3,7 @@ package com.attendease.backend.domain.attendance;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -61,7 +61,7 @@ public class AttendanceRecords {
     private EventSessions event;
 
     @DBRef
-    private EventLocations location;
+    private Location location;
 
     @Field("eventLocationId")
     @Indexed

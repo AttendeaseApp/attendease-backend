@@ -1,9 +1,9 @@
 package com.attendease.backend.student.service.location.verification.impl;
 
-import com.attendease.backend.domain.locations.EventLocations;
-import com.attendease.backend.domain.locations.Request.LocationTrackingRequest;
-import com.attendease.backend.domain.locations.Response.LocationTrackingResponse;
-import com.attendease.backend.repository.locations.LocationRepository;
+import com.attendease.backend.domain.location.Location;
+import com.attendease.backend.domain.location.tracking.LocationTrackingRequest;
+import com.attendease.backend.domain.location.tracking.LocationTrackingResponse;
+import com.attendease.backend.repository.location.LocationRepository;
 import com.attendease.backend.student.service.location.verification.LocationVerificationService;
 import com.attendease.backend.student.service.utils.LocationValidator;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class LocationVerificationServiceImpl implements LocationVerificationServ
 
     @Override
     public LocationTrackingResponse trackCurrentLocation(LocationTrackingRequest request) {
-        EventLocations location = eventLocationsRepository.findById(request.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
+        Location location = eventLocationsRepository.findById(request.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
         boolean isInside = locationValidator.isWithinLocationBoundary(location, request.getLatitude(), request.getLongitude());
         LocationTrackingResponse response = new LocationTrackingResponse();
         response.setInside(isInside);

@@ -11,13 +11,13 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
 import com.attendease.backend.domain.events.EventSessions;
 import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
-import com.attendease.backend.domain.locations.EventLocations;
+import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
-import com.attendease.backend.repository.locations.LocationRepository;
+import com.attendease.backend.repository.location.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.student.service.event.registration.EventRegistrationService;
@@ -53,7 +53,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
             throw new IllegalStateException("Student is not eligible to check in for this event.");
         }
 
-        EventLocations location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
+        Location location = eventLocationsRepository.findById(registrationRequest.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
         if (!locationValidator.isWithinLocationBoundary(location, registrationRequest.getLatitude(), registrationRequest.getLongitude())) {
             throw new IllegalStateException("Student is outside the event location boundary");
@@ -128,7 +128,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
     }
 
-    private void isAlreadyRegistered(Students student, EventSessions event, EventLocations location) {
+    private void isAlreadyRegistered(Students student, EventSessions event, Location location) {
         boolean alreadyRegistered = !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(
                 student, event, location, AttendanceStatus.REGISTERED).isEmpty() || !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.LATE).isEmpty();
         if (alreadyRegistered) {
