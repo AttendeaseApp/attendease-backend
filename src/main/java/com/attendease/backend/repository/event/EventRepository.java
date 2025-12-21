@@ -1,7 +1,7 @@
-package com.attendease.backend.repository.eventSessions;
+package com.attendease.backend.repository.event;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository interface for performing CRUD operations on {@link EventSessions} documents in MongoDB.
+ * Repository interface for performing CRUD operations on {@link Event} documents in MongoDB.
  * <p>
  * Extends {@link MongoRepository} to provide standard operations such as {@code save}, {@code findAll},
  * {@code findById}, and {@code delete}. This repository also defines custom query methods to
@@ -21,32 +21,32 @@ import org.springframework.stereotype.Repository;
  * <p>Authored: jakematthewviado204@gmail.com</p>
  */
 @Repository
-public interface EventSessionsRepository extends MongoRepository<EventSessions, String> {
+public interface EventRepository extends MongoRepository<Event, String> {
     /**
      * Finds all event sessions with the given status.
      *
      * @param status the {@link EventStatus} to filter by
-     * @return a list of {@link EventSessions} with the specified status
+     * @return a list of {@link Event} with the specified status
      */
-    List<EventSessions> findByEventStatus(EventStatus status);
+    List<Event> findByEventStatus(EventStatus status);
 
     /**
      * Finds all event sessions whose status is in the given list of statuses.
      *
      * @param statuses a list of {@link EventStatus} values to filter by
-     * @return a list of {@link EventSessions} matching any of the specified statuses
+     * @return a list of {@link Event} matching any of the specified statuses
      */
-    List<EventSessions> findByEventStatusIn(List<EventStatus> statuses);
+    List<Event> findByEventStatusIn(List<EventStatus> statuses);
 
     /**
      * Finds all event sessions that fall within the specified date range.
      *
      * @param from the start date of the range (inclusive)
      * @param to the end date of the range (inclusive)
-     * @return a list of {@link EventSessions} occurring within the specified date range
+     * @return a list of {@link Event} occurring within the specified date range
      */
     @Query("{ 'startDateTime': { $gte: ?0 }, 'endDateTime': { $lte: ?1 } }")
-    List<EventSessions> findByDateRange(Date from, Date to);
+    List<Event> findByDateRange(Date from, Date to);
 
     /**
      * Finds all event sessions with the given status that also fall within the specified date range.
@@ -54,37 +54,37 @@ public interface EventSessionsRepository extends MongoRepository<EventSessions, 
      * @param status the {@link EventStatus} to filter by
      * @param from the start date of the range (inclusive)
      * @param to the end date of the range (inclusive)
-     * @return a list of {@link EventSessions} matching the status and date range criteria
+     * @return a list of {@link Event} matching the status and date range criteria
      */
     @Query("{ 'eventStatus': ?0, 'startDateTime': { $gte: ?1 }, 'endDateTime': { $lte: ?2 } }")
-    List<EventSessions> findByStatusAndDateRange(EventStatus status, Date from, Date to);
+    List<Event> findByStatusAndDateRange(EventStatus status, Date from, Date to);
 
     /**
      * Retrieves all event sessions ordered by their creation time in descending order.
      *
-     * @return a list of {@link EventSessions} ordered from most recently created to oldest
+     * @return a list of {@link Event} ordered from most recently created to oldest
      */
-    List<EventSessions> findAllByOrderByCreatedAtDesc();
+    List<Event> findAllByOrderByCreatedAtDesc();
 
     Long countByEventLocationId(String eventLocationId);
 
-    List<EventSessions> findByEventLocationId(String eventLocationId);
+    List<Event> findByEventLocationId(String eventLocationId);
 
     /**
      * Finds all event sessions where the given cluster ID is in {@code eligibleStudents.cluster}.
      *
      * @param clusterId the cluster ID to search for
-     * @return a list of matching {@link EventSessions}
+     * @return a list of matching {@link Event}
      */
-    List<EventSessions> findByEligibleStudentsClusterContaining(String clusterId);
+    List<Event> findByEligibleStudentsClusterContaining(String clusterId);
 
     /**
      * Finds all event sessions where the given cluster name is in {@code eligibleStudents.clusterNames}.
      *
      * @param clusterName the cluster name to search for
-     * @return a list of matching {@link EventSessions}
+     * @return a list of matching {@link Event}
      */
-    List<EventSessions> findByEligibleStudentsClusterNamesContaining(String clusterName);
+    List<Event> findByEligibleStudentsClusterNamesContaining(String clusterName);
 
     Long countByEligibleStudentsClusterContaining(String clusterId);
 

@@ -1,6 +1,6 @@
 package com.attendease.backend.student.service.event.state;
 
-import com.attendease.backend.domain.events.Registration.Response.EventStartStatusResponse;
+import com.attendease.backend.domain.event.state.checking.EventStateCheckingResponse;
 
 /**
  * Service responsible for providing current state of events for the student module.
@@ -17,8 +17,8 @@ public interface EventStateService {
      * Retrieves the start status of a specific event.
      *
      * @param eventId the ID of the event to check
-     * @return {@link EventStartStatusResponse} containing flags and a status message
+     * @return {@link EventStateCheckingResponse} containing flags and a status message
      * @throws IllegalStateException if the event with the given ID is not found
      */
-    EventStartStatusResponse getEventStartStatus(String eventId);
+    EventStateCheckingResponse getEventStartStatus(String eventId);
 }

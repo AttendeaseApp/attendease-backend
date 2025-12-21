@@ -1,6 +1,8 @@
 package com.attendease.backend.osa.service.management.academic.cluster;
 
 import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.event.Event;
+
 import java.util.List;
 
 /**
@@ -53,7 +55,7 @@ public interface ManagementAcademicClusterService {
 
     /**
      * {@code deleteCLuster} is used to deletes a cluster only if no other dependencies exist including
-     * {@link com.attendease.backend.domain.courses.Courses} and {@link com.attendease.backend.domain.events.EventSessions}.
+     * {@link com.attendease.backend.domain.courses.Courses} and {@link Event}.
      *
      * @param clusterId The unique ID of the cluster to delete.
      *

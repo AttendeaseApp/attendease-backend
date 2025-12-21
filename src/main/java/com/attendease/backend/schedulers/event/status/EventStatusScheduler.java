@@ -1,8 +1,8 @@
 package com.attendease.backend.schedulers.event.status;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.repository.event.EventRepository;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -16,18 +16,18 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventStatusScheduler {
 
-    private final EventSessionsRepository eventSessionRepository;
+    private final EventRepository eventSessionRepository;
 
     @Scheduled(fixedRate = 15000)
     public void updateEventStatuses() {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            List<EventSessions> events = eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
+            List<Event> events = eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
 
             boolean updated = false;
 
-            for (EventSessions event : events) {
+            for (Event event : events) {
                 LocalDateTime registrationStart = event.getTimeInRegistrationStartDateTime();
                 LocalDateTime start = event.getStartDateTime();
                 LocalDateTime end = event.getEndDateTime();

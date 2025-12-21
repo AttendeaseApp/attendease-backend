@@ -1,7 +1,7 @@
-package com.attendease.backend.domain.events.Session.Management.Request;
+package com.attendease.backend.domain.event.management;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
+import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventSessionRequest {
+public final class EventManagementRequest {
 
     @NotNull(message = "Event name is required")
     private String eventName;
@@ -45,7 +45,7 @@ public class EventSessionRequest {
 
     private EventStatus eventStatus;
 
-    private EligibilityCriteria eligibleStudents;
+    private EventEligibility eligibleStudents;
 
     private Boolean facialVerificationEnabled;
 }

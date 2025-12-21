@@ -1,7 +1,7 @@
-package com.attendease.backend.domain.events;
+package com.attendease.backend.domain.event;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
+import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.location.Location;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
  * Domain entity representing a scheduled event session.
  * <p>
  * Captures event details like timing, location, and eligibility rules for student registration/attendance.
- * Supports states (e.g., UPCOMING, ONGOING) and geofencing verification. {@link EligibilityCriteria} defines
+ * Supports states (e.g., UPCOMING, ONGOING) and geofencing verification. {@link EventEligibility} defines
  * target student (e.g., by section/course/cluster). Post-event, triggers attendance finalization.
  *
  * @author jakematthewviado204@gmail.com
@@ -34,8 +34,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "event_sessions")
-public class EventSessions {
+@Document(collection = "event")
+public class Event {
 
     @Id
     private String eventId;
@@ -54,7 +54,7 @@ public class EventSessions {
     private String description;
 
     @Field("eligibleStudents")
-    private EligibilityCriteria eligibleStudents;
+    private EventEligibility eligibleStudents;
 
     @NotNull(message = "Time in registration date time is required")
     @Indexed

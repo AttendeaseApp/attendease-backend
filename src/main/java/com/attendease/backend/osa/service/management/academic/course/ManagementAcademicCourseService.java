@@ -1,6 +1,7 @@
 package com.attendease.backend.osa.service.management.academic.course;
 
 import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.osa.service.management.academic.section.impl.ManagementAcademicSectionServiceImpl;
 
 import java.util.List;
@@ -78,7 +79,7 @@ public interface ManagementAcademicCourseService {
      * to
      * {@link com.attendease.backend.domain.sections.Sections},
      * {@link com.attendease.backend.domain.student.Students},
-     * {@link com.attendease.backend.domain.events.EventSessions}**.
+     * {@link Event}**.
      *
      * <p>Prevents deletion if event sessions reference the course directly. If sections exist, attempts to
      * cascade deletion to each section (which individually checks for student/event dependencies). If any

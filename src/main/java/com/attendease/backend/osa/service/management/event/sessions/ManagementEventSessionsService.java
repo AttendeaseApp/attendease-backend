@@ -1,9 +1,9 @@
 package com.attendease.backend.osa.service.management.event.sessions;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
-import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.event.management.EventManagementRequest;
+import com.attendease.backend.domain.event.management.EventManagementResponse;
 
 import java.util.Date;
 import java.util.List;
@@ -25,44 +25,44 @@ public interface ManagementEventSessionsService {
      * Validates the date range and sets the initial status to {@link EventStatus#UPCOMING}.
      * Associates the event with a location if provided.
      *
-     * @param request the {@link EventSessions} object containing event details
-     * @return the saved {@link EventSessions} with generated ID and timestamps
+     * @param request the {@link Event} object containing event details
+     * @return the saved {@link Event} with generated ID and timestamps
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
-    EventCreationResponse createEvent(EventSessionRequest request);
+    EventManagementResponse createEvent(EventManagementRequest request);
 
     /**
      * {@code getEventById} is used to retrieve an event session by its unique identifier.
      *
      * @param id the unique ID of the event session
-     * @return the {@link EventSessions} matching the ID
+     * @return the {@link Event} matching the ID
      * @throws RuntimeException if no event is found with the provided ID
      */
-    EventSessions getEventById(String id);
+    Event getEventById(String id);
 
     /**
      * {@code getAllEvents} is used to retrieve all event sessions (ordered by newest first).
      *
-     * @return a list of all {@link EventSessions}
+     * @return a list of all {@link Event}
      */
-    List<EventSessions> getAllEvents();
+    List<Event> getAllEvents();
 
     /**
      * {@code getEventsByStatus} is used to retrieve event sessions filtered by a specific status.
      *
      * @param status the {@link EventStatus} to filter by
-     * @return a list of {@link EventSessions} with the matching status
+     * @return a list of {@link Event} with the matching status
      */
-    List<EventSessions> getEventsByStatus(EventStatus status);
+    List<Event> getEventsByStatus(EventStatus status);
 
     /**
      * {@code getEventsByDateRange} is used to retrieve event sessions within a specified date range.
      *
      * @param from the start date (inclusive)
      * @param to the end date (inclusive)
-     * @return a list of {@link EventSessions} within the date range
+     * @return a list of {@link Event} within the date range
      */
-    List<EventSessions> getEventsByDateRange(Date from, Date to);
+    List<Event> getEventsByDateRange(Date from, Date to);
 
     /**
      * {@code getEventsByStatusAndDateRange} is used to retrieve event sessions filtered by status and within a specified date range.
@@ -70,9 +70,9 @@ public interface ManagementEventSessionsService {
      * @param status the {@link EventStatus} to filter by
      * @param from the start date (inclusive)
      * @param to the end date (inclusive)
-     * @return a list of {@link EventSessions} matching the status and date range
+     * @return a list of {@link Event} matching the status and date range
      */
-    List<EventSessions> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to);
+    List<Event> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to);
 
     /**
      * {@code deleteEventById} is used to delete an event session by its unique identifier.
@@ -92,19 +92,19 @@ public interface ManagementEventSessionsService {
      * Event status cannot be manually updated here; use dedicated methods like cancelEvent or rely on the scheduler for time-based changes.
      *
      * @param eventId the unique ID of the event to update
-     * @param updateEvent the {@link EventSessions} object containing updated fields
-     * @return the updated {@link EventSessions}
+     * @param updateEvent the {@link Event} object containing updated fields
+     * @return the updated {@link Event}
      * @throws RuntimeException if no event is found with the provided ID or if update is prevented due to event status constraints
      * @throws IllegalArgumentException if the location ID is invalid or if attempting to update event status
      */
-    EventSessions updateEvent(String eventId, EventSessions updateEvent);
+    Event updateEvent(String eventId, Event updateEvent);
 
     /**
      * {@code cancelEvent} is used to cancel an event session by setting its status to {@link EventStatus#CANCELLED}.
      *
      * @param id the unique ID of the event to cancel
-     * @return the updated {@link EventSessions} with cancelled status
+     * @return the updated {@link Event} with cancelled status
      * @throws RuntimeException if no event is found with the provided ID
      */
-    EventSessions cancelEvent(String id);
+    Event cancelEvent(String id);
 }

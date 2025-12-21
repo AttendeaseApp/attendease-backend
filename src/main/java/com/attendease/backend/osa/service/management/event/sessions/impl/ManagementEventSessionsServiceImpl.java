@@ -3,17 +3,17 @@ package com.attendease.backend.osa.service.management.event.sessions.impl;
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
-import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
+import com.attendease.backend.domain.event.eligibility.EventEligibility;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.event.management.EventManagementRequest;
+import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,21 +34,21 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
     private final SectionsRepository sectionsRepository;
     private final CourseRepository courseRepository;
     private final ClustersRepository clustersRepository;
-    private final EventSessionsRepository eventSessionRepository;
+    private final EventRepository eventSessionRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
-    public EventCreationResponse createEvent(EventSessionRequest request) {
-        EligibilityCriteria domainCriteria;
-        EligibilityCriteria reqCriteria = request.getEligibleStudents();
+    public EventManagementResponse createEvent(EventManagementRequest request) {
+        EventEligibility domainCriteria;
+        EventEligibility reqCriteria = request.getEligibleStudents();
         if (reqCriteria == null) {
-            domainCriteria = EligibilityCriteria.builder().allStudents(true).build();
+            domainCriteria = EventEligibility.builder().allStudents(true).build();
         } else {
             validateEligibilityCriteria(reqCriteria);
             domainCriteria = populateDomainEligibilityCriteria(reqCriteria);
         }
 
-        EventSessions eventSession = EventSessions.builder()
+        Event eventSession = Event.builder()
                 .eventName(request.getEventName())
                 .description(request.getDescription())
                 .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
@@ -72,40 +72,40 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
             eventSession.setEventLocation(location);
         }
         checkLocationConflict(eventSession, null);
-        EventSessions savedEvent = eventSessionRepository.save(eventSession);
+        Event savedEvent = eventSessionRepository.save(eventSession);
         log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
         return mapToEventCreationResponse(savedEvent);
     }
 
     @Override
-    public EventSessions getEventById(String id) {
+    public Event getEventById(String id) {
         log.info("Retrieving event session with ID: {}", id);
         return eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
     }
 
     @Override
-    public List<EventSessions> getAllEvents() {
+    public List<Event> getAllEvents() {
         return eventSessionRepository.findAllByOrderByCreatedAtDesc();
     }
 
     @Override
-    public List<EventSessions> getEventsByStatus(EventStatus status) {
+    public List<Event> getEventsByStatus(EventStatus status) {
         return eventSessionRepository.findByEventStatus(status);
     }
 
     @Override
-    public List<EventSessions> getEventsByDateRange(Date from, Date to) {
+    public List<Event> getEventsByDateRange(Date from, Date to) {
         return eventSessionRepository.findByDateRange(from, to);
     }
 
     @Override
-    public List<EventSessions> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
+    public List<Event> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
         return eventSessionRepository.findByStatusAndDateRange(status, from, to);
     }
 
     @Override
     public void deleteEventById(String id) {
-        EventSessions event = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+        Event event = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
         EventStatus status = event.getEventStatus();
         if (status == EventStatus.UPCOMING || status == EventStatus.CANCELLED) {
@@ -132,8 +132,8 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
     }
 
     @Override
-    public EventSessions updateEvent(String eventId, EventSessions updateEvent) {
-        EventSessions existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+    public Event updateEvent(String eventId, Event updateEvent) {
+        Event existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
         EventStatus currentStatus = existingEvent.getEventStatus();
         if (currentStatus == EventStatus.CONCLUDED || currentStatus == EventStatus.FINALIZED) {
@@ -178,7 +178,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
 
         if (updateEvent.getEligibleStudents() != null) {
             validateEligibilityCriteria(updateEvent.getEligibleStudents());
-            EligibilityCriteria expandedCriteria = populateDomainEligibilityCriteria(updateEvent.getEligibleStudents());
+            EventEligibility expandedCriteria = populateDomainEligibilityCriteria(updateEvent.getEligibleStudents());
             existingEvent.setEligibleStudents(expandedCriteria);
         }
 
@@ -192,14 +192,14 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
 
         existingEvent.setUpdatedAt(LocalDateTime.now());
         checkLocationConflict(existingEvent, eventId);
-        EventSessions updatedEvent = eventSessionRepository.save(existingEvent);
+        Event updatedEvent = eventSessionRepository.save(existingEvent);
         log.info("Successfully updated event session with ID: {}", eventId);
         return updatedEvent;
     }
 
     @Override
-    public EventSessions cancelEvent(String id) {
-        EventSessions existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+    public Event cancelEvent(String id) {
+        Event existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
         existingEvent.setEventStatus(EventStatus.CANCELLED);
         existingEvent.setUpdatedAt(LocalDateTime.now());
@@ -210,12 +210,12 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
      * PRIVATE HELPERS
      */
 
-    private void checkLocationConflict(EventSessions eventSession, String excludeEventId) {
+    private void checkLocationConflict(Event eventSession, String excludeEventId) {
         if (eventSession.getEventLocationId() == null) {
             return;
         }
-        List<EventSessions> allEvents = eventSessionRepository.findAll();
-        List<EventSessions> conflicts = allEvents.stream()
+        List<Event> allEvents = eventSessionRepository.findAll();
+        List<Event> conflicts = allEvents.stream()
                 .filter(e -> !e.getEventId().equals(excludeEventId))
                 .filter(e -> e.getEventStatus() != EventStatus.CANCELLED && e.getEventStatus() != EventStatus.CONCLUDED && e.getEventStatus() != EventStatus.FINALIZED)
                 .filter(e -> e.getEventLocationId() != null)
@@ -224,7 +224,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
                 .toList();
         if (!conflicts.isEmpty()) {
             String conflictNames = conflicts.stream()
-                    .map(EventSessions::getEventName)
+                    .map(Event::getEventName)
                     .collect(Collectors.joining(", "));
             throw new IllegalStateException("The selected location is already in use during the specified time by the following event(s): " + conflictNames);
         }
@@ -234,7 +234,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         return start1.isBefore(end2) && end1.isAfter(start2);
     }
 
-    private void setStatusBasedOnCurrentTime(EventSessions event) {
+    private void setStatusBasedOnCurrentTime(Event event) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime registrationStart = event.getTimeInRegistrationStartDateTime();
         LocalDateTime start = event.getStartDateTime();
@@ -266,7 +266,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
     }
 
-    private String updatingConcludedAndFinalizedEventMessage(String eventId, EventSessions existingEvent, EventStatus currentStatus) {
+    private String updatingConcludedAndFinalizedEventMessage(String eventId, Event existingEvent, EventStatus currentStatus) {
         String eventName = existingEvent.getEventName();
         return switch (currentStatus) {
             case CONCLUDED -> "You cannot update the event details with CONCLUDED status '" + eventName + "'. Once an event is concluded, changes could alter all the pre-attendance records data.";
@@ -308,9 +308,9 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
     }
 
-    private EligibilityCriteria populateDomainEligibilityCriteria(EligibilityCriteria reqCriteria) {
+    private EventEligibility populateDomainEligibilityCriteria(EventEligibility reqCriteria) {
         if (reqCriteria.isAllStudents()) {
-            return EligibilityCriteria.builder().allStudents(true).build();
+            return EventEligibility.builder().allStudents(true).build();
         }
 
         Set<String> clusterIds = new HashSet<>();
@@ -361,7 +361,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
         List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getSectionName).sorted().collect(Collectors.toList());
 
-        return EligibilityCriteria.builder()
+        return EventEligibility.builder()
                 .allStudents(false)
                 .cluster(new ArrayList<>(clusterIds))
                 .clusterNames(clusterNames)
@@ -372,7 +372,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
                 .build();
     }
 
-    private void validateEligibilityCriteria(EligibilityCriteria criteria) {
+    private void validateEligibilityCriteria(EventEligibility criteria) {
         if (criteria.isAllStudents()) {
             return;
         }
@@ -387,9 +387,9 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
     }
 
-    private EventCreationResponse mapToEventCreationResponse(EventSessions event) {
-        EligibilityCriteria criteria = event.getEligibleStudents();
-        EventCreationResponse response = EventCreationResponse.builder()
+    private EventManagementResponse mapToEventCreationResponse(Event event) {
+        EventEligibility criteria = event.getEligibleStudents();
+        EventManagementResponse response = EventManagementResponse.builder()
                 .eventId(event.getEventId())
                 .eventName(event.getEventName())
                 .description(event.getDescription())

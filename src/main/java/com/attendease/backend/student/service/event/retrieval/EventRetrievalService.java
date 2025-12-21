@@ -1,6 +1,6 @@
 package com.attendease.backend.student.service.event.retrieval;
 
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +23,7 @@ public interface EventRetrievalService {
      * @param id the ID of the event session
      * @return an {@link Optional} containing the event session if found, otherwise empty
      */
-    Optional<EventSessions> getEventById(String id);
+    Optional<Event> getEventById(String id);
 
     /**
      * Retrieves all events that are either:
@@ -37,5 +37,5 @@ public interface EventRetrievalService {
      *
      * @return a list of event sessions matching any of the allowed statuses
      */
-    List<EventSessions> getOngoingRegistrationAndActiveEvents();
+    List<Event> getOngoingRegistrationAndActiveEvents();
 }

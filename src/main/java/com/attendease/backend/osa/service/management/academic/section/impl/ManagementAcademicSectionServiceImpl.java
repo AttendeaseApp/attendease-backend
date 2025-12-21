@@ -4,7 +4,7 @@ import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.management.academic.section.ManagementAcademicSectionService;
 import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import java.util.Arrays;
@@ -21,7 +21,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
 
     private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final StudentRepository studentsRepository;
     private final UserValidator userValidator;
 
@@ -94,8 +94,8 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     public void deleteSection(String id) {
         Sections section = getSectionById(id);
         Long studentCount = studentsRepository.countBySection(section);
-        Long eventCountById = eventSessionsRepository.countByEligibleStudentsSectionsContaining(section.getId());
-        Long eventCountByName = eventSessionsRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
+        Long eventCountById = eventRepository.countByEligibleStudentsSectionsContaining(section.getId());
+        Long eventCountByName = eventRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
         Long totalEventCount = eventCountById + eventCountByName;
 
         if (studentCount > 0 || eventCountById > 0 || eventCountByName > 0) {

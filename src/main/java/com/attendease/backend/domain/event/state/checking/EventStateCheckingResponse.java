@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.events.Registration.Response;
+package com.attendease.backend.domain.event.state.checking;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class EventStartStatusResponse {
+public final class EventStateCheckingResponse {
 
     private String eventId;
     private boolean eventHasStarted;

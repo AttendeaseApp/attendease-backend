@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.controller.management.event.monitoring;
 
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.osa.service.management.event.monitoring.ManagementEventMonitoringService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +31,11 @@ public class ManagementEventMonitoringController {
      * {@code getAllEventsForMonitoring} is an API endpoint used to retrieve
      * all events with statuses UPCOMING, REGISTRATION, or ONGOING.
      *
-     * @return a list of {@link EventSessions} that are in any of the specified statuses
+     * @return a list of {@link Event} that are in any of the specified statuses
      */
     @GetMapping("/all")
-    public ResponseEntity<List<EventSessions>> getAllEventsForMonitoring() {
-        List<EventSessions> events = managementEventMonitoringService.getEventWithUpcomingRegistrationOngoingStatuses();
+    public ResponseEntity<List<Event>> getAllEventsForMonitoring() {
+        List<Event> events = managementEventMonitoringService.getEventWithUpcomingRegistrationOngoingStatuses();
         return ResponseEntity.ok(events);
     }
 

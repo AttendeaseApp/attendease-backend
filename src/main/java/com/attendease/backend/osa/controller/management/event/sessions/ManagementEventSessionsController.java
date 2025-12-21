@@ -1,9 +1,9 @@
 package com.attendease.backend.osa.controller.management.event.sessions;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.events.Session.Management.Request.EventSessionRequest;
-import com.attendease.backend.domain.events.Session.Management.Response.EventCreationResponse;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.event.management.EventManagementRequest;
+import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
 import java.util.Date;
 import java.util.List;
@@ -39,19 +39,19 @@ public class ManagementEventSessionsController {
      * <p>This endpoint validates the incoming request, creates an event with initial status {@link EventStatus#UPCOMING},
      * and associates it with a location if specified. It handles date range validations and generates necessary timestamps.</p>
      *
-     * <p><strong>Request Body:</strong> {@link EventSessionRequest} containing event details such as title, description,
+     * <p><strong>Request Body:</strong> {@link EventManagementRequest} containing event details such as title, description,
      * start/end dates, location ID, and capacity.</p>
      *
-     * <p><strong>Response:</strong> {@link EventCreationResponse} with the created event details, including generated ID.</p>
+     * <p><strong>Response:</strong> {@link EventManagementResponse} with the created event details, including generated ID.</p>
      *
-     * @param request the validated {@link EventSessionRequest} object
-     * @return {@link ResponseEntity} with status 201 (CREATED) and the {@link EventCreationResponse}
+     * @param request the validated {@link EventManagementRequest} object
+     * @return {@link ResponseEntity} with status 201 (CREATED) and the {@link EventManagementResponse}
      * @throws IllegalArgumentException if date validations fail or location ID is invalid
-     * @see ManagementEventSessionsService#createEvent(EventSessionRequest)
+     * @see ManagementEventSessionsService#createEvent(EventManagementRequest)
      */
     @PostMapping
-    public ResponseEntity<EventCreationResponse> createEvent(@Valid @RequestBody EventSessionRequest request) {
-        EventCreationResponse response = managementEventSessionsService.createEvent(request);
+    public ResponseEntity<EventManagementResponse> createEvent(@Valid @RequestBody EventManagementRequest request) {
+        EventManagementResponse response = managementEventSessionsService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -62,16 +62,16 @@ public class ManagementEventSessionsController {
      *
      * <p><strong>Path Variable:</strong> {@code id} - the unique string ID of the event session.</p>
      *
-     * <p><strong>Response:</strong> {@link EventSessions} object if found, or 404 if not.</p>
+     * <p><strong>Response:</strong> {@link Event} object if found, or 404 if not.</p>
      *
      * @param eventId the unique ID of the event session
-     * @return {@link ResponseEntity} with the {@link EventSessions} or 404 if not found
+     * @return {@link ResponseEntity} with the {@link Event} or 404 if not found
      * @throws RuntimeException if no event is found with the provided ID
      * @see ManagementEventSessionsService#getEventById(String)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<EventSessions> getEventById(@PathVariable("id") String eventId) {
-        EventSessions event = managementEventSessionsService.getEventById(eventId);
+    public ResponseEntity<Event> getEventById(@PathVariable("id") String eventId) {
+        Event event = managementEventSessionsService.getEventById(eventId);
         return ResponseEntity.ok(event);
     }
 
@@ -81,14 +81,14 @@ public class ManagementEventSessionsController {
      * <p>This endpoint provides a paginated or full list of all events for administrative overview.
      * Consider adding pagination parameters in future iterations for large datasets.</p>
      *
-     * <p><strong>Response:</strong> List of {@link EventSessions}.</p>
+     * <p><strong>Response:</strong> List of {@link Event}.</p>
      *
-     * @return {@link ResponseEntity} with the list of all {@link EventSessions}
+     * @return {@link ResponseEntity} with the list of all {@link Event}
      * @see ManagementEventSessionsService#getAllEvents()
      */
     @GetMapping
-    public ResponseEntity<List<EventSessions>> getAllEvents() {
-        List<EventSessions> events = managementEventSessionsService.getAllEvents();
+    public ResponseEntity<List<Event>> getAllEvents() {
+        List<Event> events = managementEventSessionsService.getAllEvents();
         return ResponseEntity.ok(events);
     }
 
@@ -100,15 +100,15 @@ public class ManagementEventSessionsController {
      *
      * <p><strong>Path Variable:</strong> {@code status} - the {@link EventStatus} enum value (e.g., UPCOMING).</p>
      *
-     * <p><strong>Response:</strong> List of {@link EventSessions} matching the status.</p>
+     * <p><strong>Response:</strong> List of {@link Event} matching the status.</p>
      *
      * @param status the {@link EventStatus} to filter by
-     * @return {@link ResponseEntity} with the filtered list of {@link EventSessions}
+     * @return {@link ResponseEntity} with the filtered list of {@link Event}
      * @see ManagementEventSessionsService#getEventsByStatus(EventStatus)
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<EventSessions>> getEventsByStatus(@PathVariable("status") EventStatus status) {
-        List<EventSessions> events = managementEventSessionsService.getEventsByStatus(status);
+    public ResponseEntity<List<Event>> getEventsByStatus(@PathVariable("status") EventStatus status) {
+        List<Event> events = managementEventSessionsService.getEventsByStatus(status);
         return ResponseEntity.ok(events);
     }
 
@@ -124,19 +124,19 @@ public class ManagementEventSessionsController {
      * <li>{@code to} - end date in ISO format (yyyy-MM-dd'T'HH:mm:ss)</li>
      * </ul></p>
      *
-     * <p><strong>Response:</strong> List of {@link EventSessions} within the date range.</p>
+     * <p><strong>Response:</strong> List of {@link Event} within the date range.</p>
      *
      * @param from the start date (inclusive)
      * @param to the end date (inclusive)
-     * @return {@link ResponseEntity} with the filtered list of {@link EventSessions}
+     * @return {@link ResponseEntity} with the filtered list of {@link Event}
      * @see ManagementEventSessionsService#getEventsByDateRange(Date, Date)
      */
     @GetMapping("/date-range")
-    public ResponseEntity<List<EventSessions>> getEventsByDateRange(
+    public ResponseEntity<List<Event>> getEventsByDateRange(
         @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
         @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to
     ) {
-        List<EventSessions> events = managementEventSessionsService.getEventsByDateRange(from, to);
+        List<Event> events = managementEventSessionsService.getEventsByDateRange(from, to);
         return ResponseEntity.ok(events);
     }
 
@@ -152,21 +152,21 @@ public class ManagementEventSessionsController {
      * <li>{@code to} - end date in ISO format (yyyy-MM-dd'T'HH:mm:ss)</li>
      * </ul></p>
      *
-     * <p><strong>Response:</strong> List of {@link EventSessions} matching the criteria.</p>
+     * <p><strong>Response:</strong> List of {@link Event} matching the criteria.</p>
      *
      * @param status the {@link EventStatus} to filter by
      * @param from the start date (inclusive)
      * @param to the end date (inclusive)
-     * @return {@link ResponseEntity} with the filtered list of {@link EventSessions}
+     * @return {@link ResponseEntity} with the filtered list of {@link Event}
      * @see ManagementEventSessionsService#getEventsByStatusAndDateRange(EventStatus, Date, Date)
      */
     @GetMapping("/status-date-range")
-    public ResponseEntity<List<EventSessions>> getEventsByStatusAndDateRange(
+    public ResponseEntity<List<Event>> getEventsByStatusAndDateRange(
         @RequestParam("status") EventStatus status,
         @RequestParam("from") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date from,
         @RequestParam("to") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") Date to
     ) {
-        List<EventSessions> events = managementEventSessionsService.getEventsByStatusAndDateRange(status, from, to);
+        List<Event> events = managementEventSessionsService.getEventsByStatusAndDateRange(status, from, to);
         return ResponseEntity.ok(events);
     }
 
@@ -179,20 +179,20 @@ public class ManagementEventSessionsController {
      *
      * <p><strong>Path Variable:</strong> {@code id} - the unique string ID of the event.</p>
      *
-     * <p><strong>Request Body:</strong> {@link EventSessions} object with fields to update (partial updates supported).</p>
+     * <p><strong>Request Body:</strong> {@link Event} object with fields to update (partial updates supported).</p>
      *
-     * <p><strong>Response:</strong> Updated {@link EventSessions} object.</p>
+     * <p><strong>Response:</strong> Updated {@link Event} object.</p>
      *
      * @param id the unique ID of the event to update
-     * @param updateDTO the {@link EventSessions} containing updated fields
-     * @return {@link ResponseEntity} with the updated {@link EventSessions}
+     * @param updateDTO the {@link Event} containing updated fields
+     * @return {@link ResponseEntity} with the updated {@link Event}
      * @throws RuntimeException if no event is found or update is prevented due to status constraints
      * @throws IllegalArgumentException if location ID is invalid or status update is attempted
-     * @see ManagementEventSessionsService#updateEvent(String, EventSessions)
+     * @see ManagementEventSessionsService#updateEvent(String, Event)
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<EventSessions> updateEvent(@PathVariable("id") String id, @RequestBody EventSessions updateDTO) {
-        EventSessions updatedEvent = managementEventSessionsService.updateEvent(id, updateDTO);
+    public ResponseEntity<Event> updateEvent(@PathVariable("id") String id, @RequestBody Event updateDTO) {
+        Event updatedEvent = managementEventSessionsService.updateEvent(id, updateDTO);
         return ResponseEntity.ok(updatedEvent);
     }
 
@@ -204,16 +204,16 @@ public class ManagementEventSessionsController {
      *
      * <p><strong>Path Variable:</strong> {@code id} - the unique string ID of the event.</p>
      *
-     * <p><strong>Response:</strong> Updated {@link EventSessions} with cancelled status.</p>
+     * <p><strong>Response:</strong> Updated {@link Event} with cancelled status.</p>
      *
      * @param id the unique ID of the event to cancel
-     * @return {@link ResponseEntity} with the updated {@link EventSessions}
+     * @return {@link ResponseEntity} with the updated {@link Event}
      * @throws RuntimeException if no event is found with the provided ID
      * @see ManagementEventSessionsService#cancelEvent(String)
      */
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<EventSessions> cancelEvent(@PathVariable("id") String id) {
-        EventSessions canceledEvent = managementEventSessionsService.cancelEvent(id);
+    public ResponseEntity<Event> cancelEvent(@PathVariable("id") String id) {
+        Event canceledEvent = managementEventSessionsService.cancelEvent(id);
         return ResponseEntity.ok(canceledEvent);
     }
 

@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.events.Session.Management.Response;
+package com.attendease.backend.domain.event.management;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -18,10 +18,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventCreationResponse {
+public final class EventManagementResponse {
 
     private String eventId;
-
     private String eventName;
     private String description;
     private String eventLocationId;
@@ -38,15 +37,11 @@ public class EventCreationResponse {
     private EventStatus eventStatus;
 
     private boolean allStudents;
-
     private List<String> sectionIDs;
     private List<String> sectionNames;
-
     private List<String> courseIDs;
     private List<String> courseNames;
-
     private List<String> clusterIDs;
     private List<String> clusterNames;
-
     private Boolean facialVerificationEnabled;
 }

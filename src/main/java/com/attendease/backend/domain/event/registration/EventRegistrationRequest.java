@@ -1,9 +1,9 @@
-package com.attendease.backend.domain.events.Registration.Request;
+package com.attendease.backend.domain.event.registration;
 
 import lombok.Data;
 
 @Data
-public class EventRegistrationRequest {
+public final class EventRegistrationRequest {
 
     private String eventId;
     private String locationId;

@@ -1,6 +1,6 @@
 package com.attendease.backend.student.controller.event.state;
 
-import com.attendease.backend.domain.events.Registration.Response.EventStartStatusResponse;
+import com.attendease.backend.domain.event.state.checking.EventStateCheckingResponse;
 import com.attendease.backend.student.service.event.state.EventStateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -16,7 +16,7 @@ public class EventStateController {
 
     @MessageMapping("/observe-event-state/{id}")
     @SendTo("/topic/read-event-state")
-    public EventStartStatusResponse getEventStartStatus(@DestinationVariable String id) {
+    public EventStateCheckingResponse getEventStartStatus(@DestinationVariable String id) {
         return eventStateService.getEventStartStatus(id);
     }
 }

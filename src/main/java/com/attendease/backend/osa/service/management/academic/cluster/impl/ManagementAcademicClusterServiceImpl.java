@@ -4,7 +4,7 @@ import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.osa.service.management.academic.cluster.ManagementAcademicClusterService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
 
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final UserValidator userValidator;
 
     @Override
@@ -70,8 +70,8 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
     public void deleteCluster(String clusterId) {
         Clusters cluster = getClusterByClusterId(clusterId);
         long courseCount = courseRepository.countByCluster(cluster);
-        long eventCountById = eventSessionsRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
-        long eventCountByName = eventSessionsRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
+        long eventCountById = eventRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
+        long eventCountByName = eventRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
         long totalEventCount = eventCountById + eventCountByName;
 
         if (courseCount > 0 || totalEventCount > 0) {

@@ -3,7 +3,7 @@ package com.attendease.backend.osa.service.management.location.management.impl;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.enums.location.LocationEnvironment;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.location.geometry.LocationGeometry;
 import com.attendease.backend.domain.location.management.LocationManagementRequest;
@@ -11,7 +11,7 @@ import com.attendease.backend.domain.location.management.LocationManagementRespo
 import com.attendease.backend.exceptions.domain.Location.*;
 import com.attendease.backend.osa.service.management.location.management.LocationManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
 
 import java.time.LocalDateTime;
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service;
 public final class LocationManagementServiceImpl implements LocationManagementService {
 
     private final LocationRepository locationRepository;
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
@@ -130,7 +130,7 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
     @Override
     public void deleteLocationById(String locationId) {
         Location location = locationRepository.findById(locationId).orElseThrow(() -> new LocationNotFoundException(locationId));
-        Long eventSessionCount = eventSessionsRepository.countByEventLocationId(locationId);
+        Long eventSessionCount = eventRepository.countByEventLocationId(locationId);
         Long attendanceRecordCount = attendanceRecordsRepository.countByEventLocationId(locationId);
 
         if (eventSessionCount > 0 || attendanceRecordCount > 0) {
@@ -175,7 +175,7 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
     }
 
     private void checkForActiveEvents(String locationId, String locationName) {
-        List<EventSessions> referencingEvents = eventSessionsRepository.findByEventLocationId(locationId);
+        List<Event> referencingEvents = eventRepository.findByEventLocationId(locationId);
         Set<EventStatus> blockedStatuses = Set.of(
                 EventStatus.REGISTRATION,
                 EventStatus.ONGOING,
@@ -184,7 +184,7 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
         );
 
         Map<EventStatus, Long> blockedCounts = referencingEvents.stream().filter(event -> blockedStatuses.contains(event.getEventStatus()))
-                .collect(Collectors.groupingBy(EventSessions::getEventStatus, Collectors.counting()));
+                .collect(Collectors.groupingBy(Event::getEventStatus, Collectors.counting()));
 
         if (!blockedCounts.isEmpty()) {
             StringBuilder statusCounts = new StringBuilder();

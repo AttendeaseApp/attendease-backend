@@ -5,10 +5,10 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Res
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.osa.service.management.event.monitoring.ManagementEventMonitoringService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ManagementEventMonitoringServiceImpl implements ManagementEventMonitoringService {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
-    public List<EventSessions> getEventWithUpcomingRegistrationOngoingStatuses() {
-        return eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
+    public List<Event> getEventWithUpcomingRegistrationOngoingStatuses() {
+        return eventRepository.findByEventStatusIn(List.of(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
     }
 
     @Override

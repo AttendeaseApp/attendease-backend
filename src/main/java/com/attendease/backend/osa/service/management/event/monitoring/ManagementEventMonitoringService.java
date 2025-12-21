@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.management.event.monitoring;
 
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 
 import java.util.List;
 
@@ -19,9 +19,9 @@ public interface ManagementEventMonitoringService {
      * {@code getEventWithUpcomingRegistrationOngoingStatuses} is used to retrieve
      * all events with statuses UPCOMING, REGISTRATION, or ONGOING.
      *
-     * @return a list of {@link EventSessions} that are in any of the specified statuses
+     * @return a list of {@link Event} that are in any of the specified statuses
      */
-    List<EventSessions> getEventWithUpcomingRegistrationOngoingStatuses();
+    List<Event> getEventWithUpcomingRegistrationOngoingStatuses();
 
     /**
      * {@code getAttendeesByEventWithRegisteredAttendanceStatus} is used to retrieve

@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.events.EligibleAttendees;
+package com.attendease.backend.domain.event.eligibility;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EligibilityCriteria {
+public final class EventEligibility {
 
     private boolean allStudents;
 
