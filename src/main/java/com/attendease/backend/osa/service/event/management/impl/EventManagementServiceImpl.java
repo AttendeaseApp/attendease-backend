@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.management.impl;
+package com.attendease.backend.osa.service.event.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -9,7 +9,7 @@ import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osa.service.management.event.management.EventManagementService;
+import com.attendease.backend.osa.service.event.management.EventManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
@@ -34,7 +34,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
     private final SectionsRepository sectionsRepository;
     private final CourseRepository courseRepository;
     private final ClustersRepository clustersRepository;
-    private final EventRepository eventSessionRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
@@ -75,11 +75,13 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .orElseThrow(() -> new IllegalArgumentException("Registration Location ID does not exist: " + regLocationId));
 
         eventSession.setRegistrationLocation(regLocation);
+        eventSession.setRegistrationLocationName(regLocation.getLocationName());
 
         Location venueLocation = locationRepository.findById(venueLocationId)
                 .orElseThrow(() -> new IllegalArgumentException("Venue Location ID does not exist: " + venueLocationId));
 
         eventSession.setVenueLocation(venueLocation);
+        eventSession.setVenueLocationName(venueLocation.getLocationName());
 
         validateDateRange(eventSession.getRegistrationDateTime(), eventSession.getStartingDateTime(), eventSession.getEndingDateTime());
         eventSession.setEventStatus(EventStatus.UPCOMING);
@@ -87,35 +89,36 @@ public final class EventManagementServiceImpl implements EventManagementService 
         eventSession.setLastModified(LocalDateTime.now());
 
         checkLocationConflict(eventSession, null);
-        Event savedEvent = eventSessionRepository.save(eventSession);
+        Event savedEvent = eventRepository.save(eventSession);
         log.info("Successfully created event session with ID: {} (Reg: {}, Venue: {})", savedEvent.getEventId(), regLocationId, venueLocationId);
-        return toEventCreationResponse(savedEvent);
+        return toEventCreationResponse(savedEvent, regLocationId, venueLocationId);
     }
 
     @Override
     public Event getEventById(String id) {
-        log.info("Retrieving event session with ID: {}", id);
-        return eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+        return eventRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
     }
 
     @Override
-    public List<Event> getAllEvents() {
-        return eventSessionRepository.findAllByOrderByCreatedDesc();
+    public List<EventManagementResponse> getAllEvents() {
+        List<Event> events = eventRepository.findAllByOrderByCreatedDesc();
+        return events.stream().map(this::toEventManagementResponse).collect(Collectors.toList());
     }
 
     @Override
-    public List<Event> getEventsByStatus(EventStatus status) {
-        return eventSessionRepository.findByEventStatus(status);
+    public List<EventManagementResponse> getEventsByStatus(EventStatus status) {
+        List<Event> events = eventRepository.findByEventStatus(status);
+        return events.stream().map(this::toEventManagementResponse).collect(Collectors.toList());
     }
 
     @Override
     public void deleteEventById(String id) {
-        Event event = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+        Event event = eventRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
         EventStatus status = event.getEventStatus();
         if (status == EventStatus.UPCOMING || status == EventStatus.CANCELLED) {
-            eventSessionRepository.deleteById(id);
-            log.info("Deleted event with ID: {}", id);
+            eventRepository.deleteById(id);
+            log.debug("Deleted event with ID: {}", id);
             return;
         }
 
@@ -132,13 +135,13 @@ public final class EventManagementServiceImpl implements EventManagementService 
             throw new RuntimeException(message);
         }
 
-        eventSessionRepository.deleteById(id);
-        log.info("Deleted event with ID: {}", id);
+        eventRepository.deleteById(id);
+        log.debug("Deleted event with ID: {}", id);
     }
 
     @Override
-    public Event updateEvent(String eventId, Event updateEvent) {
-        Event existingEvent = eventSessionRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+    public EventManagementResponse updateEvent(String eventId, EventManagementRequest updateEvent) {
+        Event existingEvent = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
 
         EventStatus currentStatus = existingEvent.getEventStatus();
         if (currentStatus == EventStatus.CONCLUDED || currentStatus == EventStatus.FINALIZED) {
@@ -189,12 +192,14 @@ public final class EventManagementServiceImpl implements EventManagementService 
                         .orElseThrow(() -> new IllegalArgumentException("Registration Location ID does not exist: " + newRegLocationId));
                 existingEvent.setRegistrationLocation(regLocation);
                 existingEvent.setRegistrationLocationId(newRegLocationId);
+                existingEvent.setRegistrationLocationName(regLocation.getLocationName());
             }
             if (newVenueLocationId != null) {
                 Location venueLocation = locationRepository.findById(newVenueLocationId)
                         .orElseThrow(() -> new IllegalArgumentException("Venue Location ID does not exist: " + newVenueLocationId));
                 existingEvent.setVenueLocation(venueLocation);
                 existingEvent.setVenueLocationId(newVenueLocationId);
+                existingEvent.setVenueLocationName(venueLocation.getLocationName());
             }
 
             existingEvent.validateLocationPurposes();
@@ -214,18 +219,17 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         existingEvent.setLastModified(LocalDateTime.now());
         checkLocationConflict(existingEvent, eventId);
-        Event updatedEvent = eventSessionRepository.save(existingEvent);
-        log.info("Successfully updated event session with ID: {}", eventId);
-        return updatedEvent;
+        Event updatedEvent = eventRepository.save(existingEvent);
+        log.debug("Successfully updated event session with ID: {}", eventId);
+        return toEventManagementResponse(updatedEvent);
     }
 
     @Override
-    public Event cancelEvent(String id) {
-        Event existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
-
+    public Event cancelEvent(String eventId) {
+        Event existingEvent = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
         existingEvent.setEventStatus(EventStatus.CANCELLED);
         existingEvent.setLastModified(LocalDateTime.now());
-        return eventSessionRepository.save(existingEvent);
+        return eventRepository.save(existingEvent);
     }
 
     /**
@@ -237,7 +241,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
             return;
         }
 
-        List<Event> allEvents = eventSessionRepository.findAll();
+        List<Event> allEvents = eventRepository.findAll();
         List<Event> conflicts = new ArrayList<>();
 
         // this filters active events,
@@ -316,7 +320,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         if (currentStatus != newStatus) {
             event.setEventStatus(newStatus);
-            log.info("Event {} status updated from {} to {} due to date changes", event.getEventId(), currentStatus, newStatus);
+            log.debug("Event {} status updated from {} to {} due to date changes", event.getEventId(), currentStatus, newStatus);
         }
     }
 
@@ -333,32 +337,32 @@ public final class EventManagementServiceImpl implements EventManagementService 
         LocalDateTime now = LocalDateTime.now();
 
         if (timeInDateTime == null || startDateTime == null || endDateTime == null) {
-            throw new IllegalArgumentException("Please provide all date fields: time-in registration, start time, and end time.");
+            throw new IllegalArgumentException("Please provide all date fields: (Date & Time) for registration, starting, and ending.");
         }
 
         if (timeInDateTime.isBefore(now)) {
-            throw new IllegalArgumentException("The time-in registration date and time must be in the future.");
+            throw new IllegalArgumentException("Registration date & time field must be in the future.");
         }
         if (timeInDateTime.isAfter(startDateTime)) {
-            throw new IllegalArgumentException("The time-in registration must start before the event begins.");
+            throw new IllegalArgumentException("Registration must start before the event begins.");
         }
         if (startDateTime.isBefore(now)) {
-            throw new IllegalArgumentException("The event start date and time must be in the future.");
+            throw new IllegalArgumentException("Starting date & time field must be in the future.");
         }
         if (endDateTime.isBefore(now)) {
-            throw new IllegalArgumentException("The event end date and time must be in the future.");
+            throw new IllegalArgumentException("Ending date & time field must be in the future.");
         }
 
         if (startDateTime.isAfter(endDateTime)) {
-            throw new IllegalArgumentException("The event start time must be before the end time.");
+            throw new IllegalArgumentException("Starting time must be before the end time.");
         }
 
         long durationInMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
         if (durationInMinutes < 30) {
-            throw new IllegalArgumentException("The event must last at least 30 minutes.");
+            throw new IllegalArgumentException("Event must last at least 30 minutes.");
         }
         if (durationInMinutes > 360) {
-            throw new IllegalArgumentException("The event cannot exceed 6 hours in duration.");
+            throw new IllegalArgumentException("Event cannot exceed 6 hours in duration.");
         }
     }
 
@@ -441,8 +445,18 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
     }
 
-    private EventManagementResponse toEventCreationResponse(Event event) {
+    private EventManagementResponse toEventCreationResponse(Event event, String regLocationId, String venueLocationId) {
         EventEligibility criteria = event.getEligibleStudents();
+
+        Location regLocation = locationRepository.findById(regLocationId)
+                .orElseThrow(() -> new IllegalArgumentException("Registration Location ID does not exist: " + regLocationId));
+        event.setRegistrationLocation(regLocation);
+        event.setRegistrationLocationName(regLocation.getLocationName());
+
+        Location venueLocation = locationRepository.findById(venueLocationId)
+                .orElseThrow(() -> new IllegalArgumentException("Venue Location ID does not exist: " + venueLocationId));
+        event.setVenueLocation(venueLocation);
+        event.setVenueLocationName(venueLocation.getLocationName());
 
         EventManagementResponse response = EventManagementResponse.builder()
                 .eventId(event.getEventId())
@@ -450,6 +464,40 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .description(event.getDescription())
                 .registrationLocationId(event.getRegistrationLocationId())
                 .venueLocationId(event.getVenueLocationId())
+                .registrationDateTime(event.getRegistrationDateTime())
+                .startingDateTime(event.getStartingDateTime())
+                .endingDateTime(event.getEndingDateTime())
+                .eventStatus(event.getEventStatus())
+                .allStudents(criteria == null || criteria.isAllStudents())
+                .isFacialVerificationEnabled(event.isFacialVerificationEnabled())
+                .isAttendanceLocationMonitoringEnabled(event.isAttendanceLocationMonitoringEnabled())
+                .build();
+
+        if (criteria != null && !criteria.isAllStudents()) {
+            response.setClusterIDs(criteria.getCluster());
+            response.setClusterNames(criteria.getClusterNames());
+            response.setCourseIDs(criteria.getCourse());
+            response.setCourseNames(criteria.getCourseNames());
+            response.setSectionIDs(criteria.getSections());
+            response.setSectionNames(criteria.getSectionNames());
+        }
+
+        response.setRegistrationLocationName(event.getRegistrationLocationName());
+        response.setVenueLocationName(event.getVenueLocationName());
+
+        return response;
+    }
+
+    private EventManagementResponse toEventManagementResponse(Event event) {
+        EventEligibility criteria = event.getEligibleStudents();
+        EventManagementResponse response = EventManagementResponse.builder()
+                .eventId(event.getEventId())
+                .eventName(event.getEventName())
+                .description(event.getDescription())
+                .registrationLocationId(event.getRegistrationLocationId())
+                .registrationLocationName(event.getRegistrationLocationName())
+                .venueLocationId(event.getVenueLocationId())
+                .venueLocationName(event.getVenueLocationName())
                 .registrationDateTime(event.getRegistrationDateTime())
                 .startingDateTime(event.getStartingDateTime())
                 .endingDateTime(event.getEndingDateTime())

@@ -1,11 +1,12 @@
-package com.attendease.backend.osa.controller.management.event.sessions;
+package com.attendease.backend.osa.controller.event.management;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
-import com.attendease.backend.osa.service.management.event.management.EventManagementService;
+import com.attendease.backend.osa.service.event.management.EventManagementService;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementEventSessionsController {
+public class EventManagementController {
 
     private final EventManagementService eventManagementService;
 
@@ -43,9 +44,6 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> {@link EventManagementResponse} with the created event details, including generated ID.</p>
      *
      * @param request the validated {@link EventManagementRequest} object
-     * @return {@link ResponseEntity} with status 201 (CREATED) and the {@link EventManagementResponse}
-     * @throws IllegalArgumentException if date validations fail or location ID is invalid
-     * @see EventManagementService#createEvent(EventManagementRequest)
      */
     @PostMapping
     public ResponseEntity<EventManagementResponse> createEvent(@Valid @RequestBody EventManagementRequest request) {
@@ -63,9 +61,6 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> {@link Event} object if found, or 404 if not.</p>
      *
      * @param eventId the unique ID of the event session
-     * @return {@link ResponseEntity} with the {@link Event} or 404 if not found
-     * @throws RuntimeException if no event is found with the provided ID
-     * @see EventManagementService#getEventById(String)
      */
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(@PathVariable("id") String eventId) {
@@ -79,14 +74,10 @@ public class ManagementEventSessionsController {
      * <p>This endpoint provides a paginated or full list of all events for administrative overview.
      * Consider adding pagination parameters in future iterations for large datasets.</p>
      *
-     * <p><strong>Response:</strong> List of {@link Event}.</p>
-     *
-     * @return {@link ResponseEntity} with the list of all {@link Event}
-     * @see EventManagementService#getAllEvents()
      */
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
-        List<Event> events = eventManagementService.getAllEvents();
+    public ResponseEntity<List<EventManagementResponse>> getAllEvents() {
+        List<EventManagementResponse> events = eventManagementService.getAllEvents();
         return ResponseEntity.ok(events);
     }
 
@@ -101,12 +92,10 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> List of {@link Event} matching the status.</p>
      *
      * @param status the {@link EventStatus} to filter by
-     * @return {@link ResponseEntity} with the filtered list of {@link Event}
-     * @see EventManagementService#getEventsByStatus(EventStatus)
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Event>> getEventsByStatus(@PathVariable("status") EventStatus status) {
-        List<Event> events = eventManagementService.getEventsByStatus(status);
+    public ResponseEntity<List<EventManagementResponse>> getEventsByStatus(@PathVariable("status") EventStatus status) {
+        List<EventManagementResponse> events = eventManagementService.getEventsByStatus(status);
         return ResponseEntity.ok(events);
     }
 
@@ -124,15 +113,11 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> Updated {@link Event} object.</p>
      *
      * @param id the unique ID of the event to update
-     * @param updateDTO the {@link Event} containing updated fields
-     * @return {@link ResponseEntity} with the updated {@link Event}
-     * @throws RuntimeException if no event is found or update is prevented due to status constraints
-     * @throws IllegalArgumentException if location ID is invalid or status update is attempted
-     * @see EventManagementService#updateEvent(String, Event)
+     * @param updateRequest the {@link Event} containing updated fields
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable("id") String id, @RequestBody Event updateDTO) {
-        Event updatedEvent = eventManagementService.updateEvent(id, updateDTO);
+    public ResponseEntity<?> updateEvent(@PathVariable("id") String id, @RequestBody EventManagementRequest updateRequest) {
+        EventManagementResponse updatedEvent = eventManagementService.updateEvent(id, updateRequest);
         return ResponseEntity.ok(updatedEvent);
     }
 
@@ -147,13 +132,10 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> Updated {@link Event} with cancelled status.</p>
      *
      * @param id the unique ID of the event to cancel
-     * @return {@link ResponseEntity} with the updated {@link Event}
-     * @throws RuntimeException if no event is found with the provided ID
-     * @see EventManagementService#cancelEvent(String)
      */
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<Event> cancelEvent(@PathVariable("id") String id) {
-        Event canceledEvent = eventManagementService.cancelEvent(id);
+    public ResponseEntity<?> cancelEvent(@PathVariable("id") String eventId) {
+        Event canceledEvent = eventManagementService.cancelEvent(eventId);
         return ResponseEntity.ok(canceledEvent);
     }
 
@@ -169,9 +151,6 @@ public class ManagementEventSessionsController {
      * <p><strong>Response:</strong> 204 No Content on success.</p>
      *
      * @param id the unique ID of the event to delete
-     * @return {@link ResponseEntity} with 204 status on successful deletion
-     * @throws RuntimeException if no event is found or deletion is prevented due to data integrity constraints
-     * @see EventManagementService#deleteEventById(String)
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable("id") String id) {

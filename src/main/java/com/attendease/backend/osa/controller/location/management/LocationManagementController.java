@@ -1,6 +1,6 @@
-package com.attendease.backend.osa.controller.management.location.management;
+package com.attendease.backend.osa.controller.location.management;
 
-import com.attendease.backend.osa.service.management.location.management.LocationManagementService;
+import com.attendease.backend.osa.service.location.management.LocationManagementService;
 import com.attendease.backend.domain.location.management.LocationManagementRequest;
 import com.attendease.backend.domain.location.management.LocationManagementResponse;
 import jakarta.validation.Valid;

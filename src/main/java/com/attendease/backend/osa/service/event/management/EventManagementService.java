@@ -1,11 +1,10 @@
-package com.attendease.backend.osa.service.management.event.management;
+package com.attendease.backend.osa.service.event.management;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,7 +26,6 @@ public interface EventManagementService {
      *
      * @param request the {@link Event} object containing event details
      * @return the saved {@link Event} with generated ID and timestamps
-     * @throws IllegalArgumentException if date validations fail or location ID is invalid
      */
     EventManagementResponse createEvent(EventManagementRequest request);
 
@@ -36,7 +34,6 @@ public interface EventManagementService {
      *
      * @param id the unique ID of the event session
      * @return the {@link Event} matching the ID
-     * @throws RuntimeException if no event is found with the provided ID
      */
     Event getEventById(String id);
 
@@ -45,7 +42,7 @@ public interface EventManagementService {
      *
      * @return a list of all {@link Event}
      */
-    List<Event> getAllEvents();
+    List<EventManagementResponse> getAllEvents();
 
     /**
      * {@code getEventsByStatus} is used to retrieve event sessions filtered by a specific status.
@@ -53,7 +50,7 @@ public interface EventManagementService {
      * @param status the {@link EventStatus} to filter by
      * @return a list of {@link Event} with the matching status
      */
-    List<Event> getEventsByStatus(EventStatus status);
+    List<EventManagementResponse> getEventsByStatus(EventStatus status);
 
     /**
      * {@code deleteEventById} is used to delete an event session by its unique identifier.
@@ -62,7 +59,6 @@ public interface EventManagementService {
      * throwing a status-specific exception message.
      *
      * @param id the unique ID of the event session to delete
-     * @throws RuntimeException if no event is found with the provided ID or if deletion is prevented due to data integrity constraints
      */
     void deleteEventById(String id);
 
@@ -75,17 +71,11 @@ public interface EventManagementService {
      * @param eventId the unique ID of the event to update
      * @param updateEvent the {@link Event} object containing updated fields
      * @return the updated {@link Event}
-     * @throws RuntimeException if no event is found with the provided ID or if update is prevented due to event status constraints
-     * @throws IllegalArgumentException if the location ID is invalid or if attempting to update event status
      */
-    Event updateEvent(String eventId, Event updateEvent);
+    EventManagementResponse updateEvent(String eventId, EventManagementRequest updateEvent);
 
     /**
      * {@code cancelEvent} is used to cancel an event session by setting its status to {@link EventStatus#CANCELLED}.
-     *
-     * @param id the unique ID of the event to cancel
-     * @return the updated {@link Event} with cancelled status
-     * @throws RuntimeException if no event is found with the provided ID
      */
-    Event cancelEvent(String id);
+    Event cancelEvent(String eventId);
 }

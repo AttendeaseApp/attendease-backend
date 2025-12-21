@@ -5,7 +5,6 @@ import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
 import com.attendease.backend.domain.location.Location;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -56,6 +55,10 @@ public class Event {
     @NotBlank
     private String registrationLocationId;
 
+    @Field("registrationLocationName")
+    @NotBlank
+    private String registrationLocationName;
+
     @DBRef
     @NotNull
     private Location venueLocation;
@@ -64,6 +67,10 @@ public class Event {
     @Indexed
     @NotBlank
     private String venueLocationId;
+
+    @Field("venueLocationName")
+    @NotBlank
+    private String venueLocationName;
 
     @NotNull
     private String description;

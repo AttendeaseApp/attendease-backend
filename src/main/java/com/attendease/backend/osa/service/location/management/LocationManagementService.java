@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.location.management;
+package com.attendease.backend.osa.service.location.management;
 
 import com.attendease.backend.domain.location.management.LocationManagementRequest;
 import com.attendease.backend.domain.location.management.LocationManagementResponse;

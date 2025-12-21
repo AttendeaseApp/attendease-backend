@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.monitoring.impl;
+package com.attendease.backend.osa.service.event.monitoring.impl;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Response.AttendeesResponse;
@@ -6,7 +6,7 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
-import com.attendease.backend.osa.service.management.event.monitoring.ManagementEventMonitoringService;
+import com.attendease.backend.osa.service.event.monitoring.ManagementEventMonitoringService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import java.util.List;

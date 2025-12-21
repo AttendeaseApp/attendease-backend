@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.monitoring;
+package com.attendease.backend.osa.service.event.monitoring;
 
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.event.Event;

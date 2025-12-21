@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.location.management.impl;
+package com.attendease.backend.osa.service.location.management.impl;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.enums.location.LocationEnvironment;
@@ -9,7 +9,7 @@ import com.attendease.backend.domain.location.geometry.LocationGeometry;
 import com.attendease.backend.domain.location.management.LocationManagementRequest;
 import com.attendease.backend.domain.location.management.LocationManagementResponse;
 import com.attendease.backend.exceptions.domain.Location.*;
-import com.attendease.backend.osa.service.management.location.management.LocationManagementService;
+import com.attendease.backend.osa.service.location.management.LocationManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;

@@ -23,8 +23,12 @@ public final class EventManagementResponse {
     private String eventId;
     private String eventName;
     private String description;
+
     private String registrationLocationId;
+    private String registrationLocationName;
+
     private String venueLocationId;
+    private String venueLocationName;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime registrationDateTime;

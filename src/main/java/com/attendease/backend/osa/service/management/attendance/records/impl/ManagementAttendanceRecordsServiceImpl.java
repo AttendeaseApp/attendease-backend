@@ -24,11 +24,6 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
-    public List<Event> getOngoingEvents() {
-        return eventRepository.findByEventStatusIn(List.of(EventStatus.ONGOING));
-    }
-
-    @Override
     public List<FinalizedAttendanceRecordsResponse> getFinalizedEvents() {
         List<Event> finalizedEvents = eventRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
         List<FinalizedAttendanceRecordsResponse> responses = new ArrayList<>();
@@ -71,11 +66,6 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
         }
 
         return responses;
-    }
-
-    @Override
-    public List<Event> getAllSortedByCreatedAt() {
-        return eventRepository.findAllByOrderByCreatedDesc();
     }
 
     @Override

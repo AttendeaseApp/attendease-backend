@@ -22,25 +22,9 @@ import java.util.Optional;
 public interface ManagementAttendanceRecordsService {
 
     /**
-     * {@code getOngoingEvents} can be used to retrieve all ongoing event sessions.
-     *
-     * @return a list of {@link Event} with status {@link EventStatus#ONGOING}
-     */
-    List<Event> getOngoingEvents();
-
-    /**
      * {@code getFinalizedEvents} is used to retrieve all finalized event sessions with attendees per attendance status.
-     *
-     * @return a list of {@link Event} with status {@link EventStatus#FINALIZED}
      */
     List<FinalizedAttendanceRecordsResponse> getFinalizedEvents();
-
-    /**
-     * {@code getAllSortedByCreatedAt} can be used to retrieves all event sessions sorted by creation date in descending order.
-     *
-     * @return a list of {@link Event} ordered by {@code createdAt} descending
-     */
-    List<Event> getAllSortedByCreatedAt();
 
     /**
      * (@code findById) is used to retrieve an event session by its unique identifier.
