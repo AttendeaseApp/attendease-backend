@@ -130,7 +130,7 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
     @Override
     public void deleteLocationById(String locationId) {
         Location location = locationRepository.findById(locationId).orElseThrow(() -> new LocationNotFoundException(locationId));
-        Long eventSessionCount = eventRepository.countByEventLocationId(locationId);
+        Long eventSessionCount = eventRepository.countByVenueLocationId(locationId);
         Long attendanceRecordCount = attendanceRecordsRepository.countByEventLocationId(locationId);
 
         if (eventSessionCount > 0 || attendanceRecordCount > 0) {
@@ -175,7 +175,7 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
     }
 
     private void checkForActiveEvents(String locationId, String locationName) {
-        List<Event> referencingEvents = eventRepository.findByEventLocationId(locationId);
+        List<Event> referencingEvents = eventRepository.findByVenueLocationId(locationId);
         Set<EventStatus> blockedStatuses = Set.of(
                 EventStatus.REGISTRATION,
                 EventStatus.ONGOING,

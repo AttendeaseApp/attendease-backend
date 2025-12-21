@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
+public final class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
 
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
@@ -52,15 +52,15 @@ public class ManagementAttendanceRecordsServiceImpl implements ManagementAttenda
                 .filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE)
                 .count();
 
-            String locationName = event.getEventLocation() != null ? event.getEventLocation().getLocationName() : null;
+            String locationName = event.getVenueLocation() != null ? event.getVenueLocation().getLocationName() : null;
 
             FinalizedAttendanceRecordsResponse response = FinalizedAttendanceRecordsResponse.builder()
                 .eventId(event.getEventId())
                 .eventName(event.getEventName())
                 .locationName(locationName)
-                .timeInRegistrationStartDateTime(event.getTimeInRegistrationStartDateTime())
-                .startDateTime(event.getStartDateTime())
-                .endDateTime(event.getEndDateTime())
+                .timeInRegistrationStartDateTime(event.getRegistrationDateTime())
+                .startDateTime(event.getStartingDateTime())
+                .endDateTime(event.getEndingDateTime())
                 .eventStatus(event.getEventStatus())
                 .totalPresent((int) totalPresent)
                 .totalAbsent((int) totalAbsent)
@@ -75,7 +75,7 @@ public class ManagementAttendanceRecordsServiceImpl implements ManagementAttenda
 
     @Override
     public List<Event> getAllSortedByCreatedAt() {
-        return eventRepository.findAllByOrderByCreatedAtDesc();
+        return eventRepository.findAllByOrderByCreatedDesc();
     }
 
     @Override

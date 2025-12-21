@@ -93,8 +93,8 @@ public class AttendanceRecordsFinalizer {
             return AttendanceStatus.ABSENT;
         }
 
-        long eventStart = event.getStartDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long eventEnd = event.getEndDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long eventStart = event.getStartingDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long eventEnd = event.getEndingDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long eventDuration = eventEnd - eventStart;
         long insideTime = computeInsideDuration(pings, eventStart, eventEnd);
 
@@ -115,7 +115,7 @@ public class AttendanceRecordsFinalizer {
     }
 
     private AttendanceStatus evaluateLateAttendees(Event event, AttendanceRecords record) {
-        if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartDateTime())) {
+        if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartingDateTime())) {
             return null;
         }
         record.setReason("Arrived late to the event after it started at " + record.getTimeIn());

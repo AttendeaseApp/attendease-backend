@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.sessions;
+package com.attendease.backend.osa.service.management.event.management;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * {@link ManagementEventSessionsService} is a service responsible for managing event sessions, including creation, retrieval,
+ * {@link EventManagementService} is a service responsible for managing event sessions, including creation, retrieval,
  * updates, and deletion of events.
  *
  * <p>Provides methods to handle event lifecycle operations such as creating upcoming events, updating details,
@@ -18,7 +18,7 @@ import java.util.List;
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16
  */
-public interface ManagementEventSessionsService {
+public interface EventManagementService {
 
     /**
      * {@code createEvent} is used to create new event session with the provided details.
@@ -54,25 +54,6 @@ public interface ManagementEventSessionsService {
      * @return a list of {@link Event} with the matching status
      */
     List<Event> getEventsByStatus(EventStatus status);
-
-    /**
-     * {@code getEventsByDateRange} is used to retrieve event sessions within a specified date range.
-     *
-     * @param from the start date (inclusive)
-     * @param to the end date (inclusive)
-     * @return a list of {@link Event} within the date range
-     */
-    List<Event> getEventsByDateRange(Date from, Date to);
-
-    /**
-     * {@code getEventsByStatusAndDateRange} is used to retrieve event sessions filtered by status and within a specified date range.
-     *
-     * @param status the {@link EventStatus} to filter by
-     * @param from the start date (inclusive)
-     * @param to the end date (inclusive)
-     * @return a list of {@link Event} matching the status and date range
-     */
-    List<Event> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to);
 
     /**
      * {@code deleteEventById} is used to delete an event session by its unique identifier.

@@ -39,52 +39,15 @@ public interface EventRepository extends MongoRepository<Event, String> {
     List<Event> findByEventStatusIn(List<EventStatus> statuses);
 
     /**
-     * Finds all event sessions that fall within the specified date range.
-     *
-     * @param from the start date of the range (inclusive)
-     * @param to the end date of the range (inclusive)
-     * @return a list of {@link Event} occurring within the specified date range
-     */
-    @Query("{ 'startDateTime': { $gte: ?0 }, 'endDateTime': { $lte: ?1 } }")
-    List<Event> findByDateRange(Date from, Date to);
-
-    /**
-     * Finds all event sessions with the given status that also fall within the specified date range.
-     *
-     * @param status the {@link EventStatus} to filter by
-     * @param from the start date of the range (inclusive)
-     * @param to the end date of the range (inclusive)
-     * @return a list of {@link Event} matching the status and date range criteria
-     */
-    @Query("{ 'eventStatus': ?0, 'startDateTime': { $gte: ?1 }, 'endDateTime': { $lte: ?2 } }")
-    List<Event> findByStatusAndDateRange(EventStatus status, Date from, Date to);
-
-    /**
      * Retrieves all event sessions ordered by their creation time in descending order.
      *
      * @return a list of {@link Event} ordered from most recently created to oldest
      */
-    List<Event> findAllByOrderByCreatedAtDesc();
+    List<Event> findAllByOrderByCreatedDesc();
 
-    Long countByEventLocationId(String eventLocationId);
+    Long countByVenueLocationId(String venueLocationId);
 
-    List<Event> findByEventLocationId(String eventLocationId);
-
-    /**
-     * Finds all event sessions where the given cluster ID is in {@code eligibleStudents.cluster}.
-     *
-     * @param clusterId the cluster ID to search for
-     * @return a list of matching {@link Event}
-     */
-    List<Event> findByEligibleStudentsClusterContaining(String clusterId);
-
-    /**
-     * Finds all event sessions where the given cluster name is in {@code eligibleStudents.clusterNames}.
-     *
-     * @param clusterName the cluster name to search for
-     * @return a list of matching {@link Event}
-     */
-    List<Event> findByEligibleStudentsClusterNamesContaining(String clusterName);
+    List<Event> findByVenueLocationId(String venueLocationId);
 
     Long countByEligibleStudentsClusterContaining(String clusterId);
 

@@ -23,19 +23,19 @@ public final class EventManagementResponse {
     private String eventId;
     private String eventName;
     private String description;
-    private String eventLocationId;
+    private String registrationLocationId;
+    private String venueLocationId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timeInRegistrationStartDateTime;
+    private LocalDateTime registrationDateTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime startDateTime;
+    private LocalDateTime startingDateTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime endDateTime;
+    private LocalDateTime endingDateTime;
 
     private EventStatus eventStatus;
-
     private boolean allStudents;
     private List<String> sectionIDs;
     private List<String> sectionNames;
@@ -43,5 +43,6 @@ public final class EventManagementResponse {
     private List<String> courseNames;
     private List<String> clusterIDs;
     private List<String> clusterNames;
-    private Boolean facialVerificationEnabled;
+    private boolean isFacialVerificationEnabled;
+    private boolean isAttendanceLocationMonitoringEnabled;
 }

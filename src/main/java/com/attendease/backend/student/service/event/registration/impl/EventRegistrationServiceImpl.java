@@ -61,21 +61,21 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (event.getFacialVerificationEnabled() == Boolean.TRUE) {
+        if (event.isAttendanceLocationMonitoringEnabled()) {
             if (registrationRequest.getFaceImageBase64() == null) {
                 throw new IllegalStateException("Face image is required for check-in");
             }
             verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
         }
 
-        AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
+        AttendanceStatus initialStatus = now.isAfter(event.getStartingDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
         AttendanceRecords record = AttendanceRecords.builder()
                 .student(student)
                 .event(event)
                 .location(location)
                 .timeIn(now)
                 .attendanceStatus(initialStatus)
-                .reason(now.isAfter(event.getStartDateTime()) ? "Late registration" : null)
+                .reason(now.isAfter(event.getStartingDateTime()) ? "Late registration" : null)
                 .build();
 
         attendanceRecordsRepository.save(record);
@@ -90,7 +90,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         EventStatus status = event.getEventStatus();
 
         if (status == EventStatus.UPCOMING) {
-            throw new IllegalStateException(String.format("registration not yet open. It starts at %s.", event.getTimeInRegistrationStartDateTime()));
+            throw new IllegalStateException(String.format("registration not yet open. It starts at %s.", event.getRegistrationDateTime()));
         }
 
         if (status == EventStatus.CONCLUDED) {

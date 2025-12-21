@@ -37,7 +37,7 @@ public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegi
         Location location = eventLocationsRepository.findById(attendancePingLogs.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(event.getStartDateTime()) || now.isAfter(event.getEndDateTime())) {
+        if (now.isBefore(event.getStartingDateTime()) || now.isAfter(event.getEndingDateTime())) {
             throw new IllegalStateException("Event is not ongoing. Cannot record attendance ping.");
         }
 

@@ -28,9 +28,9 @@ public class EventStatusScheduler {
             boolean updated = false;
 
             for (Event event : events) {
-                LocalDateTime registrationStart = event.getTimeInRegistrationStartDateTime();
-                LocalDateTime start = event.getStartDateTime();
-                LocalDateTime end = event.getEndDateTime();
+                LocalDateTime registrationStart = event.getRegistrationDateTime();
+                LocalDateTime start = event.getStartingDateTime();
+                LocalDateTime end = event.getEndingDateTime();
 
                 if (registrationStart == null || start == null || end == null) continue;
 

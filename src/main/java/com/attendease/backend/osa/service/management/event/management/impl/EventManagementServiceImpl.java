@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.event.sessions.impl;
+package com.attendease.backend.osa.service.management.event.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
@@ -9,7 +9,7 @@ import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osa.service.management.event.sessions.ManagementEventSessionsService;
+import com.attendease.backend.osa.service.management.event.management.EventManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ManagementEventSessionsServiceImpl implements ManagementEventSessionsService {
+public final class EventManagementServiceImpl implements EventManagementService {
 
     private final LocationRepository locationRepository;
     private final SectionsRepository sectionsRepository;
@@ -51,30 +51,45 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         Event eventSession = Event.builder()
                 .eventName(request.getEventName())
                 .description(request.getDescription())
-                .timeInRegistrationStartDateTime(request.getTimeInRegistrationStartDateTime())
-                .startDateTime(request.getStartDateTime())
-                .endDateTime(request.getEndDateTime())
+                .registrationLocationId(request.getRegistrationLocationId())
+                .venueLocationId(request.getVenueLocationId())
+                .registrationDateTime(request.getRegistrationDateTime())
+                .startingDateTime(request.getStartingDateTime())
+                .endingDateTime(request.getEndingDateTime())
                 .eligibleStudents(domainCriteria)
-                .facialVerificationEnabled(request.getFacialVerificationEnabled() != null ? request.getFacialVerificationEnabled() : true)
+                .isFacialVerificationEnabled(request.isFacialVerificationEnabled())
+                .isAttendanceLocationMonitoringEnabled(request.isAttendanceLocationMonitoringEnabled())
                 .build();
 
-        eventSession.setEventLocationId(request.getEventLocationId());
-        if (eventSession.getEventLocationId() == null) {
-            throw new IllegalArgumentException("Event location is required when creating event");
-        }
-        validateDateRange(eventSession.getTimeInRegistrationStartDateTime(), eventSession.getStartDateTime(), eventSession.getEndDateTime());
-        eventSession.setEventStatus(EventStatus.UPCOMING);
-        eventSession.setCreatedAt(LocalDateTime.now());
-        eventSession.setUpdatedAt(LocalDateTime.now());
+        String regLocationId = request.getRegistrationLocationId();
+        String venueLocationId = request.getVenueLocationId();
 
-        if (eventSession.getEventLocationId() != null) {
-            Location location = locationRepository.findById(eventSession.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist"));
-            eventSession.setEventLocation(location);
+        if (regLocationId == null || venueLocationId == null) {
+            throw new IllegalArgumentException("Both registration and venue location IDs are required");
         }
+
+        eventSession.setRegistrationLocationId(regLocationId);
+        eventSession.setVenueLocationId(venueLocationId);
+
+        Location regLocation = locationRepository.findById(regLocationId)
+                .orElseThrow(() -> new IllegalArgumentException("Registration Location ID does not exist: " + regLocationId));
+
+        eventSession.setRegistrationLocation(regLocation);
+
+        Location venueLocation = locationRepository.findById(venueLocationId)
+                .orElseThrow(() -> new IllegalArgumentException("Venue Location ID does not exist: " + venueLocationId));
+
+        eventSession.setVenueLocation(venueLocation);
+
+        validateDateRange(eventSession.getRegistrationDateTime(), eventSession.getStartingDateTime(), eventSession.getEndingDateTime());
+        eventSession.setEventStatus(EventStatus.UPCOMING);
+        eventSession.setCreated(LocalDateTime.now());
+        eventSession.setLastModified(LocalDateTime.now());
+
         checkLocationConflict(eventSession, null);
         Event savedEvent = eventSessionRepository.save(eventSession);
-        log.info("Successfully created event session with ID: {}", savedEvent.getEventId());
-        return mapToEventCreationResponse(savedEvent);
+        log.info("Successfully created event session with ID: {} (Reg: {}, Venue: {})", savedEvent.getEventId(), regLocationId, venueLocationId);
+        return toEventCreationResponse(savedEvent);
     }
 
     @Override
@@ -85,22 +100,12 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
 
     @Override
     public List<Event> getAllEvents() {
-        return eventSessionRepository.findAllByOrderByCreatedAtDesc();
+        return eventSessionRepository.findAllByOrderByCreatedDesc();
     }
 
     @Override
     public List<Event> getEventsByStatus(EventStatus status) {
         return eventSessionRepository.findByEventStatus(status);
-    }
-
-    @Override
-    public List<Event> getEventsByDateRange(Date from, Date to) {
-        return eventSessionRepository.findByDateRange(from, to);
-    }
-
-    @Override
-    public List<Event> getEventsByStatusAndDateRange(EventStatus status, Date from, Date to) {
-        return eventSessionRepository.findByStatusAndDateRange(status, from, to);
     }
 
     @Override
@@ -151,25 +156,50 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         if (updateEvent.getDescription() != null) {
             existingEvent.setDescription(updateEvent.getDescription());
         }
-
-        if (updateEvent.getFacialVerificationEnabled() != null) {
-            existingEvent.setFacialVerificationEnabled(updateEvent.getFacialVerificationEnabled());
+        if (updateEvent.isFacialVerificationEnabled()) {
+            existingEvent.setFacialVerificationEnabled(true);
+        }
+        if (updateEvent.isAttendanceLocationMonitoringEnabled()) {
+            existingEvent.setAttendanceLocationMonitoringEnabled(true);
         }
 
         boolean datesUpdated = false;
-        LocalDateTime newTimeIn = updateEvent.getTimeInRegistrationStartDateTime();
-        LocalDateTime newStart = updateEvent.getStartDateTime();
-        LocalDateTime newEnd = updateEvent.getEndDateTime();
+        LocalDateTime newTimeInReg = updateEvent.getRegistrationDateTime();
+        LocalDateTime newStart = updateEvent.getStartingDateTime();
+        LocalDateTime newEnd = updateEvent.getEndingDateTime();
 
-        if (newTimeIn != null || newStart != null || newEnd != null) {
+        if (newTimeInReg != null || newStart != null || newEnd != null) {
             datesUpdated = true;
-            LocalDateTime timeIn = newTimeIn != null ? newTimeIn : existingEvent.getTimeInRegistrationStartDateTime();
-            LocalDateTime start = newStart != null ? newStart : existingEvent.getStartDateTime();
-            LocalDateTime end = newEnd != null ? newEnd : existingEvent.getEndDateTime();
+            LocalDateTime timeIn = newTimeInReg != null ? newTimeInReg : existingEvent.getRegistrationDateTime();
+            LocalDateTime start = newStart != null ? newStart : existingEvent.getStartingDateTime();
+            LocalDateTime end = newEnd != null ? newEnd : existingEvent.getEndingDateTime();
+
             validateDateRange(timeIn, start, end);
-            existingEvent.setTimeInRegistrationStartDateTime(timeIn);
-            existingEvent.setStartDateTime(start);
-            existingEvent.setEndDateTime(end);
+
+            existingEvent.setRegistrationDateTime(timeIn);
+            existingEvent.setStartingDateTime(start);
+            existingEvent.setEndingDateTime(end);
+        }
+
+        String newRegLocationId = updateEvent.getRegistrationLocationId();
+        String newVenueLocationId = updateEvent.getVenueLocationId();
+        if (newRegLocationId != null || newVenueLocationId != null) {
+            if (newRegLocationId != null) {
+                Location regLocation = locationRepository.findById(newRegLocationId)
+                        .orElseThrow(() -> new IllegalArgumentException("Registration Location ID does not exist: " + newRegLocationId));
+                existingEvent.setRegistrationLocation(regLocation);
+                existingEvent.setRegistrationLocationId(newRegLocationId);
+            }
+            if (newVenueLocationId != null) {
+                Location venueLocation = locationRepository.findById(newVenueLocationId)
+                        .orElseThrow(() -> new IllegalArgumentException("Venue Location ID does not exist: " + newVenueLocationId));
+                existingEvent.setVenueLocation(venueLocation);
+                existingEvent.setVenueLocationId(newVenueLocationId);
+            }
+
+            existingEvent.validateLocationPurposes();
+        } else if (existingEvent.getRegistrationLocationId() == null || existingEvent.getVenueLocationId() == null) {
+            throw new IllegalArgumentException("Registration and venue location IDs cannot be removed or left unset");
         }
 
         if (datesUpdated) {
@@ -182,15 +212,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
             existingEvent.setEligibleStudents(expandedCriteria);
         }
 
-        if (updateEvent.getEventLocationId() != null) {
-            Location location = locationRepository.findById(updateEvent.getEventLocationId()).orElseThrow(() -> new IllegalArgumentException("Location ID does not exist: " + updateEvent.getEventLocationId()));
-            existingEvent.setEventLocation(location);
-            existingEvent.setEventLocationId(updateEvent.getEventLocationId());
-        } else if (existingEvent.getEventLocationId() == null) {
-            throw new IllegalArgumentException("Event location ID cannot be removed or left unset");
-        }
-
-        existingEvent.setUpdatedAt(LocalDateTime.now());
+        existingEvent.setLastModified(LocalDateTime.now());
         checkLocationConflict(existingEvent, eventId);
         Event updatedEvent = eventSessionRepository.save(existingEvent);
         log.info("Successfully updated event session with ID: {}", eventId);
@@ -202,7 +224,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         Event existingEvent = eventSessionRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
 
         existingEvent.setEventStatus(EventStatus.CANCELLED);
-        existingEvent.setUpdatedAt(LocalDateTime.now());
+        existingEvent.setLastModified(LocalDateTime.now());
         return eventSessionRepository.save(existingEvent);
     }
 
@@ -211,22 +233,54 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
      */
 
     private void checkLocationConflict(Event eventSession, String excludeEventId) {
-        if (eventSession.getEventLocationId() == null) {
+        if (eventSession.getRegistrationLocationId() == null || eventSession.getVenueLocationId() == null) {
             return;
         }
+
         List<Event> allEvents = eventSessionRepository.findAll();
-        List<Event> conflicts = allEvents.stream()
+        List<Event> conflicts = new ArrayList<>();
+
+        // this filters active events,
+        // but it excludes the event with statuses
+        // cancelled, concluded, finalized, and the current event if updating
+        List<Event> activeEvents = allEvents.stream()
                 .filter(e -> !e.getEventId().equals(excludeEventId))
                 .filter(e -> e.getEventStatus() != EventStatus.CANCELLED && e.getEventStatus() != EventStatus.CONCLUDED && e.getEventStatus() != EventStatus.FINALIZED)
-                .filter(e -> e.getEventLocationId() != null)
-                .filter(e -> e.getEventLocationId().equals(eventSession.getEventLocationId()))
-                .filter(e -> hasTimeOverlap(eventSession.getStartDateTime(), eventSession.getEndDateTime(), e.getStartDateTime(), e.getEndDateTime()))
+                .filter(e -> e.getRegistrationLocationId() != null && e.getVenueLocationId() != null)
                 .toList();
+
+        // this block of code checks registration location conflicts during registration window
+        LocalDateTime regStart = eventSession.getRegistrationDateTime();
+        LocalDateTime regEnd = eventSession.getStartingDateTime();
+        List<Event> regConflicts = activeEvents.stream()
+                .filter(e -> e.getRegistrationLocationId().equals(eventSession.getRegistrationLocationId()))
+                .filter(e -> hasTimeOverlap(regStart, regEnd, e.getRegistrationDateTime(), e.getStartingDateTime()))
+                .toList();
+        if (!regConflicts.isEmpty()) {
+            conflicts.addAll(regConflicts);
+        }
+
+        // this block of code checks venue location conflicts during event window
+        LocalDateTime eventStart = eventSession.getStartingDateTime();
+        LocalDateTime eventEnd = eventSession.getEndingDateTime();
+        List<Event> venueConflicts = activeEvents.stream()
+                .filter(e -> e.getVenueLocationId().equals(eventSession.getVenueLocationId()))
+                .filter(e -> hasTimeOverlap(eventStart, eventEnd, e.getStartingDateTime(), e.getEndingDateTime()))
+                .toList();
+        if (!venueConflicts.isEmpty()) {
+            conflicts.addAll(venueConflicts);
+        }
+
+        conflicts = conflicts.stream().distinct().toList();
+
         if (!conflicts.isEmpty()) {
-            String conflictNames = conflicts.stream()
-                    .map(Event::getEventName)
+            String conflictDetails = conflicts.stream()
+                    .map(e -> String.format("%s (Reg: %s-%s, Venue: %s-%s)",
+                            e.getEventName(),
+                            e.getRegistrationDateTime(), e.getStartingDateTime(),
+                            e.getStartingDateTime(), e.getEndingDateTime()))
                     .collect(Collectors.joining(", "));
-            throw new IllegalStateException("The selected location is already in use during the specified time by the following event(s): " + conflictNames);
+            throw new IllegalStateException("Location conflict detected: The selected registration or venue is already in use during the specified times by the following event(s): " + conflictDetails);
         }
     }
 
@@ -236,9 +290,9 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
 
     private void setStatusBasedOnCurrentTime(Event event) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime registrationStart = event.getTimeInRegistrationStartDateTime();
-        LocalDateTime start = event.getStartDateTime();
-        LocalDateTime end = event.getEndDateTime();
+        LocalDateTime registrationStart = event.getRegistrationDateTime();
+        LocalDateTime start = event.getStartingDateTime();
+        LocalDateTime end = event.getEndingDateTime();
 
         if (registrationStart == null || start == null || end == null) {
             return;
@@ -387,19 +441,22 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
         }
     }
 
-    private EventManagementResponse mapToEventCreationResponse(Event event) {
+    private EventManagementResponse toEventCreationResponse(Event event) {
         EventEligibility criteria = event.getEligibleStudents();
+
         EventManagementResponse response = EventManagementResponse.builder()
                 .eventId(event.getEventId())
                 .eventName(event.getEventName())
                 .description(event.getDescription())
-                .eventLocationId(event.getEventLocationId())
-                .timeInRegistrationStartDateTime(event.getTimeInRegistrationStartDateTime())
-                .startDateTime(event.getStartDateTime())
-                .endDateTime(event.getEndDateTime())
+                .registrationLocationId(event.getRegistrationLocationId())
+                .venueLocationId(event.getVenueLocationId())
+                .registrationDateTime(event.getRegistrationDateTime())
+                .startingDateTime(event.getStartingDateTime())
+                .endingDateTime(event.getEndingDateTime())
                 .eventStatus(event.getEventStatus())
                 .allStudents(criteria == null || criteria.isAllStudents())
-                .facialVerificationEnabled(event.getFacialVerificationEnabled())
+                .isFacialVerificationEnabled(event.isFacialVerificationEnabled())
+                .isAttendanceLocationMonitoringEnabled(event.isAttendanceLocationMonitoringEnabled())
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {
@@ -410,6 +467,7 @@ public class ManagementEventSessionsServiceImpl implements ManagementEventSessio
             response.setSectionIDs(criteria.getSections());
             response.setSectionNames(criteria.getSectionNames());
         }
+
         return response;
     }
 }
