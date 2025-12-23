@@ -6,7 +6,6 @@ import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.osa.service.event.management.EventManagementService;
 import java.util.List;
-import java.util.Optional;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +51,7 @@ public class EventManagementController {
     }
 
     /**
-     * Retrieves a specific event session by its unique identifier.
+     * Retrieves a specific event session by its ID.
      *
      * <p>This endpoint fetches the event details for the given ID. It is useful for viewing individual event information.</p>
      *
@@ -125,13 +124,13 @@ public class EventManagementController {
      * Cancels an event session by updating its status to {@link EventStatus#CANCELLED}.
      *
      * <p>This endpoint is for administrative cancellation of events, typically for UPCOMING or REGISTRATION status events.
-     * It does not delete the event but marks it as cancelled for record-keeping.</p>
+     * It does not delete the event but marks it as canceled for record-keeping.</p>
      *
      * <p><strong>Path Variable:</strong> {@code id} - the unique string ID of the event.</p>
      *
-     * <p><strong>Response:</strong> Updated {@link Event} with cancelled status.</p>
+     * <p><strong>Response:</strong> Updated {@link Event} with canceled status.</p>
      *
-     * @param id the unique ID of the event to cancel
+     * @param eventId the unique ID of the event to cancel
      */
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelEvent(@PathVariable("id") String eventId) {
@@ -140,11 +139,7 @@ public class EventManagementController {
     }
 
     /**
-     * Deletes an event session by its unique identifier.
-     *
-     * <p>This endpoint permanently removes the event, subject to data integrity checks. Deletion is allowed for
-     * UPCOMING or CANCELLED events. For other statuses, it checks for existing attendance records and prevents
-     * deletion if any exist to preserve historical data.</p>
+     * Deletes an event by its ID.
      *
      * <p><strong>Path Variable:</strong> {@code id} - the unique string ID of the event.</p>
      *

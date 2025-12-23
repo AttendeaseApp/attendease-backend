@@ -55,9 +55,9 @@ public final class EventManagementRequest {
     private EventStatus eventStatus;
     private EventEligibility eligibleStudents;
 
-    @JsonProperty("isFacialVerificationEnabled")
-    private boolean isFacialVerificationEnabled;
+    @JsonProperty("facialVerificationEnabled")
+    private Boolean facialVerificationEnabled;
 
-    @JsonProperty("isAttendanceLocationMonitoringEnabled")
-    private boolean isAttendanceLocationMonitoringEnabled;
+    @JsonProperty("attendanceLocationMonitoringEnabled")
+    private Boolean attendanceLocationMonitoringEnabled;
 }

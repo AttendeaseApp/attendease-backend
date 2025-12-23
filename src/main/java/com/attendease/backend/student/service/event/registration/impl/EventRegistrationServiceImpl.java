@@ -61,7 +61,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (event.isAttendanceLocationMonitoringEnabled()) {
+        if (!event.getAttendanceLocationMonitoringEnabled()) {
             if (registrationRequest.getFaceImageBase64() == null) {
                 throw new IllegalStateException("Face image is required for check-in");
             }
@@ -147,9 +147,9 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         if (criteria.getSections() != null && criteria.getSections().contains(student.getSection().getId())) {
             return true;
         }
-        if (criteria.getCourse() != null && course != null && criteria.getCourse().contains(course.getId())) {
+        if (criteria.getCourses() != null && course != null && criteria.getCourses().contains(course.getId())) {
             return true;
         }
-        return criteria.getCluster() != null && cluster != null && criteria.getCluster().contains(cluster.getClusterId());
+        return criteria.getClusters() != null && cluster != null && criteria.getClusters().contains(cluster.getClusterId());
     }
 }

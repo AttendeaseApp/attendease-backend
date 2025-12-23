@@ -4,8 +4,6 @@ import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
 import java.util.List;
 
-import com.attendease.backend.domain.event.management.EventManagementResponse;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -37,19 +35,55 @@ public interface EventRepository extends MongoRepository<Event, String> {
      */
     List<Event> findAllByOrderByCreatedDesc();
 
+    /**
+     * Counts location by venue location id.
+     */
     Long countByVenueLocationId(String venueLocationId);
 
+    /**
+     * Retrieves location by using venue location id.
+     */
     List<Event> findByVenueLocationId(String venueLocationId);
 
-    Long countByEligibleStudentsClusterContaining(String clusterId);
+    /**
+     * Counts the number of events where the specified cluster ID is in the eligible students list.
+     */
+    Long countByEligibleStudentsClustersContaining(String clusterId);
 
-    Long countByEligibleStudentsClusterNamesContaining(@NotBlank(message = "Cluster name is required") String clusterName);
+    /**
+     * Counts the number of events where the specified cluster name is in the eligible students list.
+     */
+    Long countByEligibleStudentsClusterNamesContaining(String clusterName);
 
-    Long countByEligibleStudentsCourseContaining(String id);
+    /**
+     * Counts the number of events where the specified course ID is in the eligible students list.
+     */
+    Long countByEligibleStudentsCoursesContaining(String id);
 
-    Long countByEligibleStudentsCourseNamesContaining(@NotBlank(message = "Course name is required") String courseName);
+    /**
+     * Counts the number of events where the specified course name is in the eligible students list.
+     */
+    Long countByEligibleStudentsCourseNamesContaining(String courseName);
 
+    /**
+     * Counts the number of events where the specified section ID is in the eligible students list.
+     */
     Long countByEligibleStudentsSectionsContaining(String id);
 
+    /**
+     * Counts the number of events where the specified section name is in the eligible students list.
+     */
     Long countByEligibleStudentsSectionNamesContaining(String name);
+
+    /**
+     * Finds events at a specific venue location that do not match any of the excluded statuses.
+     * Typically used for checking scheduling conflicts.
+     */
+    List<Event> findByVenueLocationIdAndEventStatusNotIn(String venueLocationId, List<EventStatus> excludedConflictStatuses);
+
+    /**
+     * Finds events at a specific registration location that do not match any of the excluded statuses.
+     * Useful for detecting location-based conflicts during the registration phase.
+     */
+    List<Event> findByRegistrationLocationIdAndEventStatusNotIn(String registrationLocationId, List<EventStatus> excludedConflictStatuses);
 }

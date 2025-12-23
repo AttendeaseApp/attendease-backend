@@ -88,7 +88,7 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
     @Override
     public void deleteCourse(String id) {
         Courses course = getCourseById(id);
-        long eventCountById = eventRepository.countByEligibleStudentsCourseContaining(course.getId());
+        long eventCountById = eventRepository.countByEligibleStudentsCoursesContaining(course.getId());
         long eventCountByName = eventRepository.countByEligibleStudentsCourseNamesContaining(course.getCourseName());
         long totalEventCount = eventCountById + eventCountByName;
 

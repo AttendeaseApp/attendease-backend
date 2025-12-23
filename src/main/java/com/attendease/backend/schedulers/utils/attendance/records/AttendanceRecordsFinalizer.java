@@ -161,8 +161,8 @@ public class AttendanceRecordsFinalizer {
         }
         Set<Students> uniqueStudents = new HashSet<>();
 
-        if (!CollectionUtils.isEmpty(criteria.getCourse())) {
-            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourse());
+        if (!CollectionUtils.isEmpty(criteria.getCourses())) {
+            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
             List<String> allSectionIds = courseSections.stream().map(Sections::getId).collect(Collectors.toList());
             if (!allSectionIds.isEmpty()) {
                 List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
@@ -170,8 +170,8 @@ public class AttendanceRecordsFinalizer {
             }
         }
 
-        if (!CollectionUtils.isEmpty(criteria.getCluster())) {
-            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getCluster());
+        if (!CollectionUtils.isEmpty(criteria.getClusters())) {
+            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
             List<String> allCourseIds = clusterCourses.stream().map(Courses::getId).collect(Collectors.toList());
             if (!allCourseIds.isEmpty()) {
                 List<Sections> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);

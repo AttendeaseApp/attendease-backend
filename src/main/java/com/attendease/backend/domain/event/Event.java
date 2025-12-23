@@ -2,7 +2,6 @@ package com.attendease.backend.domain.event;
 
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
-import com.attendease.backend.domain.enums.location.LocationPurpose;
 import com.attendease.backend.domain.location.Location;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -95,13 +94,16 @@ public class Event {
     @NotNull
     private EventStatus eventStatus;
 
-    @Field("isFacialVerificationEnabled")
+    @Field("facialVerificationEnabled")
     @Builder.Default
-    private boolean isFacialVerificationEnabled = false;
+    private Boolean facialVerificationEnabled = false;
 
-    @Field("isAttendanceLocationMonitoringEnabled")
+    @Field("attendanceLocationMonitoringEnabled")
     @Builder.Default
-    private boolean isAttendanceLocationMonitoringEnabled = false;
+    private Boolean attendanceLocationMonitoringEnabled = false;
+
+    private String academicYear;
+    private String semester;
 
     @CreatedBy
     private String createdBy;
@@ -113,18 +115,4 @@ public class Event {
     @LastModifiedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastModified;
-
-    /**
-     * Validates that the registration location has purpose REGISTRATION_AREA
-     * and the venue location has purpose EVENT_VENUE.
-     * Throws IllegalArgumentException if mismatched.
-     */
-    public void validateLocationPurposes() {
-        if (registrationLocation != null && !LocationPurpose.REGISTRATION_AREA.equals(registrationLocation.getPurpose())) {
-            throw new IllegalArgumentException("Registration location must have purpose REGISTRATION_AREA (current: " + registrationLocation.getPurpose() + ")");
-        }
-        if (venueLocation != null && !LocationPurpose.EVENT_VENUE.equals(venueLocation.getPurpose())) {
-            throw new IllegalArgumentException("Venue location must have purpose EVENT_VENUE (current: " + venueLocation.getPurpose() + ")");
-        }
-    }
 }

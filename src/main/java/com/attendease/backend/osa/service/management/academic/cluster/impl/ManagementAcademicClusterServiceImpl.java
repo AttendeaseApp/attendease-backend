@@ -70,7 +70,7 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
     public void deleteCluster(String clusterId) {
         Clusters cluster = getClusterByClusterId(clusterId);
         long courseCount = courseRepository.countByCluster(cluster);
-        long eventCountById = eventRepository.countByEligibleStudentsClusterContaining(cluster.getClusterId());
+        long eventCountById = eventRepository.countByEligibleStudentsClustersContaining(cluster.getClusterId());
         long eventCountByName = eventRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());
         long totalEventCount = eventCountById + eventCountByName;
 

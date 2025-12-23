@@ -47,6 +47,6 @@ public final class EventManagementResponse {
     private List<String> courseNames;
     private List<String> clusterIDs;
     private List<String> clusterNames;
-    private boolean isFacialVerificationEnabled;
-    private boolean isAttendanceLocationMonitoringEnabled;
+    private Boolean facialVerificationEnabled;
+    private Boolean attendanceLocationMonitoringEnabled;
 }

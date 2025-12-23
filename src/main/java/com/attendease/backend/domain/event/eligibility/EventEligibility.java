@@ -14,10 +14,10 @@ public final class EventEligibility {
 
     private boolean allStudents;
 
-    private List<String> cluster;
+    private List<String> clusters;
     private List<String> clusterNames;
 
-    private List<String> course;
+    private List<String> courses;
     private List<String> courseNames;
 
     private List<String> sections;

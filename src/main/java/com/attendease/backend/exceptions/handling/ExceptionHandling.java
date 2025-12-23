@@ -3,6 +3,7 @@ package com.attendease.backend.exceptions.handling;
 import com.attendease.backend.domain.exception.error.ErrorResponse;
 import com.attendease.backend.domain.exception.error.csv.CsvImportErrorResponse;
 import com.attendease.backend.domain.exception.validation.ValidationErrorResponse;
+import com.attendease.backend.exceptions.domain.Event.*;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.exceptions.domain.Location.*;
 import org.springframework.http.HttpStatus;
@@ -90,6 +91,10 @@ public class ExceptionHandling {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /*
+    * LOCATION MANAGEMENT RELATED EXCEPTIONS
+    */
+
     @ExceptionHandler(LocationAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleLocationAlreadyExists(LocationAlreadyExistsException ex) {
         ErrorResponse error = new ErrorResponse(
@@ -134,6 +139,90 @@ public class ExceptionHandling {
     public ResponseEntity<ErrorResponse> handleInvalidGeometry(InvalidGeometryException ex) {
         ErrorResponse error = new ErrorResponse(
                 "INVALID_GEOMETRY",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /*
+    * EVENT MANAGEMENT RELATED EXCEPTIONS
+    */
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEventNotFound(EventNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "EVENT_NOT_FOUND",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(EventLocationConflictException.class)
+    public ResponseEntity<ErrorResponse> handleEventLocationConflict(EventLocationConflictException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "EVENT_LOCATION_CONFLICT",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(EventStatusException.class)
+    public ResponseEntity<ErrorResponse> handleEventStatus(EventStatusException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "EVENT_STATUS_ERROR",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(EventDeletionNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleEventDeletionNotAllowed(EventDeletionNotAllowedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "EVENT_DELETION_NOT_ALLOWED",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(EventUpdateNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleEventUpdateNotAllowed(EventUpdateNotAllowedException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "EVENT_UPDATE_NOT_ALLOWED",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDateRange(InvalidDateRangeException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_DATE_RANGE",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidEligibilityCriteriaException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEligibilityCriteria(InvalidEligibilityCriteriaException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_ELIGIBILITY_CRITERIA",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidLocationPurposeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLocationPurpose(InvalidLocationPurposeException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_LOCATION_PURPOSE",
                 ex.getMessage(),
                 LocalDateTime.now()
         );
