@@ -1,6 +1,6 @@
 package com.attendease.backend.student.controller.event.retrieval;
 
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.student.service.event.retrieval.EventRetrievalService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class EventRetrievalController {
 
     @MessageMapping("/events/{id}")
     @SendToUser("/queue/events/{id}")
-    public EventSessions getEventById(@DestinationVariable String id) {
+    public Event getEventById(@DestinationVariable String id) {
         return eventRetrievalService.getEventById(id).orElse(null);
     }
 
@@ -31,7 +31,7 @@ public class EventRetrievalController {
      */
     @MessageMapping("/homepage-events")
     @SendTo("/topic/homepage-events")
-    public List<EventSessions> sendHomepageEvents() {
+    public List<Event> sendHomepageEvents() {
         return eventRetrievalService.getOngoingRegistrationAndActiveEvents();
     }
 }

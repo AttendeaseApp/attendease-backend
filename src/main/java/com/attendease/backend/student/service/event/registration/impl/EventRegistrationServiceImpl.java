@@ -8,15 +8,15 @@ import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
+import com.attendease.backend.domain.event.eligibility.EventEligibility;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.event.registration.EventRegistrationRequest;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventRegistrationServiceImpl implements EventRegistrationService {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
     private final BiometricsVerificationClient biometricsVerificationService;
@@ -44,7 +44,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     public EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest) {
         User user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
-        EventSessions event = eventSessionsRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
+        Event event = eventRepository.findById(registrationRequest.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
 
         LocalDateTime now = LocalDateTime.now();
         validateEventStatus(event);
@@ -61,21 +61,21 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
         isAlreadyRegistered(student, event, location);
 
-        if (event.getFacialVerificationEnabled() == Boolean.TRUE) {
+        if (!event.getAttendanceLocationMonitoringEnabled()) {
             if (registrationRequest.getFaceImageBase64() == null) {
                 throw new IllegalStateException("Face image is required for check-in");
             }
             verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
         }
 
-        AttendanceStatus initialStatus = now.isAfter(event.getStartDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
+        AttendanceStatus initialStatus = now.isAfter(event.getStartingDateTime()) ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
         AttendanceRecords record = AttendanceRecords.builder()
                 .student(student)
                 .event(event)
                 .location(location)
                 .timeIn(now)
                 .attendanceStatus(initialStatus)
-                .reason(now.isAfter(event.getStartDateTime()) ? "Late registration" : null)
+                .reason(now.isAfter(event.getStartingDateTime()) ? "Late registration" : null)
                 .build();
 
         attendanceRecordsRepository.save(record);
@@ -86,11 +86,11 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
      * PRIVATE HELPERS
      */
 
-    private void validateEventStatus(EventSessions event) {
+    private void validateEventStatus(Event event) {
         EventStatus status = event.getEventStatus();
 
         if (status == EventStatus.UPCOMING) {
-            throw new IllegalStateException(String.format("registration not yet open. It starts at %s.", event.getTimeInRegistrationStartDateTime()));
+            throw new IllegalStateException(String.format("registration not yet open. It starts at %s.", event.getRegistrationDateTime()));
         }
 
         if (status == EventStatus.CONCLUDED) {
@@ -128,7 +128,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
     }
 
-    private void isAlreadyRegistered(Students student, EventSessions event, Location location) {
+    private void isAlreadyRegistered(Students student, Event event, Location location) {
         boolean alreadyRegistered = !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(
                 student, event, location, AttendanceStatus.REGISTERED).isEmpty() || !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(student, event, location, AttendanceStatus.LATE).isEmpty();
         if (alreadyRegistered) {
@@ -136,8 +136,8 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
     }
 
-    private boolean isStudentEligibleForEvent(EventSessions event, Students student) {
-        EligibilityCriteria criteria = event.getEligibleStudents();
+    private boolean isStudentEligibleForEvent(Event event, Students student) {
+        EventEligibility criteria = event.getEligibleStudents();
         if (criteria == null || criteria.isAllStudents()) return true;
         if (student.getSection() == null) {
             return false;
@@ -147,9 +147,9 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         if (criteria.getSections() != null && criteria.getSections().contains(student.getSection().getId())) {
             return true;
         }
-        if (criteria.getCourse() != null && course != null && criteria.getCourse().contains(course.getId())) {
+        if (criteria.getCourses() != null && course != null && criteria.getCourses().contains(course.getId())) {
             return true;
         }
-        return criteria.getCluster() != null && cluster != null && criteria.getCluster().contains(cluster.getClusterId());
+        return criteria.getClusters() != null && cluster != null && criteria.getClusters().contains(cluster.getClusterId());
     }
 }

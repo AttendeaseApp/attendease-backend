@@ -1,9 +1,9 @@
 package com.attendease.backend.student.service.event.state.impl;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.domain.events.Registration.Response.EventStartStatusResponse;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.event.state.checking.EventStateCheckingResponse;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.student.service.event.state.EventStateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventStateServiceImpl implements EventStateService {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
 
     @Override
-    public EventStartStatusResponse getEventStartStatus(String eventId) {
-        EventSessions event = eventSessionsRepository.findById(eventId).orElseThrow(() -> new IllegalStateException("Event not found"));
+    public EventStateCheckingResponse getEventStartStatus(String eventId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalStateException("Event not found"));
         EventStatus status = event.getEventStatus();
 
         boolean hasStarted = status == EventStatus.ONGOING;
@@ -32,6 +32,6 @@ public class EventStateServiceImpl implements EventStateService {
             case FINALIZED -> "Event fully completed.";
         };
 
-        return new EventStartStatusResponse(eventId, hasStarted, isOngoing, hasEnded, message);
+        return new EventStateCheckingResponse(eventId, hasStarted, isOngoing, hasEnded, message);
     }
 }

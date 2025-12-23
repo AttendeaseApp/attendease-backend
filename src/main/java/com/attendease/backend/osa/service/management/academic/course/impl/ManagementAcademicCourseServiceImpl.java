@@ -9,7 +9,7 @@ import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;
 
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.validation.UserValidator;
@@ -25,7 +25,7 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
     private final ClustersRepository clusterRepository;
     private final SectionsRepository sectionsRepository;
     private final StudentRepository studentRepository;
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final UserValidator userValidator;
 
     @Override
@@ -88,8 +88,8 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
     @Override
     public void deleteCourse(String id) {
         Courses course = getCourseById(id);
-        long eventCountById = eventSessionsRepository.countByEligibleStudentsCourseContaining(course.getId());
-        long eventCountByName = eventSessionsRepository.countByEligibleStudentsCourseNamesContaining(course.getCourseName());
+        long eventCountById = eventRepository.countByEligibleStudentsCoursesContaining(course.getId());
+        long eventCountByName = eventRepository.countByEligibleStudentsCourseNamesContaining(course.getCourseName());
         long totalEventCount = eventCountById + eventCountByName;
 
         long totalStudentCount = 0;

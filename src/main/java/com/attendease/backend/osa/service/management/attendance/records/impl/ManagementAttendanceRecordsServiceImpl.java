@@ -6,10 +6,10 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Attendees.Res
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,22 +18,17 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
+public final class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     @Override
-    public List<EventSessions> getOngoingEvents() {
-        return eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.ONGOING));
-    }
-
-    @Override
     public List<FinalizedAttendanceRecordsResponse> getFinalizedEvents() {
-        List<EventSessions> finalizedEvents = eventSessionsRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
+        List<Event> finalizedEvents = eventRepository.findByEventStatusIn(List.of(EventStatus.FINALIZED));
         List<FinalizedAttendanceRecordsResponse> responses = new ArrayList<>();
 
-        for (EventSessions event : finalizedEvents) {
+        for (Event event : finalizedEvents) {
             List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(event.getEventId());
             long totalPresent = records
                 .stream()
@@ -52,15 +47,15 @@ public class ManagementAttendanceRecordsServiceImpl implements ManagementAttenda
                 .filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE)
                 .count();
 
-            String locationName = event.getEventLocation() != null ? event.getEventLocation().getLocationName() : null;
+            String locationName = event.getVenueLocation() != null ? event.getVenueLocation().getLocationName() : null;
 
             FinalizedAttendanceRecordsResponse response = FinalizedAttendanceRecordsResponse.builder()
                 .eventId(event.getEventId())
                 .eventName(event.getEventName())
                 .locationName(locationName)
-                .timeInRegistrationStartDateTime(event.getTimeInRegistrationStartDateTime())
-                .startDateTime(event.getStartDateTime())
-                .endDateTime(event.getEndDateTime())
+                .timeInRegistrationStartDateTime(event.getRegistrationDateTime())
+                .startDateTime(event.getStartingDateTime())
+                .endDateTime(event.getEndingDateTime())
                 .eventStatus(event.getEventStatus())
                 .totalPresent((int) totalPresent)
                 .totalAbsent((int) totalAbsent)
@@ -74,13 +69,8 @@ public class ManagementAttendanceRecordsServiceImpl implements ManagementAttenda
     }
 
     @Override
-    public List<EventSessions> getAllSortedByCreatedAt() {
-        return eventSessionsRepository.findAllByOrderByCreatedAtDesc();
-    }
-
-    @Override
-    public Optional<EventSessions> findById(String id) {
-        return eventSessionsRepository.findById(id);
+    public Optional<Event> findById(String id) {
+        return eventRepository.findById(id);
     }
 
     @Override

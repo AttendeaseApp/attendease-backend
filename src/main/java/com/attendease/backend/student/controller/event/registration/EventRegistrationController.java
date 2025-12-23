@@ -1,7 +1,7 @@
 package com.attendease.backend.student.controller.event.registration;
 
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
-import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
+import com.attendease.backend.domain.event.registration.EventRegistrationRequest;
 import com.attendease.backend.student.service.attendance.registration.tracking.AttendanceRegistrationTrackingService;
 import com.attendease.backend.student.service.event.registration.EventRegistrationService;
 import lombok.RequiredArgsConstructor;

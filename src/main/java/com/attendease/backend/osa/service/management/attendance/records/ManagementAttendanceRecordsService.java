@@ -5,7 +5,7 @@ import com.attendease.backend.domain.attendance.History.Response.FinalizedAttend
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,33 +22,17 @@ import java.util.Optional;
 public interface ManagementAttendanceRecordsService {
 
     /**
-     * {@code getOngoingEvents} can be used to retrieve all ongoing event sessions.
-     *
-     * @return a list of {@link EventSessions} with status {@link EventStatus#ONGOING}
-     */
-    List<EventSessions> getOngoingEvents();
-
-    /**
      * {@code getFinalizedEvents} is used to retrieve all finalized event sessions with attendees per attendance status.
-     *
-     * @return a list of {@link EventSessions} with status {@link EventStatus#FINALIZED}
      */
     List<FinalizedAttendanceRecordsResponse> getFinalizedEvents();
-
-    /**
-     * {@code getAllSortedByCreatedAt} can be used to retrieves all event sessions sorted by creation date in descending order.
-     *
-     * @return a list of {@link EventSessions} ordered by {@code createdAt} descending
-     */
-    List<EventSessions> getAllSortedByCreatedAt();
 
     /**
      * (@code findById) is used to retrieve an event session by its unique identifier.
      *
      * @param id the unique ID of the event session
-     * @return an {@link Optional} containing the {@link EventSessions} if found, otherwise empty
+     * @return an {@link Optional} containing the {@link Event} if found, otherwise empty
      */
-    Optional<EventSessions> findById(String id);
+    Optional<Event> findById(String id);
 
     /**
      * {@code getAttendeesByEvent} is used to retrieve all attendees for a specific event, including student information, attendance status,

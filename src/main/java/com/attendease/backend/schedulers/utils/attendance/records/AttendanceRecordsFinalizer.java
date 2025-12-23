@@ -4,8 +4,8 @@ import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.enums.AttendanceStatus;
-import com.attendease.backend.domain.events.EligibleAttendees.EligibilityCriteria;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.eligibility.EventEligibility;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
@@ -35,7 +35,7 @@ public class AttendanceRecordsFinalizer {
      * Re-evaluates and finalizes attendance based on ping logs.
      * A student is marked PRESENT if they were inside for at least 70% of the event duration.
      */
-    public void finalizeAttendanceForEvent(EventSessions event) {
+    public void finalizeAttendanceForEvent(Event event) {
         String eventId = event.getEventId();
         String eventName = event.getEventName();
 
@@ -86,15 +86,15 @@ public class AttendanceRecordsFinalizer {
     /**
      * Uses attendance ping logs to decide the student's final attendance.
      */
-    private AttendanceStatus evaluateAttendanceFromLogs(EventSessions event, AttendanceRecords record) {
+    private AttendanceStatus evaluateAttendanceFromLogs(Event event, AttendanceRecords record) {
         List<AttendanceTrackingResponse> pings = record.getAttendancePingLogs();
         if (pings == null || pings.isEmpty()) {
             record.setReason("No location updates were detected during the event.");
             return AttendanceStatus.ABSENT;
         }
 
-        long eventStart = event.getStartDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long eventEnd = event.getEndDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long eventStart = event.getStartingDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long eventEnd = event.getEndingDateTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         long eventDuration = eventEnd - eventStart;
         long insideTime = computeInsideDuration(pings, eventStart, eventEnd);
 
@@ -114,8 +114,8 @@ public class AttendanceRecordsFinalizer {
         }
     }
 
-    private AttendanceStatus evaluateLateAttendees(EventSessions event, AttendanceRecords record) {
-        if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartDateTime())) {
+    private AttendanceStatus evaluateLateAttendees(Event event, AttendanceRecords record) {
+        if (record.getTimeIn() == null || !record.getTimeIn().isAfter(event.getStartingDateTime())) {
             return null;
         }
         record.setReason("Arrived late to the event after it started at " + record.getTimeIn());
@@ -148,8 +148,8 @@ public class AttendanceRecordsFinalizer {
         return totalInside;
     }
 
-    private List<Students> getExpectedStudentsForEvent(EventSessions event) {
-        EligibilityCriteria criteria = event.getEligibleStudents();
+    private List<Students> getExpectedStudentsForEvent(Event event) {
+        EventEligibility criteria = event.getEligibleStudents();
         if (criteria == null || criteria.isAllStudents()) {
             return studentRepository.findAll();
         }
@@ -161,8 +161,8 @@ public class AttendanceRecordsFinalizer {
         }
         Set<Students> uniqueStudents = new HashSet<>();
 
-        if (!CollectionUtils.isEmpty(criteria.getCourse())) {
-            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourse());
+        if (!CollectionUtils.isEmpty(criteria.getCourses())) {
+            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
             List<String> allSectionIds = courseSections.stream().map(Sections::getId).collect(Collectors.toList());
             if (!allSectionIds.isEmpty()) {
                 List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
@@ -170,8 +170,8 @@ public class AttendanceRecordsFinalizer {
             }
         }
 
-        if (!CollectionUtils.isEmpty(criteria.getCluster())) {
-            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getCluster());
+        if (!CollectionUtils.isEmpty(criteria.getClusters())) {
+            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
             List<String> allCourseIds = clusterCourses.stream().map(Courses::getId).collect(Collectors.toList());
             if (!allCourseIds.isEmpty()) {
                 List<Sections> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);

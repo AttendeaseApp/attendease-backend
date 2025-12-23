@@ -22,8 +22,11 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDateTime;
 
 /**
- * {@code Location} is a domain entity representing a location that can be used
- * for a specific event registration area or the venue.
+ * {@code Location} is a domain entity representing a geofenced area defined by {@link GeoJsonPolygon}.
+ * <p>
+ * Each location is classified by its {@link LocationPurpose} to determine if it can be assigned
+ * as a gateway for registration or as the main venue for an event. It also tracks the
+ * {@link LocationEnvironment} to assist in signal accuracy expectations when creating event.
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-16

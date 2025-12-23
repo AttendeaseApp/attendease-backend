@@ -1,6 +1,6 @@
 package com.attendease.backend.student.service.event.registration;
 
-import com.attendease.backend.domain.events.Registration.Request.EventRegistrationRequest;
+import com.attendease.backend.domain.event.registration.EventRegistrationRequest;
 
 /**
  * EventRegistrationServiceImpl is responsible for handling student event registrations.

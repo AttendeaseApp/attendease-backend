@@ -2,12 +2,12 @@ package com.attendease.backend.student.service.attendance.registration.tracking.
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegistrationTrackingService {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final LocationRepository eventLocationsRepository;
     private final StudentRepository studentsRepository;
@@ -33,11 +33,11 @@ public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegi
     public boolean attendanceRegistrationTracker(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs) {
         User user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentsRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
-        EventSessions event = eventSessionsRepository.findById(attendancePingLogs.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
+        Event event = eventRepository.findById(attendancePingLogs.getEventId()).orElseThrow(() -> new IllegalStateException("Event not found"));
         Location location = eventLocationsRepository.findById(attendancePingLogs.getLocationId()).orElseThrow(() -> new IllegalStateException("Event location not found"));
 
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(event.getStartDateTime()) || now.isAfter(event.getEndDateTime())) {
+        if (now.isBefore(event.getStartingDateTime()) || now.isAfter(event.getEndingDateTime())) {
             throw new IllegalStateException("Event is not ongoing. Cannot record attendance ping.");
         }
 

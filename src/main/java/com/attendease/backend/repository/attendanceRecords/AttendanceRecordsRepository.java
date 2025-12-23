@@ -2,7 +2,7 @@ package com.attendease.backend.repository.attendanceRecords;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.enums.AttendanceStatus;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
 import java.util.List;
@@ -30,7 +30,7 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @param status the attendance status to filter by (e.g., PRESENT, ABSENT)
      * @return a list of {@link AttendanceRecords} matching the given criteria
      */
-    List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, EventSessions event, Location location, AttendanceStatus status);
+    List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, Event event, Location location, AttendanceStatus status);
 
     /**
      * Retrieves a list of attendance records associated with a specific event ID.
@@ -48,7 +48,7 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
      * @param location the event location associated with the attendance record
      * @return an {@link Optional} containing the {@link AttendanceRecords} if found, otherwise empty
      */
-    Optional<AttendanceRecords> findByStudentAndEventAndLocation(Students student, EventSessions event, Location location);
+    Optional<AttendanceRecords> findByStudentAndEventAndLocation(Students student, Event event, Location location);
 
     /**
      * Retrieves a list of attendance records for a specific student by their student ID.

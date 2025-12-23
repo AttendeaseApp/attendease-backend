@@ -4,7 +4,7 @@ import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Request.UpdateAttendanceRequest;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
-import com.attendease.backend.domain.events.EventSessions;
+import com.attendease.backend.domain.event.Event;
 import java.util.List;
 
 import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
@@ -58,11 +58,11 @@ public class ManagementAttendanceRecordsController {
      * Retrieves a specific event by its unique ID.
      *
      * @param id the ID of the event
-     * @return the {@link EventSessions} corresponding to the given ID
+     * @return the {@link Event} corresponding to the given ID
      * @throws RuntimeException if no event is found with the provided ID
      */
     @GetMapping("/event/{id}")
-    public EventSessions getEventById(@PathVariable String id) {
+    public Event getEventById(@PathVariable String id) {
         return managementAttendanceRecordsService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
     }
 

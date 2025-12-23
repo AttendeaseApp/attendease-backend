@@ -1,8 +1,8 @@
 package com.attendease.backend.schedulers.event.schedule;
 
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.events.EventSessions;
-import com.attendease.backend.repository.eventSessions.EventSessionsRepository;
+import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.repository.event.EventRepository;
 import java.util.List;
 
 import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EventScheduleFinalizer {
 
-    private final EventSessionsRepository eventSessionsRepository;
+    private final EventRepository eventRepository;
     private final AttendanceRecordsFinalizer attendanceRecordsFinalizer;
 
     @Scheduled(fixedRate = 15000)
     public void runScheduledFinalization() throws Exception {
         try {
-            List<EventSessions> concludedEvents = eventSessionsRepository.findByEventStatus(EventStatus.CONCLUDED);
-            for (EventSessions event : concludedEvents) {
+            List<Event> concludedEvents = eventRepository.findByEventStatus(EventStatus.CONCLUDED);
+            for (Event event : concludedEvents) {
                 if (event.getEventStatus() == EventStatus.CANCELLED) {
                     log.info("Skipping finalization for cancelled event: {} {}", event.getEventId(), event.getEventName());
                     continue;
@@ -31,7 +31,7 @@ public class EventScheduleFinalizer {
                 log.info("Finalizing attendance records and status for event: {} {}", event.getEventId(), event.getEventName());
                 attendanceRecordsFinalizer.finalizeAttendanceForEvent(event);
                 event.setEventStatus(EventStatus.FINALIZED);
-                eventSessionsRepository.save(event);
+                eventRepository.save(event);
             }
         } catch (Exception e) {
             throw new Exception("Error during scheduled attendance finalization" + e);
