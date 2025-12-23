@@ -25,9 +25,24 @@ import java.time.LocalDateTime;
  * Domain entity representing a scheduled event session.
  * <p>
  * Captures event details like timing, locations (separate for registration and venue), and eligibility rules.
+ * <p>
  * Supports states (e.g., UPCOMING, ONGOING) and geofencing verification per purpose.
+ * <p>
  * {@link EventEligibility} defines target students. Post-event, triggers attendance finalization.
+ * <p>
+ * This also supports a dual-location model to facilitate precise attendance tracking:
+ * <ul>
+ * <li><b>Registration Location:</b> The specific area where students must physically
+ * be present to register for the event.
+ * </li>
+ * <li><b>Venue Location:</b> The actual space where the event takes place.
+ * This is used for ongoing location monitoring to ensure students remain
+ * within the geofence during the session.</li>
+ * </ul>
+ * <p>
  *
+ * @see com.attendease.backend.domain.enums.location.LocationEnvironment
+ * @see com.attendease.backend.domain.enums.location.LocationPurpose
  * @author jakematthewviado204@gmail.com
  * @since 2025-Dec-22 (Updated for dual locations)
  */
@@ -102,6 +117,7 @@ public class Event {
     @Builder.Default
     private Boolean attendanceLocationMonitoringEnabled = false;
 
+    // TODO: IMPLEMENT THIS, STILL HAS DEPENDENCIES
     private String academicYear;
     private String semester;
 
