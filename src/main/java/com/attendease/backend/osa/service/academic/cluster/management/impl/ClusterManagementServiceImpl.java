@@ -1,19 +1,20 @@
-package com.attendease.backend.osa.service.management.academic.cluster.impl;
+package com.attendease.backend.osa.service.academic.cluster.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.osa.service.management.academic.cluster.ManagementAcademicClusterService;
+import com.attendease.backend.osa.service.academic.cluster.management.ClusterManagementService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ManagementAcademicClusterServiceImpl implements ManagementAcademicClusterService {
+public final class ClusterManagementServiceImpl implements ClusterManagementService {
 
     private final ClustersRepository clusterRepository;
     private final CourseRepository courseRepository;
@@ -21,6 +22,7 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
     private final UserValidator userValidator;
 
     @Override
+    @Transactional
     public Clusters createNewCluster(Clusters cluster) {
         String name = cluster.getClusterName().trim();
 
@@ -49,6 +51,7 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
     }
 
     @Override
+    @Transactional
     public Clusters updateCluster(String clusterId, Clusters updatedCluster) {
         Clusters existing = getClusterByClusterId(clusterId);
         String newClusterName = updatedCluster.getClusterName().trim();
@@ -67,7 +70,8 @@ public class ManagementAcademicClusterServiceImpl implements ManagementAcademicC
     }
 
     @Override
-    public void deleteCluster(String clusterId) {
+    @Transactional
+    public final void deleteCluster(String clusterId) {
         Clusters cluster = getClusterByClusterId(clusterId);
         long courseCount = courseRepository.countByCluster(cluster);
         long eventCountById = eventRepository.countByEligibleStudentsClustersContaining(cluster.getClusterId());

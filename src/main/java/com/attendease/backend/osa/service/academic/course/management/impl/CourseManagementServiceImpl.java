@@ -1,10 +1,10 @@
-package com.attendease.backend.osa.service.management.academic.course.impl;
+package com.attendease.backend.osa.service.academic.course.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osa.service.management.academic.course.ManagementAcademicCourseService;
-import com.attendease.backend.osa.service.management.academic.section.ManagementAcademicSectionService;
+import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
+import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;
@@ -15,12 +15,13 @@ import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCourseService {
+public final class CourseManagementServiceImpl implements CourseManagementService {
 
-    private final ManagementAcademicSectionService managementAcademicSectionService;
+    private final SectionManagementService sectionManagementService;
     private final CourseRepository courseRepository;
     private final ClustersRepository clusterRepository;
     private final SectionsRepository sectionsRepository;
@@ -29,6 +30,7 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
     private final UserValidator userValidator;
 
     @Override
+    @Transactional
     public Courses createCourse(String clusterId, Courses course) {
         Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
 
@@ -39,14 +41,14 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
 
         userValidator.validateCourseNameFormat(courseName);
 
-        if (courseRepository.findByCourseName(courseName).isPresent()) {
+        if (courseRepository.findByCourseName   (courseName).isPresent()) {
             throw new IllegalArgumentException("Course name '" + courseName + "' already exists.");
         }
 
         course.setCourseName(courseName);
         course.setCluster(cluster);
         Courses savedCourse = courseRepository.save(course);
-        managementAcademicSectionService.createDefaultSections(savedCourse);
+        sectionManagementService.createDefaultSections(savedCourse);
         return savedCourse;
     }
 
@@ -67,6 +69,7 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
     }
 
     @Override
+    @Transactional
     public Courses updateCourse(String id, Courses updatedCourse) {
         Courses existing = getCourseById(id);
         String newCourseName = updatedCourse.getCourseName().trim();
@@ -81,11 +84,12 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
                     throw new IllegalArgumentException("Course name '" + newCourseName + "' already exists.");});
 
         existing.setCourseName(newCourseName);
-        managementAcademicSectionService.updateSectionsForCourseNameChange(existing.getId(), newCourseName);
+        sectionManagementService.updateSectionsForCourseNameChange(existing.getId(), newCourseName);
         return courseRepository.save(existing);
     }
 
     @Override
+    @Transactional
     public void deleteCourse(String id) {
         Courses course = getCourseById(id);
         long eventCountById = eventRepository.countByEligibleStudentsCoursesContaining(course.getId());
@@ -114,7 +118,7 @@ public class ManagementAcademicCourseServiceImpl implements ManagementAcademicCo
         if (sectionCount > 0) {
             List<Sections> sections = sectionsRepository.findByCourse(course);
             for (Sections section : sections) {
-                managementAcademicSectionService.deleteSection(section.getId());
+                sectionManagementService.deleteSection(section.getId());
             }
         }
         courseRepository.deleteById(id);

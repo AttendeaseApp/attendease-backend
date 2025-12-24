@@ -39,6 +39,9 @@ public class Sections {
     @Indexed(unique = true)
     private String sectionName;
 
+    @Indexed(unique = true)
+    private Integer yearLevel;
+
     @DBRef
     private Courses course;
 

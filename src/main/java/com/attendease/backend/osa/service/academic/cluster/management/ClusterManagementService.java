@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.academic.cluster;
+package com.attendease.backend.osa.service.academic.cluster.management;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.event.Event;
@@ -13,7 +13,7 @@ import java.util.List;
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-19
  */
-public interface ManagementAcademicClusterService {
+public interface ClusterManagementService {
 
     /**
      * {@code createNewCluster} is used to create a new cluster.

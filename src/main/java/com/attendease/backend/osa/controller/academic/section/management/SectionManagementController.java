@@ -1,8 +1,8 @@
-package com.attendease.backend.osa.controller.management.academic.section;
+package com.attendease.backend.osa.controller.academic.section.management;
 
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osa.service.management.academic.section.ManagementAcademicSectionService;
-import com.attendease.backend.osa.service.management.academic.section.impl.ManagementAcademicSectionServiceImpl;
+import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
+
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/sections")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementAcademicSectionController {
+public class SectionManagementController {
 
-    private final ManagementAcademicSectionService managementAcademicSectionService;
+    private final SectionManagementService sectionManagementService;
 
     /**
      * Retrieves a section by its ID or all.
@@ -47,10 +47,10 @@ public class ManagementAcademicSectionController {
     @GetMapping
     public ResponseEntity<?> getSectionByIdOrAll(@RequestParam(required = false) String sectionId) {
         if (sectionId != null && !sectionId.isEmpty()) {
-            Sections section = managementAcademicSectionService.getSectionById(sectionId);
+            Sections section = sectionManagementService.getSectionById(sectionId);
             return ResponseEntity.ok(section);
         } else {
-            List<Sections> sections = managementAcademicSectionService.getAllSections();
+            List<Sections> sections = sectionManagementService.getAllSections();
             return ResponseEntity.ok(sections);
         }
     }
@@ -64,7 +64,7 @@ public class ManagementAcademicSectionController {
      */
     @PostMapping("/courses/{courseId}")
     public ResponseEntity<Sections> createSection(@PathVariable String courseId, @RequestBody Sections section) {
-        Sections createdSection = managementAcademicSectionService.createNewSection(courseId, section);
+        Sections createdSection = sectionManagementService.createNewSection(courseId, section);
         return new ResponseEntity<>(createdSection, HttpStatus.CREATED);
     }
 
@@ -76,7 +76,7 @@ public class ManagementAcademicSectionController {
      */
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<List<Sections>> getSectionsByCourse(@PathVariable String courseId) {
-        List<Sections> sections = managementAcademicSectionService.getSectionsByCourse(courseId);
+        List<Sections> sections = sectionManagementService.getSectionsByCourse(courseId);
         return ResponseEntity.ok(sections);
     }
 
@@ -88,7 +88,7 @@ public class ManagementAcademicSectionController {
      */
     @GetMapping("/full/{sectionName}")
     public ResponseEntity<Sections> getSectionByFullName(@PathVariable String sectionName) {
-        Optional<Sections> optionalSection = managementAcademicSectionService.getSectionByFullName(sectionName);
+        Optional<Sections> optionalSection = sectionManagementService.getSectionByFullName(sectionName);
         return optionalSection.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -102,7 +102,7 @@ public class ManagementAcademicSectionController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Sections updatedSection) {
         try {
-            Sections updated = managementAcademicSectionService.updateSection(id, updatedSection);
+            Sections updated = sectionManagementService.updateSection(id, updatedSection);
             if (updated.getSectionName().equals(updatedSection.getSectionName().trim())) {
                 return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getSectionName() + "'.");
             }
@@ -124,7 +124,7 @@ public class ManagementAcademicSectionController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSection(@PathVariable String id) {
-        managementAcademicSectionService.deleteSection(id);
+        sectionManagementService.deleteSection(id);
         return ResponseEntity.noContent().build();
     }
 }

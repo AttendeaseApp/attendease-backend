@@ -1,8 +1,8 @@
-package com.attendease.backend.osa.service.management.academic.course;
+package com.attendease.backend.osa.service.academic.course.management;
 
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.event.Event;
-import com.attendease.backend.osa.service.management.academic.section.impl.ManagementAcademicSectionServiceImpl;
+import com.attendease.backend.osa.service.academic.section.management.impl.SectionManagementServiceImpl;
 
 import java.util.List;
 
@@ -12,12 +12,12 @@ import java.util.List;
  * <p>This service provides CRUD operations for courses, integrated with cluster and section management.
  * Key features include: duplicate name prevention per cluster, auto-creation of default sections
  * on course creation, and cascading updates/deletes to sections. It delegates to
- * {@link ManagementAcademicSectionServiceImpl} for section-related operations.</p>
+ * {@link SectionManagementServiceImpl} for section-related operations.</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-19
  */
-public interface ManagementAcademicCourseService {
+public interface CourseManagementService {
 
     /**
      * {@code createCourse} is used to create a new course under a specific cluster.

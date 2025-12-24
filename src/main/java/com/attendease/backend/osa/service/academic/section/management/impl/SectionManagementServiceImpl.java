@@ -1,8 +1,8 @@
-package com.attendease.backend.osa.service.management.academic.section.impl;
+package com.attendease.backend.osa.service.academic.section.management.impl;
 
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
-import com.attendease.backend.osa.service.management.academic.section.ManagementAcademicSectionService;
+import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
@@ -14,10 +14,11 @@ import java.util.Optional;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ManagementAcademicSectionServiceImpl implements ManagementAcademicSectionService {
+public final class SectionManagementServiceImpl implements SectionManagementService {
 
     private final CourseRepository courseRepository;
     private final SectionsRepository sectionsRepository;
@@ -26,6 +27,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     private final UserValidator userValidator;
 
     @Override
+    @Transactional
     public Sections createNewSection(String courseId, Sections section) {
         Courses course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
         String newSectionName = section.getSectionName().trim();
@@ -67,6 +69,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     }
 
     @Override
+    @Transactional
     public Sections updateSection(String id, Sections updatedSection) {
         Sections existing = getSectionById(id);
         String updatedSectionName = updatedSection.getSectionName().trim();
@@ -91,6 +94,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     }
 
     @Override
+    @Transactional
     public void deleteSection(String id) {
         Sections section = getSectionById(id);
         Long studentCount = studentsRepository.countBySection(section);
@@ -113,6 +117,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     }
 
     @Override
+    @Transactional
     public void createDefaultSections(Courses course) {
         List<String> defaultSectionNumbers = Arrays.asList("101", "201", "301", "401", "501", "601", "701", "801");
         String coursePrefix = course.getCourseName() + "-";
@@ -126,6 +131,7 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
     }
 
     @Override
+    @Transactional
     public void updateSectionsForCourseNameChange(String courseId, String newCourseName) {
         Courses course = courseRepository.findById(courseId).orElseThrow();
         List<Sections> sections = getSectionsByCourse(courseId);
@@ -136,6 +142,10 @@ public class ManagementAcademicSectionServiceImpl implements ManagementAcademicS
             sectionsRepository.save(section);
         }
     }
+
+    /*
+    * PRIVATE HELPERS
+    */
 
     private void validateFullSectionName(String fullSectionName, String courseName) {
         userValidator.validateFullCourseSectionFormat(fullSectionName);

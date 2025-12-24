@@ -1,7 +1,7 @@
-package com.attendease.backend.osa.controller.management.academic.cluster;
+package com.attendease.backend.osa.controller.academic.cluster.management;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.osa.service.management.academic.cluster.ManagementAcademicClusterService;
+import com.attendease.backend.osa.service.academic.cluster.management.ClusterManagementService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/clusters")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementAcademicClusterController {
+public class ClusterManagementController {
 
-    private final ManagementAcademicClusterService managementAcademicClusterService;
+    private final ClusterManagementService clusterManagementService;
 
     /**
      * Creates a new cluster.
@@ -43,7 +43,7 @@ public class ManagementAcademicClusterController {
      */
     @PostMapping
     public ResponseEntity<Clusters> createNewCluster(@RequestBody @Valid Clusters cluster) {
-        return ResponseEntity.ok(managementAcademicClusterService.createNewCluster(cluster));
+        return ResponseEntity.ok(clusterManagementService.createNewCluster(cluster));
     }
 
     /**
@@ -53,7 +53,7 @@ public class ManagementAcademicClusterController {
      */
     @GetMapping
     public ResponseEntity<List<Clusters>> getAllClusters() {
-        return ResponseEntity.ok(managementAcademicClusterService.getAllClusters());
+        return ResponseEntity.ok(clusterManagementService.getAllClusters());
     }
 
     /**
@@ -66,7 +66,7 @@ public class ManagementAcademicClusterController {
      */
     @GetMapping("/{clusterId}")
     public ResponseEntity<Clusters> getClusterById(@PathVariable String clusterId) {
-        return ResponseEntity.ok(managementAcademicClusterService.getClusterByClusterId(clusterId));
+        return ResponseEntity.ok(clusterManagementService.getClusterByClusterId(clusterId));
     }
 
     /**
@@ -90,7 +90,7 @@ public class ManagementAcademicClusterController {
      */
     @PutMapping("/{clusterId}")
     public ResponseEntity<Clusters> updateClusterById(@PathVariable String clusterId, @RequestBody Clusters cluster) {
-        return ResponseEntity.ok(managementAcademicClusterService.updateCluster(clusterId, cluster));
+        return ResponseEntity.ok(clusterManagementService.updateCluster(clusterId, cluster));
     }
 
     /**
@@ -106,7 +106,7 @@ public class ManagementAcademicClusterController {
      */
     @DeleteMapping("/{clusterId}")
     public ResponseEntity<Void> deleteById(@PathVariable String clusterId) {
-        managementAcademicClusterService.deleteCluster(clusterId);
+        clusterManagementService.deleteCluster(clusterId);
         return ResponseEntity.noContent().build();
     }
 }

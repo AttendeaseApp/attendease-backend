@@ -1,7 +1,8 @@
-package com.attendease.backend.osa.service.management.academic.section;
+package com.attendease.backend.osa.service.academic.section.management;
 
 import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.osa.service.academic.course.management.impl.CourseManagementServiceImpl;
 import com.attendease.backend.repository.course.CourseRepository;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Optional;
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-25
  */
-public interface ManagementAcademicSectionService {
+public interface SectionManagementService {
 
     /**
      * {@code createNewSection} is used to create a new section under a specific course.
@@ -101,7 +102,7 @@ public interface ManagementAcademicSectionService {
     void deleteSection(String id);
 
     /**
-     * {@code createDefaultSections} is used by services {@link com.attendease.backend.osa.service.management.academic.course.impl.ManagementAcademicCourseServiceImpl}
+     * {@code createDefaultSections} is used by services {@link CourseManagementServiceImpl}
      * to create default sections for a given course.
      *
      * <p>Generates sections "COURSE_NAME-101" to "COURSE_NAME-801" if they don't exist.
@@ -112,7 +113,7 @@ public interface ManagementAcademicSectionService {
     void createDefaultSections(Courses course);
 
     /**
-     * {@code updateSectionsForCourseNameChange} is used by services {@link com.attendease.backend.osa.service.management.academic.course.impl.ManagementAcademicCourseServiceImpl}
+     * {@code updateSectionsForCourseNameChange} is used by services {@link CourseManagementServiceImpl}
      * to update all sections for a course when its name changes.
      *
      * <p>Rebuilds section names with the new course prefix (e.g., "OLD-101" → "NEW-101").</p>

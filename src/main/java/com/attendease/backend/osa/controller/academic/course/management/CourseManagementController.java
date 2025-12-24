@@ -1,7 +1,7 @@
-package com.attendease.backend.osa.controller.management.academic.course;
+package com.attendease.backend.osa.controller.academic.course.management;
 
 import com.attendease.backend.domain.courses.Courses;
-import com.attendease.backend.osa.service.management.academic.course.ManagementAcademicCourseService;
+import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementAcademicCourseController {
+public class CourseManagementController {
 
-    private final ManagementAcademicCourseService managementAcademicCourseService;
+    private final CourseManagementService courseManagementService;
 
     /**
      * Creates a new course associated with a specific cluster.
@@ -42,7 +42,7 @@ public class ManagementAcademicCourseController {
      */
     @PostMapping
     public ResponseEntity<Courses> create(@RequestParam String clusterId, @RequestBody @Valid Courses course) {
-        return ResponseEntity.ok(managementAcademicCourseService.createCourse(clusterId, course));
+        return ResponseEntity.ok(courseManagementService.createCourse(clusterId, course));
     }
 
     /**
@@ -52,7 +52,7 @@ public class ManagementAcademicCourseController {
      */
     @GetMapping
     public ResponseEntity<List<Courses>> getAll() {
-        return ResponseEntity.ok(managementAcademicCourseService.getAllCourses());
+        return ResponseEntity.ok(courseManagementService.getAllCourses());
     }
 
     /**
@@ -65,7 +65,7 @@ public class ManagementAcademicCourseController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Courses> getById(@PathVariable String id) {
-        return ResponseEntity.ok(managementAcademicCourseService.getCourseById(id));
+        return ResponseEntity.ok(courseManagementService.getCourseById(id));
     }
 
     /**
@@ -78,7 +78,7 @@ public class ManagementAcademicCourseController {
      */
     @GetMapping("/cluster/{clusterId}")
     public ResponseEntity<List<Courses>> getByCluster(@PathVariable String clusterId) {
-        return ResponseEntity.ok(managementAcademicCourseService.getCoursesByCluster(clusterId));
+        return ResponseEntity.ok(courseManagementService.getCoursesByCluster(clusterId));
     }
 
     /**
@@ -104,7 +104,7 @@ public class ManagementAcademicCourseController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<Courses> update(@PathVariable String id, @RequestBody Courses course) {
-        return ResponseEntity.ok(managementAcademicCourseService.updateCourse(id, course));
+        return ResponseEntity.ok(courseManagementService.updateCourse(id, course));
     }
 
     /**
@@ -128,7 +128,7 @@ public class ManagementAcademicCourseController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        managementAcademicCourseService.deleteCourse(id);
+        courseManagementService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
 }
