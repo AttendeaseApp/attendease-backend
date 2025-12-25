@@ -39,8 +39,9 @@ public class Sections {
     @Indexed(unique = true)
     private String sectionName;
 
-    @Indexed(unique = true)
     private Integer yearLevel;
+
+    private Integer semester;
 
     @DBRef
     private Courses course;
@@ -52,4 +53,81 @@ public class Sections {
     @LastModifiedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    /**
+     * Extracts year level and semester from section number
+     * Logic:
+     * - First semester (X01): 101, 301, 501, 701
+     * - Second semester (X01): 201, 401, 601, 801
+     * where X represents the year level
+     */
+    public void calculateYearLevelAndSemester() {
+        if (this.sectionName == null || !this.sectionName.contains("-")) {
+            return;
+        }
+
+        String[] parts = this.sectionName.split("-");
+        if (parts.length != 2) {
+            return;
+        }
+
+        String sectionNumber = parts[1];
+        if (sectionNumber.length() != 3) {
+            return;
+        }
+
+        int firstDigit = Character.getNumericValue(sectionNumber.charAt(0));
+
+        // Determine year level and semester based on first digit
+        switch (firstDigit) {
+            case 1: // 1XX
+                this.yearLevel = 1;
+                this.semester = 1;
+                break;
+            case 2: // 2XX
+                this.yearLevel = 1;
+                this.semester = 2;
+                break;
+            case 3: // 3XX
+                this.yearLevel = 2;
+                this.semester = 1;
+                break;
+            case 4: // 4XX
+                this.yearLevel = 2;
+                this.semester = 2;
+                break;
+            case 5: // 5XX
+                this.yearLevel = 3;
+                this.semester = 1;
+                break;
+            case 6: // 6XX
+                this.yearLevel = 3;
+                this.semester = 2;
+                break;
+            case 7: // 7XX
+                this.yearLevel = 4;
+                this.semester = 1;
+                break;
+            case 8: // 8XX
+                this.yearLevel = 4;
+                this.semester = 2;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid section number: " + sectionNumber);
+        }
+    }
+
+    /**
+     * Gets the base section number (01-99) without year/semester prefix
+     */
+    public String getSectionSubNumber() {
+        if (this.sectionName == null || !this.sectionName.contains("-")) {
+            return null;
+        }
+        String[] parts = this.sectionName.split("-");
+        if (parts.length != 2 || parts[1].length() != 3) {
+            return null;
+        }
+        return parts[1].substring(1); // Returns "01", "02", etc.
+    }
 }

@@ -45,4 +45,10 @@ public interface SectionsRepository extends MongoRepository<Sections, String> {
     List<Sections> findByCourseId(String id);
 
     Long countByCourse(Courses course);
+
+    List<Sections> findByYearLevelAndSemester(Integer yearLevel, Integer semester);
+
+    List<Sections> findBySemester(Integer semester);
+
+    List<Sections> findByYearLevel(Integer yearLevel);
 }

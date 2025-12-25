@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.academic;
 
+import com.attendease.backend.domain.enums.academic.Semester;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,6 +42,8 @@ public class Academic {
 	@Indexed(unique = true)
 	private String academicYearName;
 
+	private Semester currentSemester;
+
 	@NotNull
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate firstSemesterStart;
@@ -67,19 +70,4 @@ public class Academic {
 	@LastModifiedDate
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime updatedAt;
-
-	/**
-	 * Determines current semester based on the current date.
-	 *
-	 * @param currentDate the date to check
-	 * @return 1 for first semester, 2 for second semester, 0 if outside both semesters
-	 */
-	public int getCurrentSemester(LocalDate currentDate) {
-		if (!currentDate.isBefore(firstSemesterStart) && !currentDate.isAfter(firstSemesterEnd)) {
-			return 1;
-		} else if (!currentDate.isBefore(secondSemesterStart) && !currentDate.isAfter(secondSemesterEnd)) {
-			return 2;
-		}
-		return 0;
-	}
 }

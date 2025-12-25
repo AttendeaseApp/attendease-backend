@@ -14,8 +14,6 @@ import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
-import com.attendease.backend.repository.clusters.ClustersRepository;
-import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -116,11 +114,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     public List<UserStudentResponse> retrieveUsers() {
         List<User> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
-
         log.info("Retrieved {} students and {} users", students.size(), users.size());
-
         Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
-
         return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
 

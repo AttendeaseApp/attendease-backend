@@ -4,6 +4,7 @@ import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.academic.course.management.impl.CourseManagementServiceImpl;
 import com.attendease.backend.repository.course.CourseRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,12 @@ public interface SectionManagementService {
      * @throws RuntimeException If the course is not found.
      */
     List<Sections> getSectionsByCourse(String courseId);
+
+    List<Sections> getSectionsByYearLevel(Integer yearLevel);
+
+    List<Sections> getSectionsBySemester(Integer semester);
+
+    List<Sections> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester);
 
     /**
      * {@code getAllSections} is used to retrieve all sections across all courses.
@@ -101,16 +108,7 @@ public interface SectionManagementService {
      */
     void deleteSection(String id);
 
-    /**
-     * {@code createDefaultSections} is used by services {@link CourseManagementServiceImpl}
-     * to create default sections for a given course.
-     *
-     * <p>Generates sections "COURSE_NAME-101" to "COURSE_NAME-801" if they don't exist.
-     * Skips duplicates based on full name.</p>
-     *
-     * @param course The parent {@link Courses} entity.
-     */
-    void createDefaultSections(Courses course);
+    void createDefaultSections(String courseId);
 
     /**
      * {@code updateSectionsForCourseNameChange} is used by services {@link CourseManagementServiceImpl}
@@ -124,4 +122,6 @@ public interface SectionManagementService {
      * @throws RuntimeException If the course is not found.
      */
     void updateSectionsForCourseNameChange(String courseId, String newCourseName);
+
+    String generateSectionNumber(Integer yearLevel, Integer semester, Integer subNumber);
 }

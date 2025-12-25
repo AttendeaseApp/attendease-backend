@@ -48,7 +48,7 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
         course.setCourseName(courseName);
         course.setCluster(cluster);
         Courses savedCourse = courseRepository.save(course);
-        sectionManagementService.createDefaultSections(savedCourse);
+        sectionManagementService.createDefaultSections(savedCourse.getId());
         return savedCourse;
     }
 
