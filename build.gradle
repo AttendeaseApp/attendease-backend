@@ -41,7 +41,8 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
     // Other libs
-    implementation 'com.opencsv:opencsv:5.12.0'
+    implementation 'org.apache.commons:commons-csv:1.14.1'
+    implementation 'org.apache.commons:commons-text:1.11.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     compileOnly 'org.projectlombok:lombok'
@@ -54,5 +55,4 @@ dependencies {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
 }

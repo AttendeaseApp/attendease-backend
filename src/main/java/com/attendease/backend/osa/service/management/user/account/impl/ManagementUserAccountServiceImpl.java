@@ -13,15 +13,13 @@ import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
+import com.attendease.backend.osa.service.utility.csv.parser.UserCsvParser;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.sections.SectionsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+// TODO: CACHING FOR QUERY OPTIMIZATIONS
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -45,70 +44,56 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
-    private static final Set<String> REQUIRED_CSV_COLUMNS = Set.of("firstName", "lastName", "studentNumber", "password");
-
     @Override
+    @Transactional
     public List<User> importStudentsViaCSV(MultipartFile file) {
+        validateCSVFile(file);
+        List<UserAccountManagementUsersCSVRowData> rows;
+
         try {
-            validateCSVFile(file);
-            List<User> importedUsers = new ArrayList<>();
-            List<String> errors = new ArrayList<>();
-            int rowNumber = 0;
-
-            try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
-                String[] header = csvReader.readNext();
-                validateCSVHeader(header);
-
-                String[] row;
-                while ((row = csvReader.readNext()) != null) {
-                    rowNumber++;
-                    try {
-                        UserAccountManagementUsersCSVRowData rowData = parseCSVRow(header, row);
-
-                        if (!isValidRowData(rowData)) {
-                            log.warn("Skipping row {} due to missing required fields", rowNumber);
-                            errors.add("Row " + rowNumber + ": Missing required fields");
-                            continue;
-                        }
-
-                        if (studentRepository.existsByStudentNumber(rowData.getStudentNumber())) {
-                            log.warn("Skipping row {} due to duplicate studentNumber: {}", rowNumber, rowData.getStudentNumber());
-                            errors.add("Row " + rowNumber + ": Duplicate student number " + rowData.getStudentNumber());
-                            continue;
-                        }
-
-                        User imported = createUserAndStudent(rowData);
-                        importedUsers.add(imported);
-                        log.info("Successfully imported student: {}", rowData.getStudentNumber());
-                    } catch (IllegalArgumentException e) {
-                        log.error("Validation error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
-                        errors.add("Row " + rowNumber + ": " + e.getMessage());
-                    } catch (Exception e) {
-                        log.error("Unexpected error processing CSV row {}: {}", rowNumber, String.join(",", row), e);
-                        errors.add("Row " + rowNumber + ": Unexpected error: " + e.getMessage());
-                    }
-                }
-            }
-
-            if (!errors.isEmpty()) {
-                List<CsvImportError> errorDetails = errors.stream()
-                        .map(err -> {
-                            String[] parts = err.split(": ", 2);
-                            int row = Integer.parseInt(parts[0].replace("Row ", ""));
-                            String message = parts[1];
-                            return new CsvImportError(row, List.of(message));
-                        })
-                        .collect(Collectors.toList());
-                throw new CsvImportException("CSV import completed with errors", errorDetails);
-            }
-
-            log.info("Successfully imported {} out of {} rows from CSV", importedUsers.size(), rowNumber);
-            return importedUsers;
-        } catch (IOException | CsvValidationException e) {
-            log.error("File or CSV parsing error", e);
-            throw new IllegalArgumentException("File or CSV parsing error: " + e.getMessage(), e);
+            rows = UserCsvParser.parse(file.getInputStream());
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid CSV file: " + e.getMessage(), e);
         }
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException("CSV file contains no data rows");
+        }
+
+        List<User> importedUsers = new ArrayList<>();
+        List<CsvImportError> errors = new ArrayList<>();
+
+        for (int i = 0; i < rows.size(); i++) {
+            int rowNumber = i + 1;
+            UserAccountManagementUsersCSVRowData row = rows.get(i);
+
+            try {
+                normalize(row);
+                if (!isValidRowData(row)) {
+                    errors.add(new CsvImportError(rowNumber, List.of("Missing required fields")));
+                    continue;
+                }
+                // TODO: OPTIMIZE THIS QUERY BY QUERYING AT ONCE THEN CHECK EXISTING FIELD
+                if (studentRepository.existsByStudentNumber(row.getStudentNumber())) {
+                    errors.add(new CsvImportError(rowNumber, List.of("Duplicate student number: " + row.getStudentNumber())));
+                    continue;
+                }
+
+                User user = createUserAndStudent(row);
+                importedUsers.add(user);
+            } catch (IllegalArgumentException e) {
+                errors.add(new CsvImportError(rowNumber, List.of(e.getMessage())));
+            } catch (Exception e) {
+                log.error("Unexpected error at row {}", rowNumber, e);
+                errors.add(new CsvImportError(rowNumber, List.of("Unexpected error: " + e.getMessage())));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new CsvImportException("CSV import completed with errors", errors);
+        }
+        log.info("Successfully imported {} students", importedUsers.size());
+        return importedUsers;
     }
+
 
     @Override
     public List<UserStudentResponse> retrieveUsers() {
@@ -122,17 +107,14 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     @Override
     public List<UserStudentResponse> retrieveAllStudents() {
         List<Students> students = studentRepository.findAll();
-
-        if (students.isEmpty()) {
+        if (students.isEmpty())
+        {
             log.info("No students found");
             return Collections.emptyList();
         }
-
         List<String> userIds = students.stream().map(Students::getUserId).filter(Objects::nonNull).distinct().toList();
-
         List<User> users = userRepository.findAllById(userIds);
         Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, u -> u));
-
         return students.stream().map(student -> mapToResponseDTO(userMap.get(student.getUserId()), student)).collect(Collectors.toList());
     }
 
@@ -142,14 +124,12 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found: " + userId);
         }
-
         studentRepository.findByUser_UserId(userId).ifPresent(student -> {
             if (student.getFacialData() != null) {
                 biometricsRepository.deleteById(student.getFacialData().getFacialId());
             }
             studentRepository.deleteById(student.getId());
         });
-
         userRepository.deleteById(userId);
     }
 
@@ -158,21 +138,16 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
         Sections section = sectionsRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
-
         List<Students> students = studentRepository.findBySection(section);
-
-        if (students.isEmpty()) {
+        if (students.isEmpty())
+        {
             log.info("No students found in section: {}", sectionName);
             return;
         }
-
         List<String> userIds = students.stream().map(Students::getUserId).toList();
-
         students.stream().filter(s -> s.getFacialData() != null).forEach(s -> biometricsRepository.deleteById(s.getFacialData().getFacialId()));
-
         studentRepository.deleteAll(students);
         userRepository.deleteAllById(userIds);
-
         log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
     }
 
@@ -198,54 +173,21 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         }
     }
 
-    private void validateCSVHeader(String[] header) {
-        if (header == null || header.length == 0) {
-            throw new IllegalArgumentException("CSV file is empty or has no header");
-        }
-
-        Set<String> headerSet = Set.of(header);
-        List<String> missingColumns = REQUIRED_CSV_COLUMNS.stream().filter(col -> !headerSet.contains(col)).collect(Collectors.toList());
-
-        if (!missingColumns.isEmpty()) {
-            throw new IllegalArgumentException("Missing required columns: " + String.join(", ", missingColumns));
-        }
+    private void normalize(UserAccountManagementUsersCSVRowData row) {
+        row.setFirstName(trim(row.getFirstName()));
+        row.setLastName(trim(row.getLastName()));
+        row.setEmail(lower(trim(row.getEmail())));
+        row.setStudentNumber(trim(row.getStudentNumber()));
+        row.setSectionName(trim(row.getSectionName()));
+        row.setContactNumber(trim(row.getContactNumber()));
     }
 
-    private UserAccountManagementUsersCSVRowData parseCSVRow(String[] header, String[] row) {
-        UserAccountManagementUsersCSVRowData data = new UserAccountManagementUsersCSVRowData();
+    private String trim(String value) {
+        return value == null ? null : value.trim();
+    }
 
-        for (int i = 0; i < header.length && i < row.length; i++) {
-            String value = (row[i] != null && !row[i].trim().isEmpty()) ? row[i].trim() : null;
-
-            switch (header[i].toLowerCase()) {
-                case "firstname":
-                    data.setFirstName(value);
-                    break;
-                case "lastname":
-                    data.setLastName(value);
-                    break;
-                case "password":
-                    data.setPassword(value);
-                    break;
-                case "email":
-                    data.setEmail(value);
-                    break;
-                case "studentnumber":
-                    data.setStudentNumber(value);
-                    break;
-                case "section":
-                    data.setSectionName(value);
-                    break;
-                case "contactnumber":
-                    data.setContactNumber(value);
-                    break;
-                default:
-                    log.debug("Ignoring unknown column: {}", header[i]);
-                    break;
-            }
-        }
-
-        return data;
+    private String lower(String value) {
+        return value == null ? null : value.toLowerCase();
     }
 
     private User createUserAndStudent(UserAccountManagementUsersCSVRowData data) {
