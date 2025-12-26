@@ -1,4 +1,4 @@
-package com.attendease.backend.repository.clusters;
+package com.attendease.backend.repository.cluster;
 
 import com.attendease.backend.domain.cluster.Cluster;
 import java.util.Optional;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Repository;
  * @since 2025-09-19
  */
 @Repository
-public interface ClustersRepository extends MongoRepository<Cluster, String> {
+public interface ClusterRepository extends MongoRepository<Cluster, String> {
     /**
      * Finds a cluster by its name globally.
      *

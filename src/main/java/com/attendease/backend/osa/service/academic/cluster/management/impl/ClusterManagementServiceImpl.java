@@ -1,8 +1,8 @@
 package com.attendease.backend.osa.service.academic.cluster.management.impl;
 
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.osa.service.academic.cluster.management.ClusterManagementService;
-import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.cluster.ClusterRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.validation.UserValidator;
@@ -22,14 +22,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class ClusterManagementServiceImpl implements ClusterManagementService {
 
-    private final ClustersRepository clusterRepository;
+    private final ClusterRepository clusterRepository;
     private final CourseRepository courseRepository;
     private final EventRepository eventRepository;
     private final UserValidator userValidator;
 
     @Override
     @Transactional
-    public Clusters addNewCluster(Clusters cluster) {
+    public Cluster addNewCluster(Cluster cluster) {
         String name = cluster.getClusterName().trim();
 
         if (name.isEmpty()) {
@@ -47,19 +47,19 @@ public final class ClusterManagementServiceImpl implements ClusterManagementServ
     }
 
     @Override
-    public List<Clusters> getAllClusters() {
+    public List<Cluster> getAllClusters() {
         return clusterRepository.findAll();
     }
 
     @Override
-    public Clusters getClusterByClusterId(String clusterId) {
+    public Cluster getClusterByClusterId(String clusterId) {
         return clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found with ID: " + clusterId));
     }
 
     @Override
     @Transactional
-    public Clusters updateCluster(String clusterId, Clusters updatedCluster) {
-        Clusters existing = getClusterByClusterId(clusterId);
+    public Cluster updateCluster(String clusterId, Cluster updatedCluster) {
+        Cluster existing = getClusterByClusterId(clusterId);
         String newClusterName = updatedCluster.getClusterName().trim();
 
         if (newClusterName.isEmpty()) {
@@ -78,7 +78,7 @@ public final class ClusterManagementServiceImpl implements ClusterManagementServ
     @Override
     @Transactional
     public final void deleteCluster(String clusterId) {
-        Clusters cluster = getClusterByClusterId(clusterId);
+        Cluster cluster = getClusterByClusterId(clusterId);
         long courseCount = courseRepository.countByCluster(cluster);
         long eventCountById = eventRepository.countByEligibleStudentsClustersContaining(cluster.getClusterId());
         long eventCountByName = eventRepository.countByEligibleStudentsClusterNamesContaining(cluster.getClusterName());

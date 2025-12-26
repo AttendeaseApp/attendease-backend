@@ -10,7 +10,7 @@ import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,7 +28,7 @@ public class AttendanceRecordsFinalizer {
 
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
-    private final SectionsRepository sectionRepository;
+    private final SectionRepository sectionRepository;
     private final CourseRepository courseRepository;
 
     /**

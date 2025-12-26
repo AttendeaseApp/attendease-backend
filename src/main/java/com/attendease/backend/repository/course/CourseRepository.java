@@ -1,6 +1,6 @@
 package com.attendease.backend.repository.course;
 
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.course.Course;
 import java.util.List;
 import java.util.Optional;
@@ -18,12 +18,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CourseRepository extends MongoRepository<Course, String> {
     Optional<Course> findByCourseName(String name);
-    List<Course> findByCluster(Clusters cluster);
-    Optional<Course> findByCourseNameAndCluster(String courseName, Clusters cluster);
+    List<Course> findByCluster(Cluster cluster);
+    Optional<Course> findByCourseNameAndCluster(String courseName, Cluster cluster);
 
     List<Course> findByClusterClusterIdIn(List<String> clusterIds);
 
     List<Course> findByClusterClusterId(String clusterId);
 
-    Long countByCluster(Clusters cluster);
+    Long countByCluster(Cluster cluster);
 }

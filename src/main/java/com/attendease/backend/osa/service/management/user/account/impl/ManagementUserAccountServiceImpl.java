@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.management.user.account.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
@@ -15,7 +15,7 @@ import com.attendease.backend.exceptions.domain.ImportException.CsvImportExcepti
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import com.attendease.backend.osa.service.utility.csv.parser.UserCsvParser;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
@@ -39,7 +39,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
 
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final BiometricsRepository biometricsRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
@@ -137,7 +137,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     @Transactional
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
-        Section section = sectionsRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
+        Section section = sectionRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
         List<Students> students = studentRepository.findBySection(section);
         if (students.isEmpty())
         {
@@ -198,7 +198,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         userValidator.validateStudentNumber(data.getStudentNumber());
         userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
-        Section section = sectionsRepository.findBySectionName(data.getSectionName())
+        Section section = sectionRepository.findBySectionName(data.getSectionName())
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
         User user = User.builder()
@@ -232,7 +232,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         Optional<Students> optStudent = Optional.ofNullable(student);
         Optional<Section> optSection = optStudent.map(Students::getSection);
         Optional<Course> optCourse = optSection.map(Section::getCourse);
-        Optional<Clusters> optCluster = optCourse.map(Course::getCluster);
+        Optional<Cluster> optCluster = optCourse.map(Course::getCluster);
         Optional<BiometricData> optBiometric = optStudent.map(Students::getFacialData);
 
         return UserStudentResponse.builder()
@@ -256,8 +256,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 .sectionId(optSection.map(Section::getId).orElse(null))
                 .course(optCourse.map(Course::getCourseName).orElse(null))
                 .courseId(optCourse.map(Course::getId).orElse(null))
-                .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
-                .clusterId(optCluster.map(Clusters::getClusterId).orElse(null))
+                .cluster(optCluster.map(Cluster::getClusterName).orElse(null))
+                .clusterId(optCluster.map(Cluster::getClusterId).orElse(null))
 
                 // biometric data of STUDENT
                 .biometricId(optBiometric.map(BiometricData::getFacialId).orElse(null))

@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.clusters;
+package com.attendease.backend.domain.cluster;
 
 import com.attendease.backend.domain.course.Course;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -29,8 +29,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "clusters")
-public class Clusters {
+@Document(collection = "cluster")
+public class Cluster {
 
     @Id
     private String clusterId;

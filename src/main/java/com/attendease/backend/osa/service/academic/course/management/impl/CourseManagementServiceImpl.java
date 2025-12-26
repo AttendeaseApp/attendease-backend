@@ -1,16 +1,16 @@
 package com.attendease.backend.osa.service.academic.course.management.impl;
 
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
-import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.cluster.ClusterRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import java.util.List;
 
 import com.attendease.backend.repository.event.EventRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +29,8 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
 
     private final SectionManagementService sectionManagementService;
     private final CourseRepository courseRepository;
-    private final ClustersRepository clusterRepository;
-    private final SectionsRepository sectionsRepository;
+    private final ClusterRepository clusterRepository;
+    private final SectionRepository sectionRepository;
     private final StudentRepository studentRepository;
     private final EventRepository eventRepository;
     private final UserValidator userValidator;
@@ -39,7 +39,7 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
     @Transactional
     public Course addNewCourse(String clusterId, Course course) {
 
-        Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
+        Cluster cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
 
         String courseName = course.getCourseName().trim();
         if (courseName.isEmpty()) {
@@ -71,7 +71,7 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
 
     @Override
     public List<Course> getCoursesByCluster(String clusterId) {
-        Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
+        Cluster cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
         return courseRepository.findByCluster(cluster);
     }
 
@@ -104,9 +104,9 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
         long totalEventCount = eventCountById + eventCountByName;
 
         long totalStudentCount = 0;
-        long sectionCount = sectionsRepository.countByCourse(course);
+        long sectionCount = sectionRepository.countByCourse(course);
         if (sectionCount > 0) {
-            List<Section> sections = sectionsRepository.findByCourse(course);
+            List<Section> sections = sectionRepository.findByCourse(course);
             for (Section section : sections) {
                 totalStudentCount += studentRepository.countBySection(section);
             }
@@ -123,7 +123,7 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
             throw new IllegalStateException(message);
         }
         if (sectionCount > 0) {
-            List<Section> sections = sectionsRepository.findByCourse(course);
+            List<Section> sections = sectionRepository.findByCourse(course);
             for (Section section : sections) {
                 sectionManagementService.deleteSection(section.getId());
             }

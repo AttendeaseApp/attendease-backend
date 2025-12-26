@@ -7,7 +7,7 @@ import com.attendease.backend.osa.service.academic.section.management.SectionMan
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public final class SectionManagementServiceImpl implements SectionManagementService {
 
     private final CourseRepository courseRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final EventRepository eventRepository;
     private final StudentRepository studentsRepository;
     private final UserValidator userValidator;
@@ -50,7 +50,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
             throw new IllegalArgumentException("Section name cannot be blank");
         }
 
-        if (sectionsRepository.findBySectionName(newSectionName).isPresent()) {
+        if (sectionRepository.findBySectionName(newSectionName).isPresent()) {
             throw new IllegalArgumentException("Section with name '" + newSectionName + "' already exists");
         }
 
@@ -62,44 +62,44 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         section.calculateYearLevelAndSemester();
         section.validateSemesterMatchesAcademicYear();
 
-        return sectionsRepository.save(section);
+        return sectionRepository.save(section);
     }
 
     @Override
     public List<Section> getSectionsByCourse(String courseId) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
-        return sectionsRepository.findByCourse(course);
+        return sectionRepository.findByCourse(course);
     }
 
     @Override
     public List<Section> getSectionsByYearLevel(Integer yearLevel) {
-        return sectionsRepository.findByYearLevel(yearLevel);
+        return sectionRepository.findByYearLevel(yearLevel);
     }
 
     @Override
     public List<Section> getSectionsBySemester(Integer semester) {
-        return sectionsRepository.findBySemester(semester);
+        return sectionRepository.findBySemester(semester);
     }
 
     @Override
     public List<Section> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
-        return sectionsRepository.findByYearLevelAndSemester(yearLevel, semester);
+        return sectionRepository.findByYearLevelAndSemester(yearLevel, semester);
     }
 
     @Override
     public List<Section> getAllSections() {
-        return sectionsRepository.findAll();
+        return sectionRepository.findAll();
     }
 
     @Override
     public Section getSectionById(String id) {
-        return sectionsRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
+        return sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
     }
 
     @Override
     public Optional<Section> getSectionByFullName(String fullName) {
         userValidator.validateFullCourseSectionFormat(fullName);
-        return sectionsRepository.findBySectionName(fullName);
+        return sectionRepository.findBySectionName(fullName);
     }
 
     @Override
@@ -116,7 +116,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
             return existing;
         }
 
-        sectionsRepository.findBySectionName(updatedSectionName).ifPresent(s -> {
+        sectionRepository.findBySectionName(updatedSectionName).ifPresent(s -> {
             if (!s.getId().equals(existing.getId())) {
                 throw new IllegalArgumentException("A section with the name '" + updatedSectionName + "' already exists");
             }
@@ -128,7 +128,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         existing.calculateYearLevelAndSemester();
         existing.validateSemesterMatchesAcademicYear();
 
-        return sectionsRepository.save(existing);
+        return sectionRepository.save(existing);
     }
 
     @Override
@@ -155,7 +155,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
             throw new IllegalStateException(message.toString());
         }
 
-        sectionsRepository.deleteById(id);
+        sectionRepository.deleteById(id);
     }
 
     @Transactional
@@ -179,7 +179,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
             int sectionNumber = calculateSectionNumber(yearLevel, currentSemester);
             String fullSectionName = course.getCourseName() + "-" + sectionNumber;
 
-            if (sectionsRepository.findBySectionName(fullSectionName).isEmpty()) {
+            if (sectionRepository.findBySectionName(fullSectionName).isEmpty()) {
                 Section section = Section.builder()
                         .sectionName(fullSectionName)
                         .yearLevel(yearLevel)
@@ -188,7 +188,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
                         .academicYear(activeAcademicYear)
                         .build();
 
-                sectionsRepository.save(section);
+                sectionRepository.save(section);
             }
         }
     }
@@ -207,7 +207,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
             section.setSectionName(newSectionName);
             section.calculateYearLevelAndSemester();
-            sectionsRepository.save(section);
+            sectionRepository.save(section);
         }
     }
 

@@ -8,7 +8,7 @@ import com.attendease.backend.domain.student.registration.StudentRegistrationReq
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.osa.service.management.student.registration.ManagementStudentRegistrationService;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.validation.UserValidator;
@@ -24,7 +24,7 @@ public class ManagementStudentRegistrationServiceImpl implements ManagementStude
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
@@ -79,9 +79,9 @@ public class ManagementStudentRegistrationServiceImpl implements ManagementStude
         if (request.getSection() != null && !request.getSection().trim().isEmpty()) {
             String sectionValue = request.getSection().trim();
             if (isValidId(sectionValue)) {
-                derivedSection = sectionsRepository.findById(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section ID not found: " + sectionValue));
+                derivedSection = sectionRepository.findById(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section ID not found: " + sectionValue));
             } else {
-                derivedSection = sectionsRepository.findBySectionName(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section name not found: " + sectionValue));
+                derivedSection = sectionRepository.findBySectionName(sectionValue).orElseThrow(() -> new IllegalArgumentException("Section name not found: " + sectionValue));
             }
             student.setSection(derivedSection);
 

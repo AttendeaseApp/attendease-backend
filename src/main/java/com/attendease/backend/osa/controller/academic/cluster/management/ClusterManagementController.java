@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.academic.cluster.management;
 
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.osa.service.academic.cluster.management.ClusterManagementService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -37,22 +37,22 @@ public class ClusterManagementController {
      * }</pre>
      *
      * @param cluster The cluster details (validated; must include a non-blank {@code clusterName}).
-     * @return The created {@link Clusters} entity (HTTP 200 OK).
+     * @return The created {@link Cluster} entity (HTTP 200 OK).
      *
      * @throws IllegalArgumentException If the cluster name already exists.
      */
     @PostMapping
-    public ResponseEntity<Clusters> addNewCluster(@RequestBody @Valid Clusters cluster) {
+    public ResponseEntity<Cluster> addNewCluster(@RequestBody @Valid Cluster cluster) {
         return ResponseEntity.ok(clusterManagementService.addNewCluster(cluster));
     }
 
     /**
      * Retrieves all clusters.
      *
-     * @return A list of all {@link Clusters} (HTTP 200 OK).
+     * @return A list of all {@link Cluster} (HTTP 200 OK).
      */
     @GetMapping
-    public ResponseEntity<List<Clusters>> getAllClusters() {
+    public ResponseEntity<List<Cluster>> getAllClusters() {
         return ResponseEntity.ok(clusterManagementService.getAllClusters());
     }
 
@@ -60,10 +60,10 @@ public class ClusterManagementController {
      * Retrieves a specific cluster by its ID.
      *
      * @param clusterId The unique ID of the cluster.
-     * @return The {@link Clusters} entity (HTTP 200 OK).
+     * @return The {@link Cluster} entity (HTTP 200 OK).
      */
     @GetMapping("/{clusterId}")
-    public ResponseEntity<Clusters> getClusterById(@PathVariable String clusterId) {
+    public ResponseEntity<Cluster> getClusterById(@PathVariable String clusterId) {
         return ResponseEntity.ok(clusterManagementService.getClusterByClusterId(clusterId));
     }
 
@@ -81,10 +81,10 @@ public class ClusterManagementController {
      *
      * @param clusterId The unique ID of the cluster to update.
      * @param cluster The updated cluster details (only {@code clusterName} is applied).
-     * @return The updated {@link Clusters} entity (HTTP 200 OK).
+     * @return The updated {@link Cluster} entity (HTTP 200 OK).
      */
     @PutMapping("/{clusterId}")
-    public ResponseEntity<Clusters> updateClusterById(@PathVariable String clusterId, @RequestBody Clusters cluster) {
+    public ResponseEntity<Cluster> updateClusterById(@PathVariable String clusterId, @RequestBody Cluster cluster) {
         return ResponseEntity.ok(clusterManagementService.updateCluster(clusterId, cluster));
     }
 

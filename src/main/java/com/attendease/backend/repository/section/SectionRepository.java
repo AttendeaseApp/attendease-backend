@@ -1,4 +1,4 @@
-package com.attendease.backend.repository.sections;
+package com.attendease.backend.repository.section;
 
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
  * @since 2025-09-19
  */
 @Repository
-public interface SectionsRepository extends MongoRepository<Section, String> {
+public interface SectionRepository extends MongoRepository<Section, String> {
     /**
      * Finds a section by its full name globally.
      *

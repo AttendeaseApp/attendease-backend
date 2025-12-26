@@ -1,6 +1,6 @@
 package com.attendease.backend.domain.course;
 
-import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.section.Section;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Domain entity representing an academic course in the Attendease system (e.g., "BSIT" for Bachelor of Science in Information Technology).
  * <p>
- * Courses are mid-level entities: children of {@link com.attendease.backend.domain.clusters.Clusters} and parents
+ * Courses are mid-level entities: children of {@link Cluster} and parents
  * to {@link Section}. Upon creation, the system can auto-generate default
  * sections (e.g., "BSIT-101" to "BSIT-801" for year levels). Used for fine-grained eligibility in events.
  *
@@ -41,7 +41,7 @@ public class Course {
     private String courseName;
 
     @DBRef
-    private Clusters cluster;
+    private Cluster cluster;
 
     @CreatedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
