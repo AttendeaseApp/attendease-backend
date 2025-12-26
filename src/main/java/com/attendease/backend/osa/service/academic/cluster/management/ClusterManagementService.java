@@ -21,8 +21,6 @@ public interface ClusterManagementService {
      *
      * @param cluster The {@link Clusters} entity to create (must have a non-blank {@code clusterName}).
      * @return The saved {@link Clusters} entity (with auto-generated ID and timestamps).
-     *
-     * @throws IllegalArgumentException If a cluster with the same name already exists.
      */
     Clusters addNewCluster(Clusters cluster);
 
@@ -38,8 +36,6 @@ public interface ClusterManagementService {
      *
      * @param clusterId The unique ID of the cluster.
      * @return The {@link Clusters} entity if found.
-     *
-     * @throws RuntimeException If the cluster is not found.
      */
     Clusters getClusterByClusterId(String clusterId);
 
@@ -49,8 +45,6 @@ public interface ClusterManagementService {
      * @param clusterId The unique ID of the cluster to update.
      * @param updatedCluster The updated details (only {@code clusterName} is applied).
      * @return The updated {@link Clusters} entity (with refreshed timestamps).
-     *
-     * @throws RuntimeException If the cluster is not found.
      */
     Clusters updateCluster(String clusterId, Clusters updatedCluster);
 
@@ -59,8 +53,6 @@ public interface ClusterManagementService {
      * {@link Course} and {@link Event}.
      *
      * @param clusterId The unique ID of the cluster to delete.
-     *
-     * @throws IllegalStateException If the cluster is not found or dependencies exist (with detailed message including counts).
      */
     void deleteCluster(String clusterId);
 }

@@ -29,9 +29,6 @@ public interface SectionManagementService {
      * @param courseId The ID of the parent course.
      * @param section The {@link Sections} entity to create (must have a valid {@code name}).
      * @return The saved {@link Sections} entity (with auto-generated ID and timestamps).
-     *
-     * @throws RuntimeException If the course is not found.
-     * @throws IllegalArgumentException If the name format is invalid or mismatches the course.
      */
     Sections addNewSection(String courseId, Sections section);
 
@@ -40,8 +37,6 @@ public interface SectionManagementService {
      *
      * @param courseId The ID of the parent course.
      * @return A {@link List} of {@link Sections} for the course.
-     *
-     * @throws RuntimeException If the course is not found.
      */
     List<Sections> getSectionsByCourse(String courseId);
 
@@ -63,8 +58,6 @@ public interface SectionManagementService {
      *
      * @param id The unique ID of the section.
      * @return The {@link Sections} entity if found.
-     *
-     * @throws RuntimeException If the section is not found.
      */
     Sections getSectionById(String id);
 
@@ -75,8 +68,6 @@ public interface SectionManagementService {
      *
      * @param fullName The full section name.
      * @return An {@link Optional} containing the {@link Sections} if found.
-     *
-     * @throws IllegalArgumentException If the name format is invalid.
      */
     Optional<Sections> getSectionByFullName(String fullName);
 
@@ -88,9 +79,6 @@ public interface SectionManagementService {
      * @param id The unique ID of the section to update.
      * @param updatedSection The updated details (only {@code name} is applied).
      * @return The updated {@link Sections} entity (with refreshed timestamps).
-     *
-     * @throws RuntimeException If the section is not found.
-     * @throws IllegalArgumentException If the new name format is invalid or mismatches the course.
      */
     Sections updateSection(String id, Sections updatedSection);
 
@@ -101,8 +89,6 @@ public interface SectionManagementService {
      * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
      *
      * @param id The unique ID of the section to delete.
-     *
-     * @throws IllegalStateException If the section is not found or dependencies exist (with detailed message including counts).
      */
     void deleteSection(String id);
 
@@ -116,10 +102,6 @@ public interface SectionManagementService {
      *
      * @param courseId The ID of the course.
      * @param newCourseName The new course name to use as prefix.
-     *
-     * @throws RuntimeException If the course is not found.
      */
     void updateSectionsForCourseNameChange(String courseId, String newCourseName);
-
-    String generateSectionNumber(Integer yearLevel, Integer semester, Integer subNumber);
 }

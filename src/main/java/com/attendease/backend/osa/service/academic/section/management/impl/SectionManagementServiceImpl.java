@@ -211,32 +211,6 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         }
     }
 
-    @Override
-    public String generateSectionNumber(Integer yearLevel, Integer semester, Integer subNumber) {
-        if (yearLevel < 1 || yearLevel > 4) {
-            throw new IllegalArgumentException("Year level must be between 1 and 4");
-        }
-        if (semester < 1 || semester > 2) {
-            throw new IllegalArgumentException("Semester must be 1 or 2");
-        }
-        if (subNumber < 1 || subNumber > 99) {
-            throw new IllegalArgumentException("Sub-number must be between 1 and 99");
-        }
-
-        int firstDigit;
-        if (yearLevel == 1) {
-            firstDigit = semester == 1 ? 1 : 2;
-        } else if (yearLevel == 2) {
-            firstDigit = semester == 1 ? 3 : 4;
-        } else if (yearLevel == 3) {
-            firstDigit = semester == 1 ? 5 : 6;
-        } else {
-            firstDigit = semester == 1 ? 7 : 8;
-        }
-
-        return String.format("%d%02d", firstDigit, subNumber);
-    }
-
     /*
     * PRIVATE HELPERS
     */

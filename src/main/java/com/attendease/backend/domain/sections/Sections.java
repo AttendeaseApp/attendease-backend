@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * representing year-level or specialized cohorts (e.g., 101 = first year). Full name format: "COURSE_NAME-SECTION_NUMBER".
  * Used for precise eligibility in events (e.g., section-specific registrations).
  * </p>
- * <p><b>Usage Notes:</b> Unique index on {@code sectionName}. Auto-generated from parent course creation.</p>
+ * <p>Self validating domain :)</p>
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Sep-19
@@ -121,20 +121,7 @@ public class Sections {
         }
     }
 
-    /**
-     * Gets the base section number (01-99) without year/semester prefix
-     */
-    public String getSectionSubNumber() {
-        if (this.sectionName == null || !this.sectionName.contains("-")) {
-            return null;
-        }
-        String[] parts = this.sectionName.split("-");
-        if (parts.length != 2 || parts[1].length() != 3) {
-            return null;
-        }
-        return parts[1].substring(1); // Returns "01", "02", etc.
-    }
-
+    // TODO: CUSTOM EXCEPTION
     /**
      * Validates that this section's semester matches the academic year's current semester
      * @throws IllegalStateException if semester doesn't match
