@@ -1,7 +1,7 @@
 package com.attendease.backend.domain.student;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.user.User;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -52,7 +52,7 @@ public class Students {
     private String studentNumber;
 
     @DBRef
-    private Sections section;
+    private Section section;
 
     @Min(value = 1, message = "Year level must be between 1 and 4")
     @Max(value = 4, message = "Year level must be between 1 and 4")
@@ -65,7 +65,7 @@ public class Students {
     /**
      * Updates student's section and caches related info
      */
-    public void updateSection(Sections newSection) {
+    public void updateSection(Section newSection) {
         this.section = newSection;
         this.sectionName = newSection.getSectionName();
         this.courseName = newSection.getCourse().getCourseName();

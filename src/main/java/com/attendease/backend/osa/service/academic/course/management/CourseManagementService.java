@@ -2,6 +2,7 @@ package com.attendease.backend.osa.service.academic.course.management;
 
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.event.Event;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.section.management.impl.SectionManagementServiceImpl;
 
 import java.util.List;
@@ -68,7 +69,7 @@ public interface CourseManagementService {
     /**
      * Used to delete a course by its ID, cascading to sections **only if sections have no dependencies
      * to
-     * {@link com.attendease.backend.domain.sections.Sections},
+     * {@link Section},
      * {@link com.attendease.backend.domain.student.Students},
      * {@link Event}**.
      *

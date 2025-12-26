@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.service.academic.section.management;
 
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.course.management.impl.CourseManagementServiceImpl;
 import com.attendease.backend.repository.course.CourseRepository;
 
@@ -27,39 +27,39 @@ public interface SectionManagementService {
      * <p>Validates the full name format and prefix match before saving.</p>
      *
      * @param courseId The ID of the parent course.
-     * @param section The {@link Sections} entity to create (must have a valid {@code name}).
-     * @return The saved {@link Sections} entity (with auto-generated ID and timestamps).
+     * @param section The {@link Section} entity to create (must have a valid {@code name}).
+     * @return The saved {@link Section} entity (with auto-generated ID and timestamps).
      */
-    Sections addNewSection(String courseId, Sections section);
+    Section addNewSection(String courseId, Section section);
 
     /**
      * {@code getSectionsByCourse} is used to retrieve all sections under a specific course.
      *
      * @param courseId The ID of the parent course.
-     * @return A {@link List} of {@link Sections} for the course.
+     * @return A {@link List} of {@link Section} for the course.
      */
-    List<Sections> getSectionsByCourse(String courseId);
+    List<Section> getSectionsByCourse(String courseId);
 
-    List<Sections> getSectionsByYearLevel(Integer yearLevel);
+    List<Section> getSectionsByYearLevel(Integer yearLevel);
 
-    List<Sections> getSectionsBySemester(Integer semester);
+    List<Section> getSectionsBySemester(Integer semester);
 
-    List<Sections> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester);
+    List<Section> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester);
 
     /**
      * {@code getAllSections} is used to retrieve all sections across all courses.
      *
-     * @return A {@link List} of all {@link Sections} entities.
+     * @return A {@link List} of all {@link Section} entities.
      */
-    List<Sections> getAllSections();
+    List<Section> getAllSections();
 
     /**
      * {@code getSectionById} is used to retrieve a section by its ID.
      *
      * @param id The unique ID of the section.
-     * @return The {@link Sections} entity if found.
+     * @return The {@link Section} entity if found.
      */
-    Sections getSectionById(String id);
+    Section getSectionById(String id);
 
     /**
      * {@code getSectionByFullName} is used to retrieve a section by its full name (e.g., "BSIT-101").
@@ -67,9 +67,9 @@ public interface SectionManagementService {
      * <p>Validates the format before querying.</p>
      *
      * @param fullName The full section name.
-     * @return An {@link Optional} containing the {@link Sections} if found.
+     * @return An {@link Optional} containing the {@link Section} if found.
      */
-    Optional<Sections> getSectionByFullName(String fullName);
+    Optional<Section> getSectionByFullName(String fullName);
 
     /**
      * {@code updateSection} is used to update an existing section by ID.
@@ -78,9 +78,9 @@ public interface SectionManagementService {
      *
      * @param id The unique ID of the section to update.
      * @param updatedSection The updated details (only {@code name} is applied).
-     * @return The updated {@link Sections} entity (with refreshed timestamps).
+     * @return The updated {@link Section} entity (with refreshed timestamps).
      */
-    Sections updateSection(String id, Sections updatedSection);
+    Section updateSection(String id, Section updatedSection);
 
     /**
      * {@code deleteSection} is used to delete a section by its ID **only if no dependencies exist**.

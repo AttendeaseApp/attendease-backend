@@ -2,7 +2,7 @@ package com.attendease.backend.osa.service.academic.section.management.impl;
 
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.course.Course;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
@@ -37,7 +37,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
     @Override
     @Transactional
-    public Sections addNewSection(String courseId, Sections section) {
+    public Section addNewSection(String courseId, Section section) {
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
 
@@ -66,46 +66,46 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     }
 
     @Override
-    public List<Sections> getSectionsByCourse(String courseId) {
+    public List<Section> getSectionsByCourse(String courseId) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
         return sectionsRepository.findByCourse(course);
     }
 
     @Override
-    public List<Sections> getSectionsByYearLevel(Integer yearLevel) {
+    public List<Section> getSectionsByYearLevel(Integer yearLevel) {
         return sectionsRepository.findByYearLevel(yearLevel);
     }
 
     @Override
-    public List<Sections> getSectionsBySemester(Integer semester) {
+    public List<Section> getSectionsBySemester(Integer semester) {
         return sectionsRepository.findBySemester(semester);
     }
 
     @Override
-    public List<Sections> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
+    public List<Section> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
         return sectionsRepository.findByYearLevelAndSemester(yearLevel, semester);
     }
 
     @Override
-    public List<Sections> getAllSections() {
+    public List<Section> getAllSections() {
         return sectionsRepository.findAll();
     }
 
     @Override
-    public Sections getSectionById(String id) {
+    public Section getSectionById(String id) {
         return sectionsRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
     }
 
     @Override
-    public Optional<Sections> getSectionByFullName(String fullName) {
+    public Optional<Section> getSectionByFullName(String fullName) {
         userValidator.validateFullCourseSectionFormat(fullName);
         return sectionsRepository.findBySectionName(fullName);
     }
 
     @Override
     @Transactional
-    public Sections updateSection(String id, Sections updatedSection) {
-        Sections existing = getSectionById(id);
+    public Section updateSection(String id, Section updatedSection) {
+        Section existing = getSectionById(id);
         String updatedSectionName = updatedSection.getSectionName().trim();
 
         if (updatedSectionName.isEmpty()) {
@@ -134,7 +134,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     @Override
     @Transactional
     public void deleteSection(String id) {
-        Sections section = getSectionById(id);
+        Section section = getSectionById(id);
         Long studentCount = studentsRepository.countBySection(section);
         Long eventCountById = eventRepository.countByEligibleStudentsSectionsContaining(section.getId());
         Long eventCountByName = eventRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
@@ -180,7 +180,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
             String fullSectionName = course.getCourseName() + "-" + sectionNumber;
 
             if (sectionsRepository.findBySectionName(fullSectionName).isEmpty()) {
-                Sections section = Sections.builder()
+                Section section = Section.builder()
                         .sectionName(fullSectionName)
                         .yearLevel(yearLevel)
                         .semester(currentSemester)
@@ -197,10 +197,10 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     @Transactional
     public void updateSectionsForCourseNameChange(String courseId, String newCourseName) {
         Course course = courseRepository.findById(courseId).orElseThrow();
-        List<Sections> sections = getSectionsByCourse(courseId);
+        List<Section> sections = getSectionsByCourse(courseId);
         String oldCourseName = course.getCourseName();
 
-        for (Sections section : sections) {
+        for (Section section : sections) {
             String oldSectionName = section.getSectionName();
             String sectionNumber = extractSectionNumber(oldSectionName, oldCourseName);
             String newSectionName = newCourseName + "-" + sectionNumber;

@@ -1,14 +1,14 @@
 package com.attendease.backend.repository.sections;
 
 import com.attendease.backend.domain.course.Course;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repository interface for managing {@link Sections} entities.
+ * Repository interface for managing {@link Section} entities.
  *
  * <p>This repository provides custom query methods for retrieving sections by name, course,
  * or combinations thereof. It extends {@link MongoRepository} for basic CRUD operations
@@ -19,16 +19,16 @@ import org.springframework.stereotype.Repository;
  * @since 2025-09-19
  */
 @Repository
-public interface SectionsRepository extends MongoRepository<Sections, String> {
+public interface SectionsRepository extends MongoRepository<Section, String> {
     /**
      * Finds a section by its full name globally.
      *
      * <p>Assumes section names are unique across the system (e.g., no two "BSIT-101" from different courses).</p>
      *
      * @param sectionName The full section name (e.g., "BSIT-101").
-     * @return An {@link Optional} containing the matching {@link Sections} if found.
+     * @return An {@link Optional} containing the matching {@link Section} if found.
      */
-    Optional<Sections> findBySectionName(String sectionName);
+    Optional<Section> findBySectionName(String sectionName);
 
     /**
      * Finds all sections associated with a specific {@link Course} entity.
@@ -36,19 +36,19 @@ public interface SectionsRepository extends MongoRepository<Sections, String> {
      * <p>Used for retrieving all sections under a course (e.g., for listing or bulk deletion).</p>
      *
      * @param course The parent {@link Course} entity (loaded via @DBRef).
-     * @return A {@link List} of all matching {@link Sections}.
+     * @return A {@link List} of all matching {@link Section}.
      */
-    List<Sections> findByCourse(Course course);
+    List<Section> findByCourse(Course course);
 
-    List<Sections> findByCourseIdIn(List<String> course);
+    List<Section> findByCourseIdIn(List<String> course);
 
-    List<Sections> findByCourseId(String id);
+    List<Section> findByCourseId(String id);
 
     Long countByCourse(Course course);
 
-    List<Sections> findByYearLevelAndSemester(Integer yearLevel, Integer semester);
+    List<Section> findByYearLevelAndSemester(Integer yearLevel, Integer semester);
 
-    List<Sections> findBySemester(Integer semester);
+    List<Section> findBySemester(Integer semester);
 
-    List<Sections> findByYearLevel(Integer yearLevel);
+    List<Section> findByYearLevel(Integer yearLevel);
 }

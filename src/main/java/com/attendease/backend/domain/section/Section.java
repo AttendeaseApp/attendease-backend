@@ -1,4 +1,4 @@
-package com.attendease.backend.domain.sections;
+package com.attendease.backend.domain.section;
 
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.course.Course;
@@ -31,8 +31,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "sections")
-public class Sections {
+@Document(collection = "section")
+public class Section {
 
     @Id
     private String id;

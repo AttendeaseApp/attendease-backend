@@ -5,7 +5,7 @@ import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.user.account.management.users.csv.row.UserAccountManagementUsersCSVRowData;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
@@ -137,7 +137,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     @Transactional
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
-        Sections section = sectionsRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
+        Section section = sectionsRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
         List<Students> students = studentRepository.findBySection(section);
         if (students.isEmpty())
         {
@@ -198,7 +198,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         userValidator.validateStudentNumber(data.getStudentNumber());
         userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
-        Sections section = sectionsRepository.findBySectionName(data.getSectionName())
+        Section section = sectionsRepository.findBySectionName(data.getSectionName())
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
 
         User user = User.builder()
@@ -230,8 +230,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
 
     public UserStudentResponse mapToResponseDTO(User user, Students student) {
         Optional<Students> optStudent = Optional.ofNullable(student);
-        Optional<Sections> optSection = optStudent.map(Students::getSection);
-        Optional<Course> optCourse = optSection.map(Sections::getCourse);
+        Optional<Section> optSection = optStudent.map(Students::getSection);
+        Optional<Course> optCourse = optSection.map(Section::getCourse);
         Optional<Clusters> optCluster = optCourse.map(Course::getCluster);
         Optional<BiometricData> optBiometric = optStudent.map(Students::getFacialData);
 
@@ -252,8 +252,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 .studentNumber(optStudent.map(Students::getStudentNumber).orElse(null))
 
                 // academic data of STUDENT
-                .section(optSection.map(Sections::getSectionName).orElse(null))
-                .sectionId(optSection.map(Sections::getId).orElse(null))
+                .section(optSection.map(Section::getSectionName).orElse(null))
+                .sectionId(optSection.map(Section::getId).orElse(null))
                 .course(optCourse.map(Course::getCourseName).orElse(null))
                 .courseId(optCourse.map(Course::getId).orElse(null))
                 .cluster(optCluster.map(Clusters::getClusterName).orElse(null))

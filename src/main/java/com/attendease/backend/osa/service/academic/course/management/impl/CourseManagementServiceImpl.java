@@ -2,7 +2,7 @@ package com.attendease.backend.osa.service.academic.course.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.course.Course;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.repository.clusters.ClustersRepository;
@@ -106,8 +106,8 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
         long totalStudentCount = 0;
         long sectionCount = sectionsRepository.countByCourse(course);
         if (sectionCount > 0) {
-            List<Sections> sections = sectionsRepository.findByCourse(course);
-            for (Sections section : sections) {
+            List<Section> sections = sectionsRepository.findByCourse(course);
+            for (Section section : sections) {
                 totalStudentCount += studentRepository.countBySection(section);
             }
         }
@@ -123,8 +123,8 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
             throw new IllegalStateException(message);
         }
         if (sectionCount > 0) {
-            List<Sections> sections = sectionsRepository.findByCourse(course);
-            for (Sections section : sections) {
+            List<Section> sections = sectionsRepository.findByCourse(course);
+            for (Section section : sections) {
                 sectionManagementService.deleteSection(section.getId());
             }
         }

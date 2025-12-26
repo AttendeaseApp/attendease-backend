@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.academic.section.management;
 
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 
 import java.util.List;
@@ -47,10 +47,10 @@ public class SectionManagementController {
     @GetMapping
     public ResponseEntity<?> getSectionByIdOrAll(@RequestParam(required = false) String sectionId) {
         if (sectionId != null && !sectionId.isEmpty()) {
-            Sections section = sectionManagementService.getSectionById(sectionId);
+            Section section = sectionManagementService.getSectionById(sectionId);
             return ResponseEntity.ok(section);
         } else {
-            List<Sections> sections = sectionManagementService.getAllSections();
+            List<Section> sections = sectionManagementService.getAllSections();
             return ResponseEntity.ok(sections);
         }
     }
@@ -63,8 +63,8 @@ public class SectionManagementController {
      * @return The created section.
      */
     @PostMapping("/courses/{courseId}")
-    public ResponseEntity<Sections> addNewSection(@PathVariable String courseId, @RequestBody Sections section) {
-        Sections createdSection = sectionManagementService.addNewSection(courseId, section);
+    public ResponseEntity<Section> addNewSection(@PathVariable String courseId, @RequestBody Section section) {
+        Section createdSection = sectionManagementService.addNewSection(courseId, section);
         return new ResponseEntity<>(createdSection, HttpStatus.CREATED);
     }
 
@@ -75,8 +75,8 @@ public class SectionManagementController {
      * @return List of sections for the course.
      */
     @GetMapping("/courses/{courseId}")
-    public ResponseEntity<List<Sections>> getSectionsByCourse(@PathVariable String courseId) {
-        List<Sections> sections = sectionManagementService.getSectionsByCourse(courseId);
+    public ResponseEntity<List<Section>> getSectionsByCourse(@PathVariable String courseId) {
+        List<Section> sections = sectionManagementService.getSectionsByCourse(courseId);
         return ResponseEntity.ok(sections);
     }
 
@@ -87,8 +87,8 @@ public class SectionManagementController {
      * @return The section if found.
      */
     @GetMapping("/full/{sectionName}")
-    public ResponseEntity<Sections> getSectionByFullName(@PathVariable String sectionName) {
-        Optional<Sections> optionalSection = sectionManagementService.getSectionByFullName(sectionName);
+    public ResponseEntity<Section> getSectionByFullName(@PathVariable String sectionName) {
+        Optional<Section> optionalSection = sectionManagementService.getSectionByFullName(sectionName);
         return optionalSection.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -100,9 +100,9 @@ public class SectionManagementController {
      * @return The updated section.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Sections updatedSection) {
+    public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Section updatedSection) {
         try {
-            Sections updated = sectionManagementService.updateSection(id, updatedSection);
+            Section updated = sectionManagementService.updateSection(id, updatedSection);
             if (updated.getSectionName().equals(updatedSection.getSectionName().trim())) {
                 return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getSectionName() + "'.");
             }

@@ -3,7 +3,7 @@ package com.attendease.backend.osa.service.management.user.information.impl;
 import com.attendease.backend.domain.clusters.Clusters;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
@@ -90,7 +90,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         }
 
         if (request.getSectionId() != null) {
-            Sections section = sectionsRepository.findById(request.getSectionId()).orElseThrow(ChangeSetPersister.NotFoundException::new);
+            Section section = sectionsRepository.findById(request.getSectionId()).orElseThrow(ChangeSetPersister.NotFoundException::new);
             student.setSection(section);
         }
 
@@ -106,7 +106,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
     }
 
     private UserStudentResponse buildUserStudentResponse(User user, Students student) {
-        Sections section = student.getSection();
+        Section section = student.getSection();
         String sectionName = (section != null) ? section.getSectionName() : null;
         String courseName = null;
         String clusterName = null;

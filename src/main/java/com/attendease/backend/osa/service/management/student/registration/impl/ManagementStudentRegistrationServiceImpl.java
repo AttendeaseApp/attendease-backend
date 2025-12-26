@@ -3,7 +3,7 @@ package com.attendease.backend.osa.service.management.student.registration.impl;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.registration.StudentRegistrationRequest;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.user.User;
@@ -73,7 +73,7 @@ public class ManagementStudentRegistrationServiceImpl implements ManagementStude
     private Students createStudentFromRegistrationRequest(StudentRegistrationRequest request) {
         Students student = new Students();
         student.setStudentNumber(request.getStudentNumber());
-        Sections derivedSection;
+        Section derivedSection;
         Course derivedCourse;
 
         if (request.getSection() != null && !request.getSection().trim().isEmpty()) {
