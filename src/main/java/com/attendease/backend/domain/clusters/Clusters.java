@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.clusters;
 
+import com.attendease.backend.domain.course.Course;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -17,7 +18,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Domain entity representing an academic cluster.
  * <p>
  * Clusters act as top-level groupings for related courses (e.g., "CETE" for engineering programs).
- * They serve as parent entities to {@link com.attendease.backend.domain.courses.Courses}, enabling
+ * They serve as parent entities to {@link Course}, enabling
  * hierarchical organization for event eligibility (e.g., cluster-wide registrations).
  * </p>
  *

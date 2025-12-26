@@ -1,6 +1,6 @@
 package com.attendease.backend.repository.sections;
 
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.sections.Sections;
 import java.util.List;
 import java.util.Optional;
@@ -31,20 +31,20 @@ public interface SectionsRepository extends MongoRepository<Sections, String> {
     Optional<Sections> findBySectionName(String sectionName);
 
     /**
-     * Finds all sections associated with a specific {@link Courses} entity.
+     * Finds all sections associated with a specific {@link Course} entity.
      *
      * <p>Used for retrieving all sections under a course (e.g., for listing or bulk deletion).</p>
      *
-     * @param course The parent {@link Courses} entity (loaded via @DBRef).
+     * @param course The parent {@link Course} entity (loaded via @DBRef).
      * @return A {@link List} of all matching {@link Sections}.
      */
-    List<Sections> findByCourse(Courses course);
+    List<Sections> findByCourse(Course course);
 
     List<Sections> findByCourseIdIn(List<String> course);
 
     List<Sections> findByCourseId(String id);
 
-    Long countByCourse(Courses course);
+    Long countByCourse(Course course);
 
     List<Sections> findByYearLevelAndSemester(Integer yearLevel, Integer semester);
 

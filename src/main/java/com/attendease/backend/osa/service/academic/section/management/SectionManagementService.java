@@ -1,17 +1,15 @@
 package com.attendease.backend.osa.service.academic.section.management;
 
-import com.attendease.backend.domain.courses.Courses;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.academic.course.management.impl.CourseManagementServiceImpl;
 import com.attendease.backend.repository.course.CourseRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 
 /**
- * {@code ManagementAcademicSectionService} is a service layer for managing academic sections within Rogationist College - College Department (e.g., "BSIT-101", "BSA-101", "BSECE-101").
+ * {@code SectionManagementService} is a service layer for managing academic sections within Rogationist College - College Department (e.g., "BSIT-101", "BSA-101", "BSECE-101").
  *
  * <p>This service provides CRUD operations for sections, with strict validation on naming format
  * ("COURSE_NAME-SECTION_NUMBER", e.g., "BSIT-101"). It supports auto-creation of defaults,
@@ -24,7 +22,7 @@ import java.util.Optional;
 public interface SectionManagementService {
 
     /**
-     * {@code createNewSection} is used to create a new section under a specific course.
+     * {@code addNewSection} is used to create a new section under a specific course.
      *
      * <p>Validates the full name format and prefix match before saving.</p>
      *
@@ -35,7 +33,7 @@ public interface SectionManagementService {
      * @throws RuntimeException If the course is not found.
      * @throws IllegalArgumentException If the name format is invalid or mismatches the course.
      */
-    Sections createNewSection(String courseId, Sections section);
+    Sections addNewSection(String courseId, Sections section);
 
     /**
      * {@code getSectionsByCourse} is used to retrieve all sections under a specific course.

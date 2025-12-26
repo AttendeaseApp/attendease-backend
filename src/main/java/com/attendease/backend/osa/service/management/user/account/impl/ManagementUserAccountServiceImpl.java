@@ -2,7 +2,7 @@ package com.attendease.backend.osa.service.management.user.account.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
@@ -231,8 +231,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     public UserStudentResponse mapToResponseDTO(User user, Students student) {
         Optional<Students> optStudent = Optional.ofNullable(student);
         Optional<Sections> optSection = optStudent.map(Students::getSection);
-        Optional<Courses> optCourse = optSection.map(Sections::getCourse);
-        Optional<Clusters> optCluster = optCourse.map(Courses::getCluster);
+        Optional<Course> optCourse = optSection.map(Sections::getCourse);
+        Optional<Clusters> optCluster = optCourse.map(Course::getCluster);
         Optional<BiometricData> optBiometric = optStudent.map(Students::getFacialData);
 
         return UserStudentResponse.builder()
@@ -254,8 +254,8 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 // academic data of STUDENT
                 .section(optSection.map(Sections::getSectionName).orElse(null))
                 .sectionId(optSection.map(Sections::getId).orElse(null))
-                .course(optCourse.map(Courses::getCourseName).orElse(null))
-                .courseId(optCourse.map(Courses::getId).orElse(null))
+                .course(optCourse.map(Course::getCourseName).orElse(null))
+                .courseId(optCourse.map(Course::getId).orElse(null))
                 .cluster(optCluster.map(Clusters::getClusterName).orElse(null))
                 .clusterId(optCluster.map(Clusters::getClusterId).orElse(null))
 

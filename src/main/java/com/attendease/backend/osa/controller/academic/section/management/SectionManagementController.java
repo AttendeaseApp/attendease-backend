@@ -63,8 +63,8 @@ public class SectionManagementController {
      * @return The created section.
      */
     @PostMapping("/courses/{courseId}")
-    public ResponseEntity<Sections> createSection(@PathVariable String courseId, @RequestBody Sections section) {
-        Sections createdSection = sectionManagementService.createNewSection(courseId, section);
+    public ResponseEntity<Sections> addNewSection(@PathVariable String courseId, @RequestBody Sections section) {
+        Sections createdSection = sectionManagementService.addNewSection(courseId, section);
         return new ResponseEntity<>(createdSection, HttpStatus.CREATED);
     }
 

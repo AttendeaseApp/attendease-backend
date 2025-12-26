@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.management.user.information.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.domain.student.Students;
@@ -112,7 +112,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         String clusterName = null;
 
         if (section != null) {
-            Courses course = section.getCourse();
+            Course course = section.getCourse();
             Clusters cluster = section.getCourse().getCluster();
             courseName = course.getCourseName();
             clusterName = (cluster != null) ? cluster.getClusterName() : null;

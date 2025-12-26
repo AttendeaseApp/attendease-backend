@@ -1,13 +1,13 @@
 package com.attendease.backend.osa.service.academic.course.management;
 
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.osa.service.academic.section.management.impl.SectionManagementServiceImpl;
 
 import java.util.List;
 
 /**
- * {@code ManagementAcademicCourseService} is a service layer responsible for managing academic courses within Rogationist College - College Department (e.g., "BSIT", "BSA", "BSECE").
+ * {@code CourseManagementService} is a service layer responsible for managing academic courses within Rogationist College - College Department (e.g., "BSIT", "BSA", "BSECE").
  *
  * <p>This service provides CRUD operations for courses, integrated with cluster and section management.
  * Key features include: duplicate name prevention per cluster, auto-creation of default sections
@@ -20,62 +20,53 @@ import java.util.List;
 public interface CourseManagementService {
 
     /**
-     * {@code createCourse} is used to create a new course under a specific cluster.
+     * Used to create a new course under a specific cluster.
      *
      * <p>Validates uniqueness within the cluster, sets the cluster reference, saves the course,
      * and auto-creates default sections.</p>
      *
      * @param clusterId The ID of the parent cluster.
-     * @param course The {@link Courses} entity to create (must have a non-blank {@code courseName}).
-     * @return The saved {@link Courses} entity (with auto-generated ID and timestamps).
-     *
-     * @throws RuntimeException If the cluster is not found.
-     * @throws IllegalArgumentException If the course name already exists in the cluster.
+     * @param course The {@link Course} entity to create (must have a non-blank {@code courseName}).
+     * @return The saved {@link Course} entity (with auto-generated ID and timestamps).
      */
-    Courses createCourse(String clusterId, Courses course);
+    Course addNewCourse(String clusterId, Course course);
 
     /**
      * {@code getAllCourses} is used to retrieve all courses across all clusters.
      *
-     * @return A {@link List} of all {@link Courses} entities.
+     * @return A {@link List} of all {@link Course} entities.
      */
-    List<Courses> getAllCourses();
+    List<Course> getAllCourses();
 
     /**
-     * {@code getCourseById} is used to retrieve a course by its ID.
+     * Used to retrieve a course by its ID.
      *
      * @param id The unique ID of the course.
-     * @return The {@link Courses} entity if found.
-     *
-     * @throws RuntimeException If the course is not found.
+     * @return The {@link Course} entity if found.
      */
-    Courses getCourseById(String id);
+    Course getCourseById(String id);
 
     /**
-     * {@code getCoursesByCluster} is used to retrieve all courses under a specific cluster.
+     * Used to retrieve all courses under a specific cluster.
      *
      * @param clusterId The ID of the parent cluster.
-     * @return A {@link List} of {@link Courses} in the cluster.
-     *
-     * @throws RuntimeException If the cluster is not found.
+     * @return A {@link List} of {@link Course} in the cluster.
      */
-    List<Courses> getCoursesByCluster(String clusterId);
+    List<Course> getCoursesByCluster(String clusterId);
 
     /**
-     * {@code updateCourse} is used to update an existing course by ID.
+     * Used to update an existing course by ID.
      *
      * <p>Only the {@code courseName} is updated. Cascades the name change to all associated sections.</p>
      *
      * @param id The unique ID of the course to update.
      * @param updatedCourse The updated details (only {@code courseName} is applied).
-     * @return The updated {@link Courses} entity (with refreshed timestamps).
-     *
-     * @throws RuntimeException If the course is not found.
+     * @return The updated {@link Course} entity (with refreshed timestamps).
      */
-    Courses updateCourse(String id, Courses updatedCourse);
+    Course updateCourse(String id, Course updatedCourse);
 
     /**
-     * {@code deleteCourse} is used to delete a course by its ID, cascading to sections **only if sections have no dependencies
+     * Used to delete a course by its ID, cascading to sections **only if sections have no dependencies
      * to
      * {@link com.attendease.backend.domain.sections.Sections},
      * {@link com.attendease.backend.domain.student.Students},
@@ -87,9 +78,6 @@ public interface CourseManagementService {
      * from the section deletion. Counts dependencies and provides rationale.</p>
      *
      * @param id The unique ID of the course to delete.
-     *
-     * @throws RuntimeException If the course is not found.
-     * @throws IllegalStateException If direct event dependencies exist or cascade fails (with user-friendly message including student and event counts).
      */
-    void deleteCourse(String id);
+    void deleteCourseById(String id);
 }

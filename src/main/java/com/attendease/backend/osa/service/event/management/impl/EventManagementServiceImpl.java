@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.event.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.enums.location.LocationEnvironment;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
@@ -415,8 +415,8 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (reqCriteria.getClusters() != null && !reqCriteria.getClusters().isEmpty()) {
             clusterIds.addAll(reqCriteria.getClusters());
             for (String clusterId : reqCriteria.getClusters()) {
-                List<Courses> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
-                for (Courses course : coursesUnderCluster) {
+                List<Course> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
+                for (Course course : coursesUnderCluster) {
                     courseIds.add(course.getId());
                     List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(course.getId());
                     sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
@@ -427,7 +427,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (reqCriteria.getCourses() != null && !reqCriteria.getCourses().isEmpty()) {
             for (String courseId : reqCriteria.getCourses()) {
                 courseIds.add(courseId);
-                Courses course = courseRepository.findById(courseId)
+                Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Course not found: " + courseId));
                 if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                     clusterIds.add(course.getCluster().getClusterId());
@@ -444,7 +444,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Section not found: " + sectionId));
                 if (section.getCourse() != null && section.getCourse().getId() != null) {
                     courseIds.add(section.getCourse().getId());
-                    Courses course = section.getCourse();
+                    Course course = section.getCourse();
                     if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                         clusterIds.add(course.getCluster().getClusterId());
                     }
@@ -453,7 +453,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
 
         List<String> clusterNames = clusterIds.isEmpty() ? null : clustersRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
-        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
+        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Course::getCourseName).sorted().collect(Collectors.toList());
         List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getSectionName).sorted().collect(Collectors.toList());
 
         return EventEligibility.builder()

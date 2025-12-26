@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Service implementation for managing academic clusters.
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Dec-24
+ */
 @Service
 @RequiredArgsConstructor
 public final class ClusterManagementServiceImpl implements ClusterManagementService {
@@ -23,7 +29,7 @@ public final class ClusterManagementServiceImpl implements ClusterManagementServ
 
     @Override
     @Transactional
-    public Clusters createNewCluster(Clusters cluster) {
+    public Clusters addNewCluster(Clusters cluster) {
         String name = cluster.getClusterName().trim();
 
         if (name.isEmpty()) {

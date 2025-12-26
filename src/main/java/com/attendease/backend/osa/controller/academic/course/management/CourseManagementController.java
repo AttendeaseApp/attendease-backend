@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.controller.academic.course.management;
 
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -35,23 +35,20 @@ public class CourseManagementController {
      *
      * @param clusterId The ID of the parent cluster (required query parameter).
      * @param course The course details (validated; must include a non-blank {@code courseName}).
-     * @return The created {@link Courses} entity (HTTP 200 OK).
-     *
-     * @throws IllegalArgumentException If the course name already exists in the cluster.
-     * @throws RuntimeException If the cluster is not found.
+     * @return The created {@link Course}
      */
     @PostMapping
-    public ResponseEntity<Courses> create(@RequestParam String clusterId, @RequestBody @Valid Courses course) {
-        return ResponseEntity.ok(courseManagementService.createCourse(clusterId, course));
+    public ResponseEntity<Course> addNewCourse(@RequestParam String clusterId, @RequestBody @Valid Course course) {
+        return ResponseEntity.ok(courseManagementService.addNewCourse(clusterId, course));
     }
 
     /**
      * Retrieves all courses across all clusters.
      *
-     * @return A list of all {@link Courses} (HTTP 200 OK).
+     * @return A list of all {@link Course} (HTTP 200 OK).
      */
     @GetMapping
-    public ResponseEntity<List<Courses>> getAll() {
+    public ResponseEntity<List<Course>> getAll() {
         return ResponseEntity.ok(courseManagementService.getAllCourses());
     }
 
@@ -59,12 +56,12 @@ public class CourseManagementController {
      * Retrieves a specific course by its ID.
      *
      * @param id The unique ID of the course.
-     * @return The {@link Courses} entity (HTTP 200 OK).
+     * @return The {@link Course} entity (HTTP 200 OK).
      *
      * @throws RuntimeException If the course is not found.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Courses> getById(@PathVariable String id) {
+    public ResponseEntity<Course> getById(@PathVariable String id) {
         return ResponseEntity.ok(courseManagementService.getCourseById(id));
     }
 
@@ -72,12 +69,10 @@ public class CourseManagementController {
      * Retrieves all courses under a specific cluster.
      *
      * @param clusterId The ID of the cluster.
-     * @return A list of {@link Courses} in the cluster (HTTP 200 OK).
-     *
-     * @throws RuntimeException If the cluster is not found.
+     * @return A list of {@link Course} in the cluster (HTTP 200 OK).
      */
     @GetMapping("/cluster/{clusterId}")
-    public ResponseEntity<List<Courses>> getByCluster(@PathVariable String clusterId) {
+    public ResponseEntity<List<Course>> getByCluster(@PathVariable String clusterId) {
         return ResponseEntity.ok(courseManagementService.getCoursesByCluster(clusterId));
     }
 
@@ -97,13 +92,10 @@ public class CourseManagementController {
      *
      * @param id The unique ID of the course to update.
      * @param course The updated course details (only {@code courseName} is applied).
-     * @return The updated {@link Courses} entity (HTTP 200 OK).
-     *
-     * @throws RuntimeException If the course is not found.
-     * @throws IllegalArgumentException If the new name already exists in the cluster.
+     * @return The updated {@link Course} entity (HTTP 200 OK).
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<Courses> update(@PathVariable String id, @RequestBody Courses course) {
+    public ResponseEntity<Course> update(@PathVariable String id, @RequestBody Course course) {
         return ResponseEntity.ok(courseManagementService.updateCourse(id, course));
     }
 
@@ -114,21 +106,12 @@ public class CourseManagementController {
      * deletion is prevented. If sections exist and have no dependencies (student or events), they are deleted first, then the course.
      * If any section has dependencies, deletion stops and throws a detailed integrity exception.</p>
      *
-     * <p><strong>Responses:</strong></p>
-     * <ul>
-     *   <li><strong>204 No Content</strong>: Successful deletion (no dependencies or all resolved).</li>
-     *   <li><strong>409 Conflict</strong>: Deletion prevented due to dependencies (e.g., enrolled student, referenced events)—check logs/response body for details.</li>
-     *   <li><strong>404 Not Found</strong>: Course not found.</li>
-     * </ul>
-     *
      * @param id The unique ID of the course to delete.
      * @return No content (HTTP 204 No Content) on success.
-     *
-     * @throws RuntimeException If integrity checks fail (mapped to 409) or course not found (mapped to 404).
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        courseManagementService.deleteCourse(id);
+    public ResponseEntity<Void> deleteCourseById(@PathVariable String id) {
+        courseManagementService.deleteCourseById(id);
         return ResponseEntity.noContent().build();
     }
 }

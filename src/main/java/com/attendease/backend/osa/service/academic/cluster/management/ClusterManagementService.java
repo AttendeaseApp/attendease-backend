@@ -1,12 +1,13 @@
 package com.attendease.backend.osa.service.academic.cluster.management;
 
 import com.attendease.backend.domain.clusters.Clusters;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.event.Event;
 
 import java.util.List;
 
 /**
- * {@code ManagementAcademicClusterService} is a service layer responsible for managing academic clusters (e.g., "CETE", "CBAM").
+ * {@code ClusterManagementService} is a service layer responsible for managing academic clusters (e.g., "CETE", "CBAM").
  *
  * <p>Provides CRUD operations for managing clusters</p>
  *
@@ -16,14 +17,14 @@ import java.util.List;
 public interface ClusterManagementService {
 
     /**
-     * {@code createNewCluster} is used to create a new cluster.
+     * {@code addNewCluster} is used to create a new cluster.
      *
      * @param cluster The {@link Clusters} entity to create (must have a non-blank {@code clusterName}).
      * @return The saved {@link Clusters} entity (with auto-generated ID and timestamps).
      *
      * @throws IllegalArgumentException If a cluster with the same name already exists.
      */
-    Clusters createNewCluster(Clusters cluster);
+    Clusters addNewCluster(Clusters cluster);
 
     /**
      * {@code getAllClusters} is used to retrieve all clusters.
@@ -55,7 +56,7 @@ public interface ClusterManagementService {
 
     /**
      * {@code deleteCLuster} is used to deletes a cluster only if no other dependencies exist including
-     * {@link com.attendease.backend.domain.courses.Courses} and {@link Event}.
+     * {@link Course} and {@link Event}.
      *
      * @param clusterId The unique ID of the cluster to delete.
      *

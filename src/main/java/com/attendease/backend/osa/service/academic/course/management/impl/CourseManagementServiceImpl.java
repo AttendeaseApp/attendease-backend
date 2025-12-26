@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.academic.course.management.impl;
 
 import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.sections.Sections;
 import com.attendease.backend.osa.service.academic.course.management.CourseManagementService;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
@@ -17,6 +17,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service implementation for managing academic courses.
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-Dec-24
+ */
 @Service
 @RequiredArgsConstructor
 public final class CourseManagementServiceImpl implements CourseManagementService {
@@ -31,7 +37,8 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
 
     @Override
     @Transactional
-    public Courses createCourse(String clusterId, Courses course) {
+    public Course addNewCourse(String clusterId, Course course) {
+
         Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
 
         String courseName = course.getCourseName().trim();
@@ -47,31 +54,31 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
 
         course.setCourseName(courseName);
         course.setCluster(cluster);
-        Courses savedCourse = courseRepository.save(course);
+        Course savedCourse = courseRepository.save(course);
         sectionManagementService.createDefaultSections(savedCourse.getId());
         return savedCourse;
     }
 
     @Override
-    public List<Courses> getAllCourses() {
+    public List<Course> getAllCourses() {
         return courseRepository.findAll();
     }
 
     @Override
-    public Courses getCourseById(String id) {
+    public Course getCourseById(String id) {
         return courseRepository.findById(id).orElseThrow(() -> new RuntimeException("Course not found."));
     }
 
     @Override
-    public List<Courses> getCoursesByCluster(String clusterId) {
+    public List<Course> getCoursesByCluster(String clusterId) {
         Clusters cluster = clusterRepository.findById(clusterId).orElseThrow(() -> new RuntimeException("Cluster not found."));
         return courseRepository.findByCluster(cluster);
     }
 
     @Override
     @Transactional
-    public Courses updateCourse(String id, Courses updatedCourse) {
-        Courses existing = getCourseById(id);
+    public Course updateCourse(String id, Course updatedCourse) {
+        Course existing = getCourseById(id);
         String newCourseName = updatedCourse.getCourseName().trim();
 
         if (newCourseName.isEmpty()) {
@@ -90,8 +97,8 @@ public final class CourseManagementServiceImpl implements CourseManagementServic
 
     @Override
     @Transactional
-    public void deleteCourse(String id) {
-        Courses course = getCourseById(id);
+    public void deleteCourseById(String id) {
+        Course course = getCourseById(id);
         long eventCountById = eventRepository.countByEligibleStudentsCoursesContaining(course.getId());
         long eventCountByName = eventRepository.countByEligibleStudentsCourseNamesContaining(course.getCourseName());
         long totalEventCount = eventCountById + eventCountByName;

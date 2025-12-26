@@ -2,7 +2,7 @@ package com.attendease.backend.schedulers.utils.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.event.Event;
@@ -171,8 +171,8 @@ public class AttendanceRecordsFinalizer {
         }
 
         if (!CollectionUtils.isEmpty(criteria.getClusters())) {
-            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
-            List<String> allCourseIds = clusterCourses.stream().map(Courses::getId).collect(Collectors.toList());
+            List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
+            List<String> allCourseIds = clusterCourses.stream().map(Course::getId).collect(Collectors.toList());
             if (!allCourseIds.isEmpty()) {
                 List<Sections> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);
                 List<String> allClusterSectionIds = clusterSections.stream().map(Sections::getId).collect(Collectors.toList());

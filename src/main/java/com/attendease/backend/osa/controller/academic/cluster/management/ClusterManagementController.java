@@ -42,8 +42,8 @@ public class ClusterManagementController {
      * @throws IllegalArgumentException If the cluster name already exists.
      */
     @PostMapping
-    public ResponseEntity<Clusters> createNewCluster(@RequestBody @Valid Clusters cluster) {
-        return ResponseEntity.ok(clusterManagementService.createNewCluster(cluster));
+    public ResponseEntity<Clusters> addNewCluster(@RequestBody @Valid Clusters cluster) {
+        return ResponseEntity.ok(clusterManagementService.addNewCluster(cluster));
     }
 
     /**
@@ -61,8 +61,6 @@ public class ClusterManagementController {
      *
      * @param clusterId The unique ID of the cluster.
      * @return The {@link Clusters} entity (HTTP 200 OK).
-     *
-     * @throws RuntimeException If the cluster is not found.
      */
     @GetMapping("/{clusterId}")
     public ResponseEntity<Clusters> getClusterById(@PathVariable String clusterId) {
@@ -84,9 +82,6 @@ public class ClusterManagementController {
      * @param clusterId The unique ID of the cluster to update.
      * @param cluster The updated cluster details (only {@code clusterName} is applied).
      * @return The updated {@link Clusters} entity (HTTP 200 OK).
-     *
-     * @throws RuntimeException If the cluster is not found.
-     * @throws IllegalArgumentException If the new name already exists.
      */
     @PutMapping("/{clusterId}")
     public ResponseEntity<Clusters> updateClusterById(@PathVariable String clusterId, @RequestBody Clusters cluster) {
@@ -101,8 +96,6 @@ public class ClusterManagementController {
      *
      * @param clusterId The unique ID of the cluster to delete.
      * @return No content (HTTP 204 No Content).
-     *
-     * @throws RuntimeException If the cluster is not found.
      */
     @DeleteMapping("/{clusterId}")
     public ResponseEntity<Void> deleteById(@PathVariable String clusterId) {

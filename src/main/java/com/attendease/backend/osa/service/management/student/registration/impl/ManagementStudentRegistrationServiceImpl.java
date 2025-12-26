@@ -1,6 +1,6 @@
 package com.attendease.backend.osa.service.management.student.registration.impl;
 
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.sections.Sections;
@@ -74,7 +74,7 @@ public class ManagementStudentRegistrationServiceImpl implements ManagementStude
         Students student = new Students();
         student.setStudentNumber(request.getStudentNumber());
         Sections derivedSection;
-        Courses derivedCourse;
+        Course derivedCourse;
 
         if (request.getSection() != null && !request.getSection().trim().isEmpty()) {
             String sectionValue = request.getSection().trim();

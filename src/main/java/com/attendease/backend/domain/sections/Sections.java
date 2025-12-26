@@ -1,6 +1,7 @@
 package com.attendease.backend.domain.sections;
 
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.academic.Academic;
+import com.attendease.backend.domain.course.Course;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Domain entity representing a course section (e.g., "BSIT-101") in the Attendease system.
  * <p>
- * Sections are the lowest-level grouping: children of {@link com.attendease.backend.domain.courses.Courses},
+ * Sections are the lowest-level grouping: children of {@link Course} and linked to {@link Academic},
  * representing year-level or specialized cohorts (e.g., 101 = first year). Full name format: "COURSE_NAME-SECTION_NUMBER".
  * Used for precise eligibility in events (e.g., section-specific registrations).
  * </p>
@@ -44,7 +45,10 @@ public class Sections {
     private Integer semester;
 
     @DBRef
-    private Courses course;
+    private Course course;
+
+    @DBRef
+    private Academic academicYear;
 
     @CreatedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -58,7 +62,7 @@ public class Sections {
      * Extracts year level and semester from section number
      * Logic:
      * - First semester (X01): 101, 301, 501, 701
-     * - Second semester (X01): 201, 401, 601, 801
+     * - Second semester (X02): 201, 401, 601, 801
      * where X represents the year level
      */
     public void calculateYearLevelAndSemester() {
@@ -129,5 +133,27 @@ public class Sections {
             return null;
         }
         return parts[1].substring(1); // Returns "01", "02", etc.
+    }
+
+    /**
+     * Validates that this section's semester matches the academic year's current semester
+     * @throws IllegalStateException if semester doesn't match
+     */
+    public void validateSemesterMatchesAcademicYear() {
+        if (this.academicYear == null) {
+            throw new IllegalStateException("Section must be linked to an academic year");
+        }
+
+        if (this.academicYear.getCurrentSemester() == null) {
+            throw new IllegalStateException("Academic year does not have an active semester");
+        }
+
+        Integer currentAcademicSemester = this.academicYear.getCurrentSemester().getNumber();
+        if (!currentAcademicSemester.equals(this.semester)) {
+            throw new IllegalStateException(
+                    "Section semester (" + this.semester + ") does not match academic year's current semester ("
+                            + currentAcademicSemester + ")"
+            );
+        }
     }
 }
