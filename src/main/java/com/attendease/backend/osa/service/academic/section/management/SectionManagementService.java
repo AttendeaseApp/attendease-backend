@@ -1,20 +1,13 @@
 package com.attendease.backend.osa.service.academic.section.management;
 
 import com.attendease.backend.domain.section.Section;
-import com.attendease.backend.osa.service.academic.course.management.impl.CourseManagementServiceImpl;
-import com.attendease.backend.repository.course.CourseRepository;
+import com.attendease.backend.domain.section.management.SectionResponse;
 
 import java.util.List;
 import java.util.Optional;
 
-
 /**
- * {@code SectionManagementService} is a service layer for managing academic sections within Rogationist College - College Department (e.g., "BSIT-101", "BSA-101", "BSECE-101").
- *
- * <p>This service provides CRUD operations for sections, with strict validation on naming format
- * ("COURSE_NAME-SECTION_NUMBER", e.g., "BSIT-101"). It supports auto-creation of defaults,
- * bulk operations for courses, and cascading updates/deletes. Integrates with
- * {@link CourseRepository} for parent course resolution.</p>
+ * Service interface for managing academic sections.
  *
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-25
@@ -22,86 +15,99 @@ import java.util.Optional;
 public interface SectionManagementService {
 
     /**
-     * {@code addNewSection} is used to create a new section under a specific course.
+     * Adds a new section to a course.
      *
-     * <p>Validates the full name format and prefix match before saving.</p>
-     *
-     * @param courseId The ID of the parent course.
-     * @param section The {@link Section} entity to create (must have a valid {@code name}).
-     * @return The saved {@link Section} entity (with auto-generated ID and timestamps).
+     * @param courseId the ID of the course
+     * @param section the section to add
+     * @return the created section response
      */
-    Section addNewSection(String courseId, Section section);
+    SectionResponse addNewSection(String courseId, Section section);
 
     /**
-     * {@code getSectionsByCourse} is used to retrieve all sections under a specific course.
+     * Retrieves all sections for a specific course.
      *
-     * @param courseId The ID of the parent course.
-     * @return A {@link List} of {@link Section} for the course.
+     * @param courseId the ID of the course
+     * @return list of section responses
      */
-    List<Section> getSectionsByCourse(String courseId);
-
-    List<Section> getSectionsByYearLevel(Integer yearLevel);
-
-    List<Section> getSectionsBySemester(Integer semester);
-
-    List<Section> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester);
+    List<SectionResponse> getSectionsByCourse(String courseId);
 
     /**
-     * {@code getAllSections} is used to retrieve all sections across all courses.
+     * Retrieves all sections for a specific year level.
      *
-     * @return A {@link List} of all {@link Section} entities.
+     * @param yearLevel the year level (1-4)
+     * @return list of section responses
      */
-    List<Section> getAllSections();
+    List<SectionResponse> getSectionsByYearLevel(Integer yearLevel);
 
     /**
-     * {@code getSectionById} is used to retrieve a section by its ID.
+     * Retrieves all sections for a specific semester.
      *
-     * @param id The unique ID of the section.
-     * @return The {@link Section} entity if found.
+     * @param semester the semester (1 or 2)
+     * @return list of section responses
      */
-    Section getSectionById(String id);
+    List<SectionResponse> getSectionsBySemester(Integer semester);
 
     /**
-     * {@code getSectionByFullName} is used to retrieve a section by its full name (e.g., "BSIT-101").
+     * Retrieves all sections for a specific year level and semester combination.
      *
-     * <p>Validates the format before querying.</p>
-     *
-     * @param fullName The full section name.
-     * @return An {@link Optional} containing the {@link Section} if found.
+     * @param yearLevel the year level (1-4)
+     * @param semester the semester (1 or 2)
+     * @return list of section responses
      */
-    Optional<Section> getSectionByFullName(String fullName);
+    List<SectionResponse> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester);
 
     /**
-     * {@code updateSection} is used to update an existing section by ID.
+     * Retrieves all sections in the system.
      *
-     * <p>Only the {@code name} is updated. Validates the new name against the parent course.</p>
-     *
-     * @param id The unique ID of the section to update.
-     * @param updatedSection The updated details (only {@code name} is applied).
-     * @return The updated {@link Section} entity (with refreshed timestamps).
+     * @return list of all section responses
      */
-    Section updateSection(String id, Section updatedSection);
+    List<SectionResponse> getAllSections();
 
     /**
-     * {@code deleteSection} is used to delete a section by its ID **only if no dependencies exist**.
+     * Retrieves a section by its ID.
      *
-     * <p>Prevents deletion if event sessions or student reference the section. Counts dependencies
-     * and throws a detailed exception with counts and rationale (similar to attendance checks in event deletion).</p>
+     * @param id the section ID
+     * @return the section response
+     */
+    SectionResponse getSectionById(String id);
+
+    /**
+     * Retrieves a section by its full name (e.g., "BSIT-101").
      *
-     * @param id The unique ID of the section to delete.
+     * @param fullName the full section name
+     * @return optional section response
+     */
+    Optional<SectionResponse> getSectionByFullName(String fullName);
+
+    /**
+     * Updates an existing section.
+     *
+     * @param id the section ID
+     * @param updatedSection the updated section data
+     * @return the updated section response
+     */
+    SectionResponse updateSection(String id, Section updatedSection);
+
+    /**
+     * Deletes a section if it has no dependencies.
+     *
+     * @param id the section ID
+     * @throws IllegalStateException if section has dependencies
      */
     void deleteSection(String id);
 
+    /**
+     * Creates default sections (X01 to X81) for a course based on the active academic year's current semester.
+     *
+     * @param courseId the ID of the course
+     */
     void createDefaultSections(String courseId);
 
     /**
-     * {@code updateSectionsForCourseNameChange} is used by services {@link CourseManagementServiceImpl}
-     * to update all sections for a course when its name changes.
+     * Updates section names when a course name changes.
      *
-     * <p>Rebuilds section names with the new course prefix (e.g., "OLD-101" → "NEW-101").</p>
-     *
-     * @param courseId The ID of the course.
-     * @param newCourseName The new course name to use as prefix.
+     * @param courseId the ID of the course
+     * @param newCourseName the new course name
      */
     void updateSectionsForCourseNameChange(String courseId, String newCourseName);
 }

@@ -31,10 +31,11 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		if (academicRepository.findByAcademicYearName(academicYear.getAcademicYearName()).isPresent()) {
 			throw new IllegalArgumentException("Academic year with name '" + academicYear.getAcademicYearName() + "' already exists");
 		}
-		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
 		if (academicYear.isActive()) {
+			validateNoActiveAcademicYearInTimeline(academicYear);
 			deactivateAllAcademicYears();
 		}
+		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
 		return academicRepository.save(academicYear);
 	}
 
@@ -74,6 +75,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		existing.setCurrentSemester(calculateCurrentSemester(existing));
 
 		if (academicYear.isActive() && !existing.isActive()) {
+			validateNoActiveAcademicYearInTimeline(academicYear, id);
 			deactivateAllAcademicYears();
 			existing.setActive(true);
 		}
@@ -97,6 +99,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 	public Academic setActiveAcademicYear(String id) {
 		// TODO: prevent activating academic year that is already finished
 		Academic academicYear = getAcademicYearById(id);
+		validateNoActiveAcademicYearInTimeline(academicYear, id);
 		deactivateAllAcademicYears();
 		academicYear.setActive(true);
 		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
@@ -157,6 +160,32 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		}
 		if (firstSemEnd.isAfter(secondSemStart) || firstSemEnd.isEqual(secondSemStart)) {
 			throw new IllegalArgumentException("First semester must end before second semester starts");
+		}
+	}
+
+	private void validateNoActiveAcademicYearInTimeline(Academic academicYear) {
+		validateNoActiveAcademicYearInTimeline(academicYear, null);
+	}
+
+	private void validateNoActiveAcademicYearInTimeline(Academic academicYear, String excludeId) {
+		Optional<Academic> activeYear = getActiveAcademicYear();
+
+		if (activeYear.isPresent()) {
+			Academic active = activeYear.get();
+			if (active.getId().equals(excludeId)) {
+				return;
+			}
+
+			LocalDate today = LocalDate.now();
+			LocalDate activeStart = active.getFirstSemesterStart();
+			LocalDate activeEnd = active.getSecondSemesterEnd();
+
+			if (isDateInRange(today, activeStart, activeEnd)) {
+				throw new IllegalStateException(
+						"Cannot create or activate academic year. There is already an active academic year '" +
+								active.getAcademicYearName() + "' in progress (from " + activeStart + " to " + activeEnd + ")"
+				);
+			}
 		}
 	}
 

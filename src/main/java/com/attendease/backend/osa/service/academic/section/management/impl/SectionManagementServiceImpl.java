@@ -3,6 +3,7 @@ package com.attendease.backend.osa.service.academic.section.management.impl;
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
+import com.attendease.backend.domain.section.management.SectionResponse;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
@@ -12,6 +13,7 @@ import com.attendease.backend.repository.students.StudentRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +39,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
     @Override
     @Transactional
-    public Section addNewSection(String courseId, Section section) {
+    public SectionResponse addNewSection(String courseId, Section section) {
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
 
@@ -62,50 +64,57 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         section.calculateYearLevelAndSemester();
         section.validateSemesterMatchesAcademicYear();
 
-        return sectionRepository.save(section);
+        Section savedSection = sectionRepository.save(section);
+        return SectionResponse.fromEntity(savedSection);
     }
 
     @Override
-    public List<Section> getSectionsByCourse(String courseId) {
+    public List<SectionResponse> getSectionsByCourse(String courseId) {
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found."));
-        return sectionRepository.findByCourse(course);
+        List<Section> sections = sectionRepository.findByCourse(course);
+        return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
     @Override
-    public List<Section> getSectionsByYearLevel(Integer yearLevel) {
-        return sectionRepository.findByYearLevel(yearLevel);
+    public List<SectionResponse> getSectionsByYearLevel(Integer yearLevel) {
+        List<Section> sections = sectionRepository.findByYearLevel(yearLevel);
+        return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
     @Override
-    public List<Section> getSectionsBySemester(Integer semester) {
-        return sectionRepository.findBySemester(semester);
+    public List<SectionResponse> getSectionsBySemester(Integer semester) {
+        List<Section> sections = sectionRepository.findBySemester(semester);
+        return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
     @Override
-    public List<Section> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
-        return sectionRepository.findByYearLevelAndSemester(yearLevel, semester);
+    public List<SectionResponse> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
+        List<Section> sections = sectionRepository.findByYearLevelAndSemester(yearLevel, semester);
+        return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
     @Override
-    public List<Section> getAllSections() {
-        return sectionRepository.findAll();
+    public List<SectionResponse> getAllSections() {
+        List<Section> sections = sectionRepository.findAll();
+        return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
     @Override
-    public Section getSectionById(String id) {
-        return sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
+    public SectionResponse getSectionById(String id) {
+        Section section = sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
+        return SectionResponse.fromEntity(section);
     }
 
     @Override
-    public Optional<Section> getSectionByFullName(String fullName) {
+    public Optional<SectionResponse> getSectionByFullName(String fullName) {
         userValidator.validateFullCourseSectionFormat(fullName);
-        return sectionRepository.findBySectionName(fullName);
+        return sectionRepository.findBySectionName(fullName).map(SectionResponse::fromEntity);
     }
 
     @Override
     @Transactional
-    public Section updateSection(String id, Section updatedSection) {
-        Section existing = getSectionById(id);
+    public SectionResponse updateSection(String id, Section updatedSection) {
+        Section existing = sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
         String updatedSectionName = updatedSection.getSectionName().trim();
 
         if (updatedSectionName.isEmpty()) {
@@ -113,7 +122,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         }
 
         if (existing.getSectionName().equals(updatedSectionName)) {
-            return existing;
+            return SectionResponse.fromEntity(existing);
         }
 
         sectionRepository.findBySectionName(updatedSectionName).ifPresent(s -> {
@@ -128,13 +137,14 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         existing.calculateYearLevelAndSemester();
         existing.validateSemesterMatchesAcademicYear();
 
-        return sectionRepository.save(existing);
+        Section savedSection = sectionRepository.save(existing);
+        return SectionResponse.fromEntity(savedSection);
     }
 
     @Override
     @Transactional
     public void deleteSection(String id) {
-        Section section = getSectionById(id);
+        Section section = sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
         Long studentCount = studentsRepository.countBySection(section);
         Long eventCountById = eventRepository.countByEligibleStudentsSectionsContaining(section.getId());
         Long eventCountByName = eventRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
@@ -197,7 +207,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     @Transactional
     public void updateSectionsForCourseNameChange(String courseId, String newCourseName) {
         Course course = courseRepository.findById(courseId).orElseThrow();
-        List<Section> sections = getSectionsByCourse(courseId);
+        List<Section> sections = sectionRepository.findByCourse(course);
         String oldCourseName = course.getCourseName();
 
         for (Section section : sections) {
@@ -261,6 +271,6 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         } else {
             firstDigit = semester == 1 ? 7 : 8;
         }
-        return firstDigit * 100 + 1; // Default to XX01
+        return firstDigit * 100 + 1;
     }
 }
