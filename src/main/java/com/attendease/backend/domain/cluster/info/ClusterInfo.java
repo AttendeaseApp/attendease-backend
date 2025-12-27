@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ClusterInfo {
+public final class ClusterInfo {
 	private String id;
 	private String clusterName;
 }

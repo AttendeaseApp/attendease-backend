@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SectionResponse {
+public final class SectionResponse {
 
 	private String id;
 	private String sectionName;

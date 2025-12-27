@@ -5,7 +5,7 @@ import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.section.management.SectionResponse;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
-import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
+import com.attendease.backend.repository.academic.AcademicRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.section.SectionRepository;
@@ -35,7 +35,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     private final EventRepository eventRepository;
     private final StudentRepository studentsRepository;
     private final UserValidator userValidator;
-    private final AcademicYearManagementService academicYearManagementService;
+    private final AcademicRepository academicRepository;
 
     @Override
     @Transactional
@@ -43,8 +43,10 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
 
-        Academic activeAcademicYear = academicYearManagementService.getActiveAcademicYear().orElseThrow(() ->
-                new IllegalStateException("No active academic year found. Please set an active academic year first."));
+        Academic activeAcademicYear = academicRepository.findByIsActive(true)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No active academic year found. Please set an active academic year first."
+                ));
 
         String newSectionName = section.getSectionName().trim();
 
@@ -152,11 +154,20 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
         if (studentCount > 0 || totalEventCount > 0) {
             String sectionName = section.getSectionName();
-            StringBuilder message = new StringBuilder("Cannot delete section '" + sectionName + "' due to existing dependencies (")
-                    .append(studentCount).append(" student");
+            StringBuilder message = new StringBuilder(
+                    "Cannot delete section '" + sectionName + "' due to existing dependencies ("
+            ).append(studentCount).append(" student");
+
+            if (studentCount != 1) {
+                message.append("s");
+            }
 
             if (totalEventCount > 0) {
-                message.append(", ").append(totalEventCount).append(" event sessions)");
+                message.append(", ").append(totalEventCount).append(" event");
+                if (totalEventCount != 1) {
+                    message.append("s");
+                }
+                message.append(")");
             } else {
                 message.append(")");
             }
@@ -174,8 +185,10 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
 
-        Academic activeAcademicYear = academicYearManagementService.getActiveAcademicYear()
-                .orElseThrow(() -> new IllegalStateException("No active academic year found. Please set an active academic year first."));
+        Academic activeAcademicYear = academicRepository.findByIsActive(true)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No active academic year found. Please set an active academic year first."
+                ));
 
         Integer currentSemester = activeAcademicYear.getCurrentSemester() != null
                 ? activeAcademicYear.getCurrentSemester().getNumber()
@@ -206,7 +219,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     @Override
     @Transactional
     public void updateSectionsForCourseNameChange(String courseId, String newCourseName) {
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
         List<Section> sections = sectionRepository.findByCourse(course);
         String oldCourseName = course.getCourseName();
 

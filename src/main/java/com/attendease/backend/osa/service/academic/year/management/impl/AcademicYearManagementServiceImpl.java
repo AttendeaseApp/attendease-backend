@@ -1,6 +1,7 @@
 package com.attendease.backend.osa.service.academic.year.management.impl;
 
 import com.attendease.backend.domain.academic.Academic;
+import com.attendease.backend.domain.academic.info.AcademicYearResponse;
 import com.attendease.backend.domain.enums.academic.Semester;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.academic.AcademicRepository;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service implementation for managing academic year.
@@ -26,40 +28,48 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 
 	@Override
 	@Transactional
-	public Academic createAcademicYear(Academic academicYear) {
+	public AcademicYearResponse createAcademicYear(Academic academicYear) {
 		validateAcademicYearDates(academicYear);
+		validateNoDateOverlapWithExistingYears(academicYear, null);
 		if (academicRepository.findByAcademicYearName(academicYear.getAcademicYearName()).isPresent()) {
-			throw new IllegalArgumentException("Academic year with name '" + academicYear.getAcademicYearName() + "' already exists");
-		}
-		if (academicYear.isActive()) {
-			validateNoActiveAcademicYearInTimeline(academicYear);
-			deactivateAllAcademicYears();
+			throw new IllegalArgumentException(
+					"Academic year with name '" + academicYear.getAcademicYearName() + "' already exists"
+			);
 		}
 		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
-		return academicRepository.save(academicYear);
+		if (academicYear.isActive()) {
+			validateCanActivateAcademicYear(academicYear);
+			deactivateAllAcademicYears();
+		}
+		Academic savedAcademic = academicRepository.save(academicYear);
+		return AcademicYearResponse.fromEntity(savedAcademic);
 	}
 
 	@Override
-	public List<Academic> getAllAcademicYears() {
-		return academicRepository.findAll();
+	public List<AcademicYearResponse> getAllAcademicYears() {
+		return academicRepository.findAll().stream()
+				.map(AcademicYearResponse::fromEntity)
+				.collect(Collectors.toList());
 	}
 
 	@Override
-	public Optional<Academic> getActiveAcademicYear() {
-		return academicRepository.findByIsActive(true);
+	public Optional<AcademicYearResponse> getActiveAcademicYear() {
+		return academicRepository.findByIsActive(true).map(AcademicYearResponse::fromEntity);
 	}
 
 	@Override
-	public Academic getAcademicYearById(String id) {
-		return academicRepository.findById(id).orElseThrow(() -> new RuntimeException("Academic year not found"));
+	public AcademicYearResponse getAcademicYearById(String id) {
+		Academic academic = academicRepository.findById(id).orElseThrow(() -> new RuntimeException("Academic year not found"));
+		return AcademicYearResponse.fromEntity(academic);
 	}
 
 	@Override
 	@Transactional
-	public Academic updateAcademicYear(String id, Academic academicYear) {
-		// TODO: prevent updating of academic year with dependencies on EVENT, ATTENDANCE RECORDS, COURSE, SECTION, ETC.
-		Academic existing = getAcademicYearById(id);
+	public AcademicYearResponse updateAcademicYear(String id, Academic academicYear) {
+		Academic existing = academicRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Academic year not found"));
 		validateAcademicYearDates(academicYear);
+		validateNoDateOverlapWithExistingYears(academicYear, id);
 
 		academicRepository.findByAcademicYearName(academicYear.getAcademicYearName())
 				.filter(a -> !a.getId().equals(id))
@@ -75,41 +85,48 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		existing.setCurrentSemester(calculateCurrentSemester(existing));
 
 		if (academicYear.isActive() && !existing.isActive()) {
-			validateNoActiveAcademicYearInTimeline(academicYear, id);
+			validateCanActivateAcademicYear(existing);
 			deactivateAllAcademicYears();
 			existing.setActive(true);
+		} else if (!academicYear.isActive() && existing.isActive()) {
+			existing.setActive(false);
 		}
 
-		return academicRepository.save(existing);
+		Academic savedAcademic = academicRepository.save(existing);
+		return AcademicYearResponse.fromEntity(savedAcademic);
 	}
 
+	// TODO: Check for dependencies (events, attendance records, sections, etc.)
 	@Override
 	@Transactional
 	public void deleteAcademicYear(String id) {
-		Academic academicYear = getAcademicYearById(id);
+		Academic academicYear = academicRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Academic year not found"));
 		if (academicYear.isActive()) {
-			// TODO: prevent deletion of academic year with dependencies on EVENT, ATTENDANCE RECORDS, COURSE, SECTION, ETC.
-			throw new IllegalStateException("You cannot delete an active academic year.");
+			throw new IllegalStateException(
+					"Cannot delete an active academic year. Deactivate it first."
+			);
 		}
 		academicRepository.deleteById(id);
 	}
 
 	@Override
 	@Transactional
-	public Academic setActiveAcademicYear(String id) {
-		// TODO: prevent activating academic year that is already finished
-		Academic academicYear = getAcademicYearById(id);
-		validateNoActiveAcademicYearInTimeline(academicYear, id);
+	public AcademicYearResponse setActiveAcademicYear(String id) {
+		Academic academicYear = academicRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Academic year not found"));
+
+		validateCanActivateAcademicYear(academicYear);
 		deactivateAllAcademicYears();
 		academicYear.setActive(true);
 		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
-		return academicRepository.save(academicYear);
+		Academic savedAcademic = academicRepository.save(academicYear);
+		return AcademicYearResponse.fromEntity(savedAcademic);
 	}
 
 	@Override
 	public String getCurrentSemesterName() {
-		Optional<Academic> activeYear = getActiveAcademicYear();
-		return activeYear
+		return academicRepository.findByIsActive(true)
 				.map(Academic::getCurrentSemester)
 				.map(Semester::getDisplayName)
 				.orElse(null);
@@ -117,8 +134,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 
 	@Override
 	public Integer getCurrentSemester() {
-		Optional<Academic> activeYear = getActiveAcademicYear();
-		return activeYear
+		return academicRepository.findByIsActive(true)
 				.map(Academic::getCurrentSemester)
 				.map(Semester::getNumber)
 				.orElse(null);
@@ -126,8 +142,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 
 	@Override
 	public boolean isFirstSemesterActive() {
-		Optional<Academic> activeYear = getActiveAcademicYear();
-		return activeYear
+		return academicRepository.findByIsActive(true)
 				.map(Academic::getCurrentSemester)
 				.map(s -> s == Semester.FIRST)
 				.orElse(false);
@@ -135,8 +150,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 
 	@Override
 	public boolean isSecondSemesterActive() {
-		Optional<Academic> activeYear = getActiveAcademicYear();
-		return activeYear
+		return academicRepository.findByIsActive(true)
 				.map(Academic::getCurrentSemester)
 				.map(s -> s == Semester.SECOND)
 				.orElse(false);
@@ -153,49 +167,92 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		LocalDate secondSemEnd = academicYear.getSecondSemesterEnd();
 
 		if (firstSemStart.isAfter(firstSemEnd)) {
-			throw new IllegalArgumentException("First semester start date must be before end date");
+			throw new IllegalArgumentException(
+					"First semester start date must be before end date"
+			);
 		}
 		if (secondSemStart.isAfter(secondSemEnd)) {
-			throw new IllegalArgumentException("Second semester start date must be before end date");
+			throw new IllegalArgumentException(
+					"Second semester start date must be before end date"
+			);
 		}
-		if (firstSemEnd.isAfter(secondSemStart) || firstSemEnd.isEqual(secondSemStart)) {
-			throw new IllegalArgumentException("First semester must end before second semester starts");
+		if (!firstSemEnd.isBefore(secondSemStart)) {
+			throw new IllegalArgumentException(
+					"First semester must end before second semester starts. There should be at least one day gap."
+			);
+		}
+		// ~8 months
+		long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(firstSemStart, secondSemEnd);
+		if (daysBetween < 240) {
+			throw new IllegalArgumentException(
+					"Academic year is too short. It should span at least 8 months."
+			);
+		}
+		// ~13 months
+		if (daysBetween > 400) {
+			throw new IllegalArgumentException(
+					"Academic year is too long. It should not exceed 13 months."
+			);
 		}
 	}
 
-	private void validateNoActiveAcademicYearInTimeline(Academic academicYear) {
-		validateNoActiveAcademicYearInTimeline(academicYear, null);
-	}
-
-	private void validateNoActiveAcademicYearInTimeline(Academic academicYear, String excludeId) {
-		Optional<Academic> activeYear = getActiveAcademicYear();
-
-		if (activeYear.isPresent()) {
-			Academic active = activeYear.get();
-			if (active.getId().equals(excludeId)) {
-				return;
+	private void validateNoDateOverlapWithExistingYears(Academic academicYear, String excludeId) {
+		List<Academic> allYears = academicRepository.findAll();
+		LocalDate newStart = academicYear.getFirstSemesterStart();
+		LocalDate newEnd = academicYear.getSecondSemesterEnd();
+		for (Academic existing : allYears) {
+			if (existing.getId().equals(excludeId)) {
+				continue;
 			}
-
-			LocalDate today = LocalDate.now();
-			LocalDate activeStart = active.getFirstSemesterStart();
-			LocalDate activeEnd = active.getSecondSemesterEnd();
-
-			if (isDateInRange(today, activeStart, activeEnd)) {
-				throw new IllegalStateException(
-						"Cannot create or activate academic year. There is already an active academic year '" +
-								active.getAcademicYearName() + "' in progress (from " + activeStart + " to " + activeEnd + ")"
+			LocalDate existingStart = existing.getFirstSemesterStart();
+			LocalDate existingEnd = existing.getSecondSemesterEnd();
+			if (datesOverlap(newStart, newEnd, existingStart, existingEnd)) {
+				throw new IllegalArgumentException(
+						"Academic year dates overlap with existing academic year '" +
+								existing.getAcademicYearName() + "' (" + existingStart + " to " + existingEnd + ")"
 				);
 			}
 		}
 	}
 
-	@Transactional
+	private void validateCanActivateAcademicYear(Academic academicYear) {
+		LocalDate today = LocalDate.now();
+		LocalDate yearStart = academicYear.getFirstSemesterStart();
+		LocalDate yearEnd = academicYear.getSecondSemesterEnd();
+
+		if (today.isAfter(yearEnd)) {
+			throw new IllegalStateException(
+					"Cannot activate academic year '" + academicYear.getAcademicYearName() +
+							"' because it has already ended on " + yearEnd
+			);
+		}
+		if (today.isBefore(yearStart.minusDays(30))) {
+			throw new IllegalStateException(
+					"Cannot activate academic year '" + academicYear.getAcademicYearName() +
+							"' because it doesn't start until " + yearStart +
+							". You can only activate it within 30 days of its start date."
+			);
+		}
+		Optional<Academic> currentActive = academicRepository.findByIsActive(true);
+		if (currentActive.isPresent() && !currentActive.get().getId().equals(academicYear.getId())) {
+			Academic active = currentActive.get();
+			if (today.isBefore(active.getSecondSemesterEnd()) || today.isEqual(active.getSecondSemesterEnd())) {
+				throw new IllegalStateException(
+						"Cannot activate academic year. Academic year '" + active.getAcademicYearName() +
+								"' is still in progress (ends on " + active.getSecondSemesterEnd() + ")"
+				);
+			}
+		}
+	}
+
 	private void deactivateAllAcademicYears() {
-		List<Academic> allYears = academicRepository.findAll();
-		allYears.forEach(year -> {
-			year.setActive(false);
-			academicRepository.save(year);
-		});
+		List<Academic> activeYears = academicRepository.findAll().stream()
+				.filter(Academic::isActive)
+				.toList();
+		if (!activeYears.isEmpty()) {
+			activeYears.forEach(year -> year.setActive(false));
+			academicRepository.saveAll(activeYears);
+		}
 	}
 
 	private Semester calculateCurrentSemester(Academic academic) {
@@ -212,5 +269,9 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 
 	private boolean isDateInRange(LocalDate date, LocalDate start, LocalDate end) {
 		return !date.isBefore(start) && !date.isAfter(end);
+	}
+
+	private boolean datesOverlap(LocalDate start1, LocalDate end1, LocalDate start2, LocalDate end2) {
+		return !start1.isAfter(end2) && !start2.isAfter(end1);
 	}
 }

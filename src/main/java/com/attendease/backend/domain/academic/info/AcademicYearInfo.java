@@ -6,13 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Response DTO for academic year information
+ * Academic year information
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AcademicYearInfo {
+public final class AcademicYearInfo {
 	private String id;
 	private String academicYearName;
 	private String currentSemester;

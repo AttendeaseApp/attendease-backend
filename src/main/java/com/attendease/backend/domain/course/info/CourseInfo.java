@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CourseInfo {
+public final class CourseInfo {
 	private String id;
 	private String courseName;
 	private ClusterInfo cluster;
