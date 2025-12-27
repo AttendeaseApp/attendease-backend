@@ -4,8 +4,8 @@ import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.biometrics.BiometricData;
 import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.biometrics.Verification.Response.EventRegistrationBiometricsVerificationResponse;
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.cluster.Cluster;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
@@ -142,8 +142,8 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         if (student.getSection() == null) {
             return false;
         }
-        Courses course = student.getSection().getCourse();
-        Clusters cluster = (course != null) ? course.getCluster() : null;
+        Course course = student.getSection().getCourse();
+        Cluster cluster = (course != null) ? course.getCluster() : null;
         if (criteria.getSections() != null && criteria.getSections().contains(student.getSection().getId())) {
             return true;
         }

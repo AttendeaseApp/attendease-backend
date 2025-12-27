@@ -1,8 +1,10 @@
 package com.attendease.backend.domain.student;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.user.User;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -50,9 +52,45 @@ public class Students {
     private String studentNumber;
 
     @DBRef
-    private Sections section;
+    private Section section;
+
+    @Min(value = 1, message = "Year level must be between 1 and 4")
+    @Max(value = 4, message = "Year level must be between 1 and 4")
+    private Integer yearLevel;
 
     private String sectionName;
     private String courseName;
     private String clusterName;
+
+    /**
+     * Updates student's section and caches related info
+     */
+    public void updateSection(Section newSection) {
+        this.section = newSection;
+        this.sectionName = newSection.getSectionName();
+        this.courseName = newSection.getCourse().getCourseName();
+        this.clusterName = newSection.getCourse().getCluster().getClusterName();
+        this.yearLevel = newSection.getYearLevel();
+    }
+
+    /**
+     * Gets admission year from user account creation date
+     */
+    public Integer getAdmissionYear() {
+        if (user != null && user.getCreatedAt() != null) {
+            return user.getCreatedAt().getYear();
+        }
+        return null;
+    }
+
+    /**
+     * Gets expected graduation year based on admission year (4-year program)
+     */
+    public Integer getExpectedGraduationYear() {
+        Integer admissionYear = getAdmissionYear();
+        if (admissionYear != null) {
+            return admissionYear + 4;
+        }
+        return null;
+    }
 }

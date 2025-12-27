@@ -5,6 +5,7 @@ package com.attendease.backend.domain.enums;
  */
 public enum AccountStatus {
     ACTIVE,
+    GRADUATED,
     INACTIVE,
     LOCKED,
     PENDING

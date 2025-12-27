@@ -11,7 +11,6 @@ import com.attendease.backend.student.service.utils.BiometricImageRequestValidat
 import com.attendease.backend.student.service.utils.BiometricsRegistrationClient;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

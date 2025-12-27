@@ -2,15 +2,15 @@ package com.attendease.backend.schedulers.utils.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.event.Event;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.course.CourseRepository;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,7 +28,7 @@ public class AttendanceRecordsFinalizer {
 
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
-    private final SectionsRepository sectionRepository;
+    private final SectionRepository sectionRepository;
     private final CourseRepository courseRepository;
 
     /**
@@ -162,8 +162,8 @@ public class AttendanceRecordsFinalizer {
         Set<Students> uniqueStudents = new HashSet<>();
 
         if (!CollectionUtils.isEmpty(criteria.getCourses())) {
-            List<Sections> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
-            List<String> allSectionIds = courseSections.stream().map(Sections::getId).collect(Collectors.toList());
+            List<Section> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
+            List<String> allSectionIds = courseSections.stream().map(Section::getId).collect(Collectors.toList());
             if (!allSectionIds.isEmpty()) {
                 List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
                 uniqueStudents.addAll(courseStudents);
@@ -171,11 +171,11 @@ public class AttendanceRecordsFinalizer {
         }
 
         if (!CollectionUtils.isEmpty(criteria.getClusters())) {
-            List<Courses> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
-            List<String> allCourseIds = clusterCourses.stream().map(Courses::getId).collect(Collectors.toList());
+            List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
+            List<String> allCourseIds = clusterCourses.stream().map(Course::getId).collect(Collectors.toList());
             if (!allCourseIds.isEmpty()) {
-                List<Sections> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);
-                List<String> allClusterSectionIds = clusterSections.stream().map(Sections::getId).collect(Collectors.toList());
+                List<Section> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);
+                List<String> allClusterSectionIds = clusterSections.stream().map(Section::getId).collect(Collectors.toList());
                 if (!allClusterSectionIds.isEmpty()) {
                     List<Students> clusterStudents = studentRepository.findBySectionIdIn(allClusterSectionIds);
                     uniqueStudents.addAll(clusterStudents);

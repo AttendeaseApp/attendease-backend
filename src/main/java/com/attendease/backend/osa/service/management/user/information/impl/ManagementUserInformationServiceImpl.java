@@ -1,16 +1,16 @@
 package com.attendease.backend.osa.service.management.user.information.impl;
 
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.cluster.Cluster;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.UserType;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.osa.service.management.user.information.ManagementUserInformationService;
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
@@ -30,7 +30,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final StudentBiometrics studentBiometrics;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
@@ -90,7 +90,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         }
 
         if (request.getSectionId() != null) {
-            Sections section = sectionsRepository.findById(request.getSectionId()).orElseThrow(ChangeSetPersister.NotFoundException::new);
+            Section section = sectionRepository.findById(request.getSectionId()).orElseThrow(ChangeSetPersister.NotFoundException::new);
             student.setSection(section);
         }
 
@@ -106,14 +106,14 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
     }
 
     private UserStudentResponse buildUserStudentResponse(User user, Students student) {
-        Sections section = student.getSection();
+        Section section = student.getSection();
         String sectionName = (section != null) ? section.getSectionName() : null;
         String courseName = null;
         String clusterName = null;
 
         if (section != null) {
-            Courses course = section.getCourse();
-            Clusters cluster = section.getCourse().getCluster();
+            Course course = section.getCourse();
+            Cluster cluster = section.getCourse().getCluster();
             courseName = course.getCourseName();
             clusterName = (cluster != null) ? cluster.getClusterName() : null;
         }

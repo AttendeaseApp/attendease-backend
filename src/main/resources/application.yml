@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: attendease-backend
+  profiles:
+    active: local
+  data:
+    mongodb:
+      auto-index-creation: true
+      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 20MB
+
+server:
+  port: 8082
+
+jwt:
+  secret: ${JWT_SECRET:0gIcxb4s5qmWscBo58iu4BBb7FczeCVrOqldrTta98iwkSW9LTxAtMh0cUJ5dobmXHmntxbn55wkWOFxtAgXTA==}
+
+# LOGGING CONFIGS
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb: DEBUG
+        messaging:
+          simp:
+            stomp: TRACE
+        web:
+          socket:
+            messaging:
+              StompSubProtocolHandler: TRACE
+      mongodb:
+        driver: INFO
+    com:
+      attendease:
+        backend:
+          configurations: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# SYSTEM INFORMATION
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  info:
+    env:
+      enabled: true
+
+info:
+  timezone: ${user.timezone:UTC}
+  application:
+    name: ${spring.application.name}

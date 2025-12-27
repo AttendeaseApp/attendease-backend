@@ -1,7 +1,7 @@
 package com.attendease.backend.osa.service.event.management.impl;
 
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.cluster.Cluster;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.enums.location.LocationEnvironment;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
@@ -10,14 +10,14 @@ import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.exceptions.domain.Event.*;
 import com.attendease.backend.exceptions.domain.Location.InvalidLocationEnvironmentException;
 import com.attendease.backend.exceptions.domain.Location.InvalidLocationPurposeException;
 import com.attendease.backend.exceptions.domain.Location.LocationNotFoundException;
 import com.attendease.backend.osa.service.event.management.EventManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.cluster.ClusterRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,9 +49,9 @@ import org.springframework.transaction.annotation.Transactional;
 public final class EventManagementServiceImpl implements EventManagementService {
 
     private final LocationRepository locationRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final CourseRepository courseRepository;
-    private final ClustersRepository clustersRepository;
+    private final ClusterRepository clusterRepository;
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
 
@@ -415,11 +415,11 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (reqCriteria.getClusters() != null && !reqCriteria.getClusters().isEmpty()) {
             clusterIds.addAll(reqCriteria.getClusters());
             for (String clusterId : reqCriteria.getClusters()) {
-                List<Courses> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
-                for (Courses course : coursesUnderCluster) {
+                List<Course> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
+                for (Course course : coursesUnderCluster) {
                     courseIds.add(course.getId());
-                    List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(course.getId());
-                    sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+                    List<Section> sectionUnderCourse = sectionRepository.findByCourseId(course.getId());
+                    sectionIds.addAll(sectionUnderCourse.stream().map(Section::getId).collect(Collectors.toSet()));
                 }
             }
         }
@@ -427,24 +427,24 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (reqCriteria.getCourses() != null && !reqCriteria.getCourses().isEmpty()) {
             for (String courseId : reqCriteria.getCourses()) {
                 courseIds.add(courseId);
-                Courses course = courseRepository.findById(courseId)
+                Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Course not found: " + courseId));
                 if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                     clusterIds.add(course.getCluster().getClusterId());
                 }
-                List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(courseId);
-                sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+                List<Section> sectionUnderCourse = sectionRepository.findByCourseId(courseId);
+                sectionIds.addAll(sectionUnderCourse.stream().map(Section::getId).collect(Collectors.toSet()));
             }
         }
 
         if (reqCriteria.getSections() != null && !reqCriteria.getSections().isEmpty()) {
             for (String sectionId : reqCriteria.getSections()) {
                 sectionIds.add(sectionId);
-                Sections section = sectionsRepository.findById(sectionId)
+                Section section = sectionRepository.findById(sectionId)
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Section not found: " + sectionId));
                 if (section.getCourse() != null && section.getCourse().getId() != null) {
                     courseIds.add(section.getCourse().getId());
-                    Courses course = section.getCourse();
+                    Course course = section.getCourse();
                     if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                         clusterIds.add(course.getCluster().getClusterId());
                     }
@@ -452,9 +452,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
             }
         }
 
-        List<String> clusterNames = clusterIds.isEmpty() ? null : clustersRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
-        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
-        List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getSectionName).sorted().collect(Collectors.toList());
+        List<String> clusterNames = clusterIds.isEmpty() ? null : clusterRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Cluster::getClusterName).sorted().collect(Collectors.toList());
+        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Course::getCourseName).sorted().collect(Collectors.toList());
+        List<String> sectionNames = sectionIds.isEmpty() ? null : sectionRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Section::getSectionName).sorted().collect(Collectors.toList());
 
         return EventEligibility.builder()
                 .allStudents(false)
