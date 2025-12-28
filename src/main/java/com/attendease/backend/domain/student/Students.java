@@ -61,36 +61,4 @@ public class Students {
     private String sectionName;
     private String courseName;
     private String clusterName;
-
-    /**
-     * Updates student's section and caches related info
-     */
-    public void updateSection(Section newSection) {
-        this.section = newSection;
-        this.sectionName = newSection.getSectionName();
-        this.courseName = newSection.getCourse().getCourseName();
-        this.clusterName = newSection.getCourse().getCluster().getClusterName();
-        this.yearLevel = newSection.getYearLevel();
-    }
-
-    /**
-     * Gets admission year from user account creation date
-     */
-    public Integer getAdmissionYear() {
-        if (user != null && user.getCreatedAt() != null) {
-            return user.getCreatedAt().getYear();
-        }
-        return null;
-    }
-
-    /**
-     * Gets expected graduation year based on admission year (4-year program)
-     */
-    public Integer getExpectedGraduationYear() {
-        Integer admissionYear = getAdmissionYear();
-        if (admissionYear != null) {
-            return admissionYear + 4;
-        }
-        return null;
-    }
 }

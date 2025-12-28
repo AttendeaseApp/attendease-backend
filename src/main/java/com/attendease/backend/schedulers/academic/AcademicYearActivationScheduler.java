@@ -1,7 +1,9 @@
 package com.attendease.backend.schedulers.academic;
 
 import com.attendease.backend.domain.academic.Academic;
+import com.attendease.backend.domain.enums.academic.AcademicYearStatus;
 import com.attendease.backend.domain.enums.academic.Semester;
+import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.academic.AcademicRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ import java.util.Optional;
 public class AcademicYearActivationScheduler {
 
 	private final AcademicRepository academicRepository;
+	private final AcademicYearManagementService academicYearManagementService;
 
 	/**
 	 * Runs daily at midnight to check and update academic year and semester status.
@@ -63,12 +66,17 @@ public class AcademicYearActivationScheduler {
 			return;
 		}
 		Academic activeYear = activeYearOpt.get();
-		LocalDate yearEnd = activeYear.getSecondSemesterEnd();
-		if (today.isAfter(yearEnd)) {
-			activeYear.setActive(false);
-			activeYear.setCurrentSemester(null);
-			academicRepository.save(activeYear);
-			log.info("Academic year '{}' has ended and been deactivated (ended on {})", activeYear.getAcademicYearName(), yearEnd);
+		AcademicYearStatus status = calculateStatus(activeYear, today);
+
+		if (status == AcademicYearStatus.COMPLETED) {
+			try {
+				academicYearManagementService.deactivateAcademicYear(activeYear.getId());
+				log.info("Academic year '{}' has ended and been deactivated (ended on {})",
+						activeYear.getAcademicYearName(),
+						activeYear.getSecondSemesterEnd());
+			} catch (IllegalStateException e) {
+				log.warn("Could not deactivate completed academic year '{}': {}", activeYear.getAcademicYearName(), e.getMessage());
+			}
 		}
 	}
 
@@ -80,25 +88,29 @@ public class AcademicYearActivationScheduler {
 			return;
 		}
 		List<Academic> allYears = academicRepository.findAll();
+		Optional<Academic> yearToActivate = allYears.stream()
+				.filter(year -> !year.isActive())
+				.filter(year -> {
+					AcademicYearStatus status = calculateStatus(year, today);
+					return status == AcademicYearStatus.IN_PROGRESS ||
+							status == AcademicYearStatus.BETWEEN_SEMESTERS;
+				})
+				.findFirst();
 
-		for (Academic year : allYears) {
-			if (year.isActive()) {
-				continue;
+		if (yearToActivate.isPresent()) {
+			Academic year = yearToActivate.get();
+			try {
+				academicYearManagementService.setActiveAcademicYear(year.getId());
+				log.info("Academic year '{}' has been automatically activated (started on {})",
+						year.getAcademicYearName(),
+						year.getFirstSemesterStart());
+			} catch (IllegalStateException e) {
+				log.error("Failed to activate academic year '{}': {}",
+						year.getAcademicYearName(), e.getMessage());
 			}
-
-			LocalDate yearStart = year.getFirstSemesterStart();
-			LocalDate yearEnd = year.getSecondSemesterEnd();
-
-			if (!today.isBefore(yearStart) && !today.isAfter(yearEnd)) {
-				year.setActive(true);
-				year.setCurrentSemester(determineCurrentSemester(today, year));
-				academicRepository.save(year);
-				log.info("Academic year '{}' has been automatically activated (started on {})", year.getAcademicYearName(), yearStart);
-				return;
-			}
+		} else {
+			log.debug("No upcoming academic year found to activate");
 		}
-
-		log.debug("No upcoming academic year found to activate");
 	}
 
 	private void updateCurrentSemester(LocalDate today) {
@@ -113,8 +125,14 @@ public class AcademicYearActivationScheduler {
 		if (currentSemester != newSemester) {
 			activeYear.setCurrentSemester(newSemester);
 			academicRepository.save(activeYear);
-			String oldSemesterName = currentSemester != null ? currentSemester.getDisplayName() : "None";
-			String newSemesterName = newSemester != null ? newSemester.getDisplayName() : "None (Between Semesters)";
+
+			String oldSemesterName = currentSemester != null
+					? currentSemester.getDisplayName()
+					: "None";
+			String newSemesterName = newSemester != null
+					? newSemester.getDisplayName()
+					: "None (Between Semesters)";
+
 			log.info("Semester updated for academic year '{}': {} -> {}",
 					activeYear.getAcademicYearName(),
 					oldSemesterName,
@@ -133,6 +151,19 @@ public class AcademicYearActivationScheduler {
 	public void manualTrigger() {
 		log.info("Manual trigger initiated for academic year activation check");
 		processAcademicYearActivation();
+	}
+	private AcademicYearStatus calculateStatus(Academic academic, LocalDate date) {
+		if (date.isBefore(academic.getFirstSemesterStart())) {
+			return AcademicYearStatus.UPCOMING;
+		}
+		if (date.isAfter(academic.getSecondSemesterEnd())) {
+			return AcademicYearStatus.COMPLETED;
+		}
+		if (date.isAfter(academic.getFirstSemesterEnd()) &&
+				date.isBefore(academic.getSecondSemesterStart())) {
+			return AcademicYearStatus.BETWEEN_SEMESTERS;
+		}
+		return AcademicYearStatus.IN_PROGRESS;
 	}
 
 	private Semester determineCurrentSemester(LocalDate today, Academic academic) {

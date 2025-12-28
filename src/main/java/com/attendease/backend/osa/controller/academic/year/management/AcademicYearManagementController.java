@@ -2,6 +2,8 @@ package com.attendease.backend.osa.controller.academic.year.management;
 
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.academic.info.AcademicYearResponse;
+import com.attendease.backend.domain.academic.mapper.AcademicYearMapper;
+import com.attendease.backend.domain.academic.update.UpdateAcademicYearRequest;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -100,24 +102,16 @@ public class AcademicYearManagementController {
 	 * </p>
 	 *
 	 * @param id the academic year ID
-	 * @param academicYear the updated academic year data
+	 * @param request the updated academic year data
 	 * @return the updated academic year response
 	 */
 	@PutMapping("/{id}")
-	public ResponseEntity<?> updateAcademicYear(
+	public ResponseEntity<AcademicYearResponse> updateAcademicYear(
 			@PathVariable String id,
-			@Valid
-			@RequestBody Academic academicYear) {
-		try {
-			AcademicYearResponse response = academicYearManagementService.updateAcademicYear(id, academicYear);
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException ex) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
-		} catch (IllegalStateException ex) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
-		} catch (RuntimeException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
-		}
+			@Valid @RequestBody UpdateAcademicYearRequest request) {
+		Academic academic = AcademicYearMapper.toEntity(request);
+		AcademicYearResponse response = academicYearManagementService.updateAcademicYear(id, academic);
+		return ResponseEntity.ok(response);
 	}
 
 	/**
@@ -161,6 +155,12 @@ public class AcademicYearManagementController {
 		} catch (RuntimeException ex) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
 		}
+	}
+
+	@PatchMapping("/{id}/deactivate")
+	public ResponseEntity<AcademicYearResponse> deactivateAcademicYear(@PathVariable String id) {
+		AcademicYearResponse response = academicYearManagementService.deactivateAcademicYear(id);
+		return ResponseEntity.ok(response);
 	}
 
 	/**

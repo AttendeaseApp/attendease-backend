@@ -2,6 +2,7 @@ package com.attendease.backend.osa.service.academic.year.management.impl;
 
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.academic.info.AcademicYearResponse;
+import com.attendease.backend.domain.enums.academic.AcademicYearStatus;
 import com.attendease.backend.domain.enums.academic.Semester;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.academic.AcademicRepository;
@@ -77,6 +78,9 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 					throw new IllegalArgumentException("Academic year name already exists");
 				});
 
+		validateUpdateDoesNotChangeStatus(existing, academicYear);
+		validateDateUpdatePermissions(existing, academicYear);
+
 		existing.setAcademicYearName(academicYear.getAcademicYearName());
 		existing.setFirstSemesterStart(academicYear.getFirstSemesterStart());
 		existing.setFirstSemesterEnd(academicYear.getFirstSemesterEnd());
@@ -89,6 +93,7 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 			deactivateAllAcademicYears();
 			existing.setActive(true);
 		} else if (!academicYear.isActive() && existing.isActive()) {
+			validateCanDeactivateAcademicYear(existing);
 			existing.setActive(false);
 		}
 
@@ -107,6 +112,16 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 					"Cannot delete an active academic year. Deactivate it first."
 			);
 		}
+
+		LocalDate today = LocalDate.now();
+		AcademicYearStatus status = calculateStatus(academicYear, today);
+		if (status == AcademicYearStatus.IN_PROGRESS ||
+				status == AcademicYearStatus.BETWEEN_SEMESTERS) {
+			throw new IllegalStateException(
+					"Cannot delete an ongoing academic year (status: " + status + "). " +
+							"Wait until after " + academicYear.getSecondSemesterEnd()
+			);
+		}
 		academicRepository.deleteById(id);
 	}
 
@@ -120,6 +135,22 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		deactivateAllAcademicYears();
 		academicYear.setActive(true);
 		academicYear.setCurrentSemester(calculateCurrentSemester(academicYear));
+		Academic savedAcademic = academicRepository.save(academicYear);
+		return AcademicYearResponse.fromEntity(savedAcademic);
+	}
+
+	@Override
+	@Transactional
+	public AcademicYearResponse deactivateAcademicYear(String id) {
+		Academic academicYear = academicRepository.findById(id).orElseThrow(() -> new RuntimeException("Academic year not found"));
+		if (!academicYear.isActive()) {
+			throw new IllegalStateException(
+					"Academic year '" + academicYear.getAcademicYearName() + "' is already inactive"
+			);
+		}
+		validateCanDeactivateAcademicYear(academicYear);
+		academicYear.setActive(false);
+		academicYear.setCurrentSemester(null);
 		Academic savedAcademic = academicRepository.save(academicYear);
 		return AcademicYearResponse.fromEntity(savedAcademic);
 	}
@@ -181,17 +212,16 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 					"First semester must end before second semester starts. There should be at least one day gap."
 			);
 		}
-		// ~8 months
 		long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(firstSemStart, secondSemEnd);
 		if (daysBetween < 240) {
 			throw new IllegalArgumentException(
-					"Academic year is too short. It should span at least 8 months."
+					"Academic year is too short. It should span at least 8 months (~240 days)."
 			);
 		}
-		// ~13 months
+
 		if (daysBetween > 400) {
 			throw new IllegalArgumentException(
-					"Academic year is too long. It should not exceed 13 months."
+					"Academic year is too long. It should not exceed 13 months (~400 days)."
 			);
 		}
 	}
@@ -209,9 +239,86 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 			if (datesOverlap(newStart, newEnd, existingStart, existingEnd)) {
 				throw new IllegalArgumentException(
 						"Academic year dates overlap with existing academic year '" +
-								existing.getAcademicYearName() + "' (" + existingStart + " to " + existingEnd + ")"
+								existing.getAcademicYearName() + "' (" +
+								existingStart + " to " + existingEnd + ")"
 				);
 			}
+		}
+	}
+
+	private void validateUpdateDoesNotChangeStatus(Academic existing, Academic updated) {
+		LocalDate today = LocalDate.now();
+		AcademicYearStatus currentStatus = calculateStatus(existing, today);
+		AcademicYearStatus newStatus = calculateStatus(updated, today);
+		if (currentStatus != newStatus) {
+			throw new IllegalStateException(
+					"Cannot update academic year: changes would alter its status from " +
+							currentStatus + " to " + newStatus + ". " +
+							"Status changes must occur naturally through date progression."
+			);
+		}
+	}
+
+	private void validateDateUpdatePermissions(Academic existing, Academic updated) {
+		LocalDate today = LocalDate.now();
+		AcademicYearStatus status = calculateStatus(existing, today);
+
+		switch (status) {
+			case COMPLETED:
+				if (!datesMatch(existing, updated)) {
+					throw new IllegalStateException(
+							"Cannot modify dates of academic year '" + existing.getAcademicYearName() +
+									"' because it has already ended on " + existing.getSecondSemesterEnd()
+					);
+				}
+				break;
+
+			case IN_PROGRESS:
+				Semester currentSem = existing.getCurrentSemester();
+				if (currentSem == Semester.FIRST) {
+					if (!updated.getFirstSemesterStart().equals(existing.getFirstSemesterStart()) ||
+							!updated.getFirstSemesterEnd().equals(existing.getFirstSemesterEnd())) {
+						throw new IllegalStateException(
+								"Cannot modify first semester dates while it is currently in progress. " +
+										"Only second semester dates can be updated."
+						);
+					}
+					validateSemesterGap(updated.getFirstSemesterEnd(), updated.getSecondSemesterStart());
+
+				} else if (currentSem == Semester.SECOND) {
+					if (!datesMatch(existing, updated)) {
+						throw new IllegalStateException(
+								"Cannot modify any semester dates while second semester is in progress. " +
+										"The academic year is too far along to allow changes."
+						);
+					}
+				}
+				break;
+
+			case BETWEEN_SEMESTERS:
+				if (!updated.getFirstSemesterStart().equals(existing.getFirstSemesterStart()) ||
+						!updated.getFirstSemesterEnd().equals(existing.getFirstSemesterEnd())) {
+					throw new IllegalStateException(
+							"Cannot modify first semester dates during the break period. " +
+									"First semester has already concluded. Only second semester dates can be updated."
+					);
+				}
+
+				if (updated.getSecondSemesterStart().isBefore(today)) {
+					throw new IllegalStateException(
+							"Cannot move second semester start date to the past (" +
+									updated.getSecondSemesterStart() + "). It must be today or in the future."
+					);
+				}
+				break;
+
+			case UPCOMING:
+				if (updated.getFirstSemesterStart().isBefore(today.minusDays(30))) {
+					throw new IllegalStateException(
+							"Cannot set first semester start date more than 30 days in the past"
+					);
+				}
+				break;
 		}
 	}
 
@@ -236,13 +343,27 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		Optional<Academic> currentActive = academicRepository.findByIsActive(true);
 		if (currentActive.isPresent() && !currentActive.get().getId().equals(academicYear.getId())) {
 			Academic active = currentActive.get();
-			if (today.isBefore(active.getSecondSemesterEnd()) || today.isEqual(active.getSecondSemesterEnd())) {
+			if (today.isBefore(active.getSecondSemesterEnd()) ||
+					today.isEqual(active.getSecondSemesterEnd())) {
 				throw new IllegalStateException(
 						"Cannot activate academic year. Academic year '" + active.getAcademicYearName() +
 								"' is still in progress (ends on " + active.getSecondSemesterEnd() + ")"
 				);
 			}
 		}
+	}
+	private void validateCanDeactivateAcademicYear(Academic academicYear) {
+		LocalDate today = LocalDate.now();
+		AcademicYearStatus status = calculateStatus(academicYear, today);
+		if (status == AcademicYearStatus.IN_PROGRESS ||
+				status == AcademicYearStatus.BETWEEN_SEMESTERS) {
+			throw new IllegalStateException(
+					"Cannot deactivate academic year '" + academicYear.getAcademicYearName() +
+							"' while it is ongoing (status: " + status + "). " +
+							"It can only be deactivated after " + academicYear.getSecondSemesterEnd()
+			);
+		}
+
 	}
 
 	private void deactivateAllAcademicYears() {
@@ -267,11 +388,42 @@ public final class AcademicYearManagementServiceImpl implements AcademicYearMana
 		return null;
 	}
 
+	private AcademicYearStatus calculateStatus(Academic academic, LocalDate date) {
+		if (date.isBefore(academic.getFirstSemesterStart())) {
+			return AcademicYearStatus.UPCOMING;
+		}
+		if (date.isAfter(academic.getSecondSemesterEnd())) {
+			return AcademicYearStatus.COMPLETED;
+		}
+		if (date.isAfter(academic.getFirstSemesterEnd()) &&
+				date.isBefore(academic.getSecondSemesterStart())) {
+			return AcademicYearStatus.BETWEEN_SEMESTERS;
+		}
+		return AcademicYearStatus.IN_PROGRESS;
+	}
+
+
 	private boolean isDateInRange(LocalDate date, LocalDate start, LocalDate end) {
 		return !date.isBefore(start) && !date.isAfter(end);
 	}
 
 	private boolean datesOverlap(LocalDate start1, LocalDate end1, LocalDate start2, LocalDate end2) {
 		return !start1.isAfter(end2) && !start2.isAfter(end1);
+	}
+
+
+	private boolean datesMatch(Academic a1, Academic a2) {
+		return a1.getFirstSemesterStart().equals(a2.getFirstSemesterStart()) &&
+				a1.getFirstSemesterEnd().equals(a2.getFirstSemesterEnd()) &&
+				a1.getSecondSemesterStart().equals(a2.getSecondSemesterStart()) &&
+				a1.getSecondSemesterEnd().equals(a2.getSecondSemesterEnd());
+	}
+	private void validateSemesterGap(LocalDate firstEnd, LocalDate secondStart) {
+		if (!firstEnd.isBefore(secondStart)) {
+			throw new IllegalArgumentException(
+					"First semester must end before second semester starts. " +
+							"There should be at least one day gap."
+			);
+		}
 	}
 }

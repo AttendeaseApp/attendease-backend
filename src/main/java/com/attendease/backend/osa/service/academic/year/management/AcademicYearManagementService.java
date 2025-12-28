@@ -80,6 +80,11 @@ public interface AcademicYearManagementService {
 	 */
 	AcademicYearResponse setActiveAcademicYear(String id);
 
+	/*
+	* Sets an academic year as inactive.
+	*/
+	AcademicYearResponse deactivateAcademicYear(String id);
+
 	/**
 	 * Gets the display name of the current semester (e.g., "First Semester", "Second Semester").
 	 *
