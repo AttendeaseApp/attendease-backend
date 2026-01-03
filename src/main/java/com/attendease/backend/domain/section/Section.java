@@ -47,6 +47,9 @@ public class Section {
     @DBRef
     private Course course;
 
+    @Builder.Default
+    private Boolean isActive = true;
+
     @DBRef
     private Academic academicYear;
 
@@ -57,6 +60,56 @@ public class Section {
     @LastModifiedDate
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    /**
+     * activates this section, making it available for student enrollment
+     */
+    public void activate() {
+        this.isActive = true;
+    }
+
+
+    /**
+     * deactivates this section, preventing new enrollments while preserving historical data
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
+
+
+    /**
+     * checks if this section is currently active
+     */
+    public boolean isCurrentlyActive() {
+        return Boolean.TRUE.equals(this.isActive);
+    }
+
+
+    /**
+     * gets the next progression section name for a student advancing to the next semester or year
+     */
+    public String getNextSectionName(boolean isNewAcademicYear) {
+        if (this.sectionName == null || this.course == null) {
+            throw new IllegalStateException("Section must have name and course to calculate next section");
+        }
+        int nextYearLevel;
+        int nextSemester;
+        if (isNewAcademicYear) {
+            nextYearLevel = this.yearLevel + 1;
+            nextSemester = 1;
+            if (nextYearLevel > 4) {
+                throw new IllegalStateException(
+                        "Student has completed all year levels (currently in " + this.sectionName + ")"
+                );
+            }
+        } else {
+            nextYearLevel = this.yearLevel;
+            nextSemester = 2;
+        }
+        int nextSectionNumber = calculateSectionNumberForYearAndSemester(nextYearLevel, nextSemester);
+        return this.course.getCourseName() + "-" + nextSectionNumber;
+    }
+
 
     /**
      * Extracts year level and semester from section number
@@ -121,26 +174,22 @@ public class Section {
         }
     }
 
-    // TODO: CUSTOM EXCEPTION
     /**
-     * Validates that this section's semester matches the academic year's current semester
-     * @throws IllegalStateException if semester doesn't match
+     * helper method to calculate section number from year level and semester
      */
-    public void validateSemesterMatchesAcademicYear() {
-        if (this.academicYear == null) {
-            throw new IllegalStateException("Section must be linked to an academic year");
+    private int calculateSectionNumberForYearAndSemester(int yearLevel, int semester) {
+        int firstDigit;
+        if (yearLevel == 1) {
+            firstDigit = semester == 1 ? 1 : 2;
+        } else if (yearLevel == 2) {
+            firstDigit = semester == 1 ? 3 : 4;
+        } else if (yearLevel == 3) {
+            firstDigit = semester == 1 ? 5 : 6;
+        } else if (yearLevel == 4) {
+            firstDigit = semester == 1 ? 7 : 8;
+        } else {
+            throw new IllegalArgumentException("Invalid year level: " + yearLevel);
         }
-
-        if (this.academicYear.getCurrentSemester() == null) {
-            throw new IllegalStateException("Academic year does not have an active semester");
-        }
-
-        Integer currentAcademicSemester = this.academicYear.getCurrentSemester().getNumber();
-        if (!currentAcademicSemester.equals(this.semester)) {
-            throw new IllegalStateException(
-                    "Section semester (" + this.semester + ") does not match academic year's current semester ("
-                            + currentAcademicSemester + ")"
-            );
-        }
+        return firstDigit * 100 + 1;
     }
 }

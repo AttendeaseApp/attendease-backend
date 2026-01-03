@@ -1,5 +1,6 @@
 package com.attendease.backend.repository.section;
 
+import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
 import java.util.List;
@@ -51,4 +52,16 @@ public interface SectionRepository extends MongoRepository<Section, String> {
     List<Section> findBySemester(Integer semester);
 
     List<Section> findByYearLevel(Integer yearLevel);
+
+    List<Section> findByAcademicYearAndIsActive(Academic academicYear, boolean isActive);
+
+    List<Section> findByAcademicYearAndSemesterAndIsActive(
+            Academic academicYear,
+            Integer semester,
+            boolean isActive
+    );
+
+    Optional<Section> findBySectionNameAndAcademicYear(String sectionName, Academic academicYear);
+
+    List<Section> findByAcademicYearAndSemester(Academic academicYear, int number);
 }

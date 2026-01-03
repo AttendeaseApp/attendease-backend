@@ -42,12 +42,6 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     public SectionResponse addNewSection(String courseId, Section section) {
 
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
-        Academic activeAcademicYear = academicRepository.findByIsActive(true)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No active academic year found. Please set an active academic year first."
-                ));
-
         String newSectionName = section.getSectionName().trim();
 
         if (newSectionName.isEmpty()) {
@@ -62,13 +56,12 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
         section.setSectionName(newSectionName);
         section.setCourse(course);
-        section.setAcademicYear(activeAcademicYear);
         section.calculateYearLevelAndSemester();
-        section.validateSemesterMatchesAcademicYear();
 
         Section savedSection = sectionRepository.save(section);
         return SectionResponse.fromEntity(savedSection);
     }
+
 
     @Override
     public List<SectionResponse> getSectionsByCourse(String courseId) {
@@ -77,11 +70,13 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
+
     @Override
     public List<SectionResponse> getSectionsByYearLevel(Integer yearLevel) {
         List<Section> sections = sectionRepository.findByYearLevel(yearLevel);
         return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
+
 
     @Override
     public List<SectionResponse> getSectionsBySemester(Integer semester) {
@@ -89,11 +84,13 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
+
     @Override
     public List<SectionResponse> getSectionsByYearLevelAndSemester(Integer yearLevel, Integer semester) {
         List<Section> sections = sectionRepository.findByYearLevelAndSemester(yearLevel, semester);
         return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
+
 
     @Override
     public List<SectionResponse> getAllSections() {
@@ -101,17 +98,20 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         return sections.stream().map(SectionResponse::fromEntity).collect(Collectors.toList());
     }
 
+
     @Override
     public SectionResponse getSectionById(String id) {
         Section section = sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
         return SectionResponse.fromEntity(section);
     }
 
+
     @Override
     public Optional<SectionResponse> getSectionByFullName(String fullName) {
         userValidator.validateFullCourseSectionFormat(fullName);
         return sectionRepository.findBySectionName(fullName).map(SectionResponse::fromEntity);
     }
+
 
     @Override
     @Transactional
@@ -137,11 +137,11 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
 
         existing.setSectionName(updatedSectionName);
         existing.calculateYearLevelAndSemester();
-        existing.validateSemesterMatchesAcademicYear();
 
         Section savedSection = sectionRepository.save(existing);
         return SectionResponse.fromEntity(savedSection);
     }
+
 
     @Override
     @Transactional
@@ -179,17 +179,15 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         sectionRepository.deleteById(id);
     }
 
+
     @Transactional
     @Override
     public void createDefaultSections(String courseId) {
 
-        Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found"));
-
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
         Academic activeAcademicYear = academicRepository.findByIsActive(true)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No active academic year found. Please set an active academic year first."
-                ));
-
+                .orElseThrow(() -> new IllegalStateException("No active academic year found"));
         Integer currentSemester = activeAcademicYear.getCurrentSemester() != null
                 ? activeAcademicYear.getCurrentSemester().getNumber()
                 : null;
@@ -199,22 +197,70 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         }
 
         for (int yearLevel = 1; yearLevel <= 4; yearLevel++) {
-            int sectionNumber = calculateSectionNumber(yearLevel, currentSemester);
-            String fullSectionName = course.getCourseName() + "-" + sectionNumber;
+            for (int semester = 1; semester <= 2; semester++) {
+                int sectionNumber = calculateSectionNumber(yearLevel, semester);
+                String fullSectionName = course.getCourseName() + "-" + sectionNumber;
+                Optional<Section> existingSection = sectionRepository.findBySectionNameAndAcademicYear(fullSectionName, activeAcademicYear);
+                if (existingSection.isEmpty()) {
+                    boolean shouldBeActive = (semester == currentSemester);
 
-            if (sectionRepository.findBySectionName(fullSectionName).isEmpty()) {
-                Section section = Section.builder()
-                        .sectionName(fullSectionName)
-                        .yearLevel(yearLevel)
-                        .semester(currentSemester)
-                        .course(course)
-                        .academicYear(activeAcademicYear)
-                        .build();
+                    Section section = Section.builder()
+                            .sectionName(fullSectionName)
+                            .yearLevel(yearLevel)
+                            .semester(semester)
+                            .course(course)
+                            .academicYear(activeAcademicYear)
+                            .isActive(shouldBeActive)
+                            .build();
 
-                sectionRepository.save(section);
+                    sectionRepository.save(section);
+                }
             }
         }
     }
+
+
+    @Transactional
+    @Override
+    public void createAllSectionsForActiveAcademicYear() {
+
+        Academic activeAcademicYear = academicRepository.findByIsActive(true)
+                .orElseThrow(() -> new IllegalStateException("No active academic year found"));
+        Integer currentSemester = activeAcademicYear.getCurrentSemester() != null
+                ? activeAcademicYear.getCurrentSemester().getNumber()
+                : null;
+
+        if (currentSemester == null) {
+            throw new IllegalStateException("Active academic year does not have a current semester set");
+        }
+
+        List<Course> allCourses = courseRepository.findAll();
+
+		for (Course course : allCourses) {
+            for (int yearLevel = 1; yearLevel <= 4; yearLevel++) {
+                for (int semester = 1; semester <= 2; semester++) {
+
+                    int sectionNumber = calculateSectionNumber(yearLevel, semester);
+                    String fullSectionName = course.getCourseName() + "-" + sectionNumber;
+                    Optional<Section> existingSection = sectionRepository.findBySectionNameAndAcademicYear(fullSectionName, activeAcademicYear);
+
+                    if (existingSection.isEmpty()) {
+                        boolean shouldBeActive = (semester == currentSemester);
+                        Section section = Section.builder()
+                                .sectionName(fullSectionName)
+                                .yearLevel(yearLevel)
+                                .semester(semester)
+                                .course(course)
+                                .academicYear(activeAcademicYear)
+                                .isActive(shouldBeActive)
+                                .build();
+                        sectionRepository.save(section);
+					}
+                }
+            }
+        }
+    }
+
 
     @Override
     @Transactional
@@ -263,6 +309,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         }
     }
 
+
     private String extractSectionNumber(String fullSectionName, String courseName) {
         String expectedPrefix = courseName + "-";
         if (!fullSectionName.startsWith(expectedPrefix)) {
@@ -272,6 +319,7 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         }
         return fullSectionName.substring(expectedPrefix.length());
     }
+
 
     private int calculateSectionNumber(int yearLevel, int semester) {
         int firstDigit;

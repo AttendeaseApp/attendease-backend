@@ -33,6 +33,7 @@ public final class SectionResponse {
 	private Integer yearLevel;
 	private Integer semester;
 	private CourseInfo course;
+	private Boolean isActive;
 	private AcademicYearInfo academicYear;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -54,6 +55,7 @@ public final class SectionResponse {
 				.sectionName(section.getSectionName())
 				.yearLevel(section.getYearLevel())
 				.semester(section.getSemester())
+				.isActive(section.getIsActive())
 				.createdAt(section.getCreatedAt())
 				.updatedAt(section.getUpdatedAt());
 

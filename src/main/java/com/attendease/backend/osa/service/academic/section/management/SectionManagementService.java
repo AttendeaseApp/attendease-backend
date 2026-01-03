@@ -2,6 +2,7 @@ package com.attendease.backend.osa.service.academic.section.management;
 
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.section.management.SectionResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -102,6 +103,13 @@ public interface SectionManagementService {
      * @param courseId the ID of the course
      */
     void createDefaultSections(String courseId);
+
+    /**
+     * Creates all sections (both semesters) for all courses in the active academic year.
+     * Only sections matching the current semester are marked as active.
+     * This should be called when a new academic year is activated.
+     */
+    void createAllSectionsForActiveAcademicYear();
 
     /**
      * Updates section names when a course name changes.
