@@ -22,4 +22,6 @@ public final class EventEligibility {
 
     private List<String> sections;
     private List<String> sectionNames;
+
+    private List<Integer> targetYearLevels;
 }

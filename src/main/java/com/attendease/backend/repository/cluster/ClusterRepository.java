@@ -1,0 +1,31 @@
+package com.attendease.backend.repository.cluster;
+
+import com.attendease.backend.domain.cluster.Cluster;
+import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+/**
+ * Repository interface for managing {@link Cluster} entities.
+ *
+ * <p>This repository provides custom query methods for retrieving clusters by name.
+ * It extends {@link MongoRepository} for basic CRUD operations (e.g., {@code save},
+ * {@code findById}, {@code deleteById}).</p>
+ *
+ * @author jakematthewviado204@gmail.com
+ * @since 2025-09-19
+ */
+@Repository
+public interface ClusterRepository extends MongoRepository<Cluster, String> {
+    /**
+     * Finds a cluster by its name globally.
+     *
+     * <p>Enforces uniqueness; used for lookups during course creation to associate courses with clusters.</p>
+     *
+     * @param name The cluster name (e.g., "CETE").
+     * @return An {@link Optional} containing the matching {@link Cluster} if found.
+     *
+     * @throws IllegalArgumentException Implicitly if duplicate names exist (due to unique index).
+     */
+    Optional<Cluster> findByClusterName(String name);
+}

@@ -1,7 +1,8 @@
 package com.attendease.backend.osa.service.event.management.impl;
 
-import com.attendease.backend.domain.clusters.Clusters;
-import com.attendease.backend.domain.courses.Courses;
+import com.attendease.backend.domain.academic.Academic;
+import com.attendease.backend.domain.cluster.Cluster;
+import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.enums.location.LocationEnvironment;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
@@ -10,14 +11,15 @@ import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.event.management.EventManagementRequest;
 import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.exceptions.domain.Event.*;
 import com.attendease.backend.exceptions.domain.Location.InvalidLocationEnvironmentException;
 import com.attendease.backend.exceptions.domain.Location.InvalidLocationPurposeException;
 import com.attendease.backend.exceptions.domain.Location.LocationNotFoundException;
 import com.attendease.backend.osa.service.event.management.EventManagementService;
+import com.attendease.backend.repository.academic.AcademicRepository;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
-import com.attendease.backend.repository.clusters.ClustersRepository;
+import com.attendease.backend.repository.cluster.ClusterRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.location.LocationRepository;
@@ -26,7 +28,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.attendease.backend.repository.sections.SectionsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,11 +51,12 @@ import org.springframework.transaction.annotation.Transactional;
 public final class EventManagementServiceImpl implements EventManagementService {
 
     private final LocationRepository locationRepository;
-    private final SectionsRepository sectionsRepository;
+    private final SectionRepository sectionRepository;
     private final CourseRepository courseRepository;
-    private final ClustersRepository clustersRepository;
+    private final ClusterRepository clusterRepository;
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
+    private final AcademicRepository academicRepository;
 
     private static final long MIN_EVENT_DURATION_MINUTES = 30;
     private static final long MAX_EVENT_DURATION_MINUTES = 360;
@@ -66,6 +69,8 @@ public final class EventManagementServiceImpl implements EventManagementService 
     @Override
     @Transactional
     public EventManagementResponse createEvent(EventManagementRequest request) {
+        Academic activeAcademicYear = getActiveAcademicYear(request.getAcademicYearId());
+
         EventEligibility domainCriteria;
         EventEligibility reqCriteria = request.getEligibleStudents();
         if (reqCriteria == null) {
@@ -84,8 +89,13 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .startingDateTime(request.getStartingDateTime())
                 .endingDateTime(request.getEndingDateTime())
                 .eligibleStudents(domainCriteria)
-                .facialVerificationEnabled(Boolean.FALSE.equals(request.getFacialVerificationEnabled()))
-                .attendanceLocationMonitoringEnabled(Boolean.FALSE.equals(request.getAttendanceLocationMonitoringEnabled()))
+                .facialVerificationEnabled(request.getFacialVerificationEnabled())
+                .attendanceLocationMonitoringEnabled(request.getAttendanceLocationMonitoringEnabled())
+                .academicYear(activeAcademicYear)
+                .academicYearId(activeAcademicYear.getId())
+                .academicYearName(activeAcademicYear.getAcademicYearName())
+                .semester(activeAcademicYear.getCurrentSemester() != null ? activeAcademicYear.getCurrentSemester().getNumber() : null)
+                .semesterName(activeAcademicYear.getCurrentSemester() != null ? activeAcademicYear.getCurrentSemester().getDisplayName() : null)
                 .build();
 
         String regLocationId = request.getRegistrationLocationId();
@@ -120,7 +130,11 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         checkLocationConflict(eventSession, null);
         Event savedEvent = eventRepository.save(eventSession);
-        log.info("Successfully created event session with ID: {} (Reg: {}, Venue: {})", savedEvent.getEventId(), regLocationId, venueLocationId);
+
+        log.info("Successfully created event session '{}' for academic year '{}' semester {}", savedEvent.getEventName(),
+                savedEvent.getAcademicYearName(),
+                savedEvent.getSemester());
+
         return toEventCreationResponse(savedEvent, regLocationId, venueLocationId);
     }
 
@@ -198,6 +212,16 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
         if (updateEvent.getAttendanceLocationMonitoringEnabled() != null) {
             existingEvent.setAttendanceLocationMonitoringEnabled(updateEvent.getAttendanceLocationMonitoringEnabled());
+        }
+
+        if (updateEvent.getAcademicYearId() != null) {
+            Academic newAcademicYear = academicRepository
+                    .findById(updateEvent.getAcademicYearId()).orElseThrow(()-> new RuntimeException("Academic year not found: " + updateEvent.getAcademicYearId()));
+            existingEvent.setAcademicYear(newAcademicYear);
+            existingEvent.setAcademicYearId(newAcademicYear.getId());
+            existingEvent.setAcademicYearName(newAcademicYear.getAcademicYearName());
+            existingEvent.setSemester(newAcademicYear.getCurrentSemester() != null ? newAcademicYear.getCurrentSemester().getNumber() : null);
+            existingEvent.setSemesterName(newAcademicYear.getCurrentSemester() != null ? newAcademicYear.getCurrentSemester().getDisplayName() : null);
         }
 
         boolean datesUpdated = false;
@@ -325,9 +349,11 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
     }
 
+
     private boolean hasTimeOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
         return start1.isBefore(end2) && end1.isAfter(start2);
     }
+
 
     private void setStatusBasedOnCurrentTime(Event event) {
         LocalDateTime now = LocalDateTime.now();
@@ -361,6 +387,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
     }
 
+
     private String updatingConcludedAndFinalizedEventMessage(String eventId, Event existingEvent, EventStatus currentStatus) {
         String eventName = existingEvent.getEventName();
         return switch (currentStatus) {
@@ -369,6 +396,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
             default -> "You cannot update the event '" + eventName + "' (ID: " + eventId + ") with status " + currentStatus + ". This status prevents modifications to protect attendance records.";
         };
     }
+
 
     private void validateDateRange(LocalDateTime timeInDateTime, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         LocalDateTime now = LocalDateTime.now();
@@ -403,23 +431,38 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
     }
 
+
     private EventEligibility populateDomainEligibilityCriteria(EventEligibility reqCriteria) {
+
         if (reqCriteria.isAllStudents()) {
-            return EventEligibility.builder().allStudents(true).build();
+            return EventEligibility.builder()
+                    .allStudents(true)
+                    .build();
         }
 
         Set<String> clusterIds = new HashSet<>();
         Set<String> courseIds = new HashSet<>();
         Set<String> sectionIds = new HashSet<>();
 
+        Academic activeAcademicYear = academicRepository.findByIsActive(true)
+                .orElseThrow(() -> new IllegalStateException("No active academic year found"));
+
+        Integer currentSemester = activeAcademicYear.getCurrentSemester() != null
+                ? activeAcademicYear.getCurrentSemester().getNumber()
+                : null;
+
         if (reqCriteria.getClusters() != null && !reqCriteria.getClusters().isEmpty()) {
             clusterIds.addAll(reqCriteria.getClusters());
             for (String clusterId : reqCriteria.getClusters()) {
-                List<Courses> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
-                for (Courses course : coursesUnderCluster) {
+                List<Course> coursesUnderCluster = courseRepository.findByClusterClusterId(clusterId);
+                for (Course course : coursesUnderCluster) {
                     courseIds.add(course.getId());
-                    List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(course.getId());
-                    sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+
+                    List<Section> sectionUnderCourse = currentSemester != null
+                            ? sectionRepository.findByCourseIdAndSemesterAndIsActive(course.getId(), currentSemester, true)
+                            : sectionRepository.findByCourseIdAndIsActive(course.getId(), true);
+
+                    sectionIds.addAll(sectionUnderCourse.stream().map(Section::getId).collect(Collectors.toSet()));
                 }
             }
         }
@@ -427,24 +470,30 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (reqCriteria.getCourses() != null && !reqCriteria.getCourses().isEmpty()) {
             for (String courseId : reqCriteria.getCourses()) {
                 courseIds.add(courseId);
-                Courses course = courseRepository.findById(courseId)
+                Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Course not found: " + courseId));
+
                 if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                     clusterIds.add(course.getCluster().getClusterId());
                 }
-                List<Sections> sectionsUnderCourse = sectionsRepository.findByCourseId(courseId);
-                sectionIds.addAll(sectionsUnderCourse.stream().map(Sections::getId).collect(Collectors.toSet()));
+
+                List<Section> sectionUnderCourse = currentSemester != null
+                        ? sectionRepository.findByCourseIdAndSemesterAndIsActive(courseId, currentSemester, true)
+                        : sectionRepository.findByCourseIdAndIsActive(courseId, true);
+
+                sectionIds.addAll(sectionUnderCourse.stream().map(Section::getId).collect(Collectors.toSet()));
             }
         }
 
         if (reqCriteria.getSections() != null && !reqCriteria.getSections().isEmpty()) {
             for (String sectionId : reqCriteria.getSections()) {
                 sectionIds.add(sectionId);
-                Sections section = sectionsRepository.findById(sectionId)
+                Section section = sectionRepository.findById(sectionId)
                         .orElseThrow(() -> new InvalidEligibilityCriteriaException("Section not found: " + sectionId));
+
                 if (section.getCourse() != null && section.getCourse().getId() != null) {
                     courseIds.add(section.getCourse().getId());
-                    Courses course = section.getCourse();
+                    Course course = section.getCourse();
                     if (course.getCluster() != null && course.getCluster().getClusterId() != null) {
                         clusterIds.add(course.getCluster().getClusterId());
                     }
@@ -452,9 +501,73 @@ public final class EventManagementServiceImpl implements EventManagementService 
             }
         }
 
-        List<String> clusterNames = clusterIds.isEmpty() ? null : clustersRepository.findAllById(new ArrayList<>(clusterIds)).stream().map(Clusters::getClusterName).sorted().collect(Collectors.toList());
-        List<String> courseNames = courseIds.isEmpty() ? null : courseRepository.findAllById(new ArrayList<>(courseIds)).stream().map(Courses::getCourseName).sorted().collect(Collectors.toList());
-        List<String> sectionNames = sectionIds.isEmpty() ? null : sectionsRepository.findAllById(new ArrayList<>(sectionIds)).stream().map(Sections::getSectionName).sorted().collect(Collectors.toList());
+        if (reqCriteria.getTargetYearLevels() != null && !reqCriteria.getTargetYearLevels().isEmpty()) {
+
+            if (clusterIds.isEmpty() && courseIds.isEmpty() && sectionIds.isEmpty()) {
+                log.debug("Auto-populating sections for year levels: {} in semester: {}", reqCriteria.getTargetYearLevels(), currentSemester);
+
+                for (Integer yearLevel : reqCriteria.getTargetYearLevels()) {
+                    List<Section> sectionsForYearLevel;
+
+                    if (currentSemester != null) {
+                        sectionsForYearLevel = sectionRepository.findByYearLevelAndSemesterAndIsActive(yearLevel, currentSemester, true);
+                    } else {
+                        sectionsForYearLevel = sectionRepository.findByYearLevelAndIsActive(yearLevel, true);
+                    }
+
+                    for (Section section : sectionsForYearLevel) {
+                        sectionIds.add(section.getId());
+
+                        if (section.getCourse() != null) {
+                            courseIds.add(section.getCourse().getId());
+
+                            if (section.getCourse().getCluster() != null) {
+                                clusterIds.add(section.getCourse().getCluster().getClusterId());
+                            }
+                        }
+                    }
+                }
+            } else {
+                log.debug("Filtering existing sections by year levels: {} and semester: {}",
+                        reqCriteria.getTargetYearLevels(), currentSemester);
+
+                Set<String> filteredSectionIds = new HashSet<>();
+                List<Section> allSections = sectionRepository.findAllById(new ArrayList<>(sectionIds));
+
+                for (Section section : allSections) {
+                    boolean matchesYearLevel = reqCriteria.getTargetYearLevels().contains(section.getYearLevel());
+                    boolean matchesSemester = currentSemester == null || section.getSemester().equals(currentSemester);
+                    boolean isActive = Boolean.TRUE.equals(section.getIsActive());
+
+                    if (matchesYearLevel && matchesSemester && isActive) {
+                        filteredSectionIds.add(section.getId());
+                    }
+                }
+
+                sectionIds = filteredSectionIds;
+            }
+        }
+
+        List<String> clusterNames = clusterIds.isEmpty() ? null :
+                clusterRepository.findAllById(new ArrayList<>(clusterIds))
+                        .stream()
+                        .map(Cluster::getClusterName)
+                        .sorted()
+                        .collect(Collectors.toList());
+
+        List<String> courseNames = courseIds.isEmpty() ? null :
+                courseRepository.findAllById(new ArrayList<>(courseIds))
+                        .stream()
+                        .map(Course::getCourseName)
+                        .sorted()
+                        .collect(Collectors.toList());
+
+        List<String> sectionNames = sectionIds.isEmpty() ? null :
+                sectionRepository.findAllById(new ArrayList<>(sectionIds))
+                        .stream()
+                        .map(Section::getSectionName)
+                        .sorted()
+                        .collect(Collectors.toList());
 
         return EventEligibility.builder()
                 .allStudents(false)
@@ -464,23 +577,53 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .courseNames(courseNames)
                 .sections(new ArrayList<>(sectionIds))
                 .sectionNames(sectionNames)
+                .targetYearLevels(reqCriteria.getTargetYearLevels())
                 .build();
     }
 
+
     private void validateEligibilityCriteria(EventEligibility criteria) {
+
         if (criteria.isAllStudents()) {
+            if (criteria.getTargetYearLevels() != null && !criteria.getTargetYearLevels().isEmpty()) {
+                throw new InvalidEligibilityCriteriaException(
+                        "Unable to select use 'All Students' when targeting a 'Year Levels'. Set 'All Levels' to false when targeting specific year levels."
+                );
+            }
             return;
         }
+
         List<String> clusterIds = criteria.getClusters();
         List<String> courseIds = criteria.getCourses();
         List<String> sectionIds = criteria.getSections();
-        if ((clusterIds == null || clusterIds.isEmpty()) && (courseIds == null || courseIds.isEmpty()) && (sectionIds == null || sectionIds.isEmpty())) {
-            throw new InvalidEligibilityCriteriaException("At least one cluster, course, or section must be provided when you are not targeting all student.");
+        List<Integer> yearLevels = criteria.getTargetYearLevels();
+
+        if ((clusterIds == null || clusterIds.isEmpty()) &&
+                (courseIds == null || courseIds.isEmpty()) &&
+                (sectionIds == null || sectionIds.isEmpty()) &&
+                (yearLevels == null || yearLevels.isEmpty())) {
+            throw new InvalidEligibilityCriteriaException(
+                    "At least one cluster, course, section, or year level must be provided when 'All Students' is false."
+            );
         }
-        if ((clusterIds != null && clusterIds.stream().anyMatch(String::isBlank)) || (courseIds != null && courseIds.stream().anyMatch(String::isBlank)) || (sectionIds != null && sectionIds.stream().anyMatch(String::isBlank))) {
+
+        if ((clusterIds != null && clusterIds.stream().anyMatch(String::isBlank)) ||
+                (courseIds != null && courseIds.stream().anyMatch(String::isBlank)) ||
+                (sectionIds != null && sectionIds.stream().anyMatch(String::isBlank))) {
             throw new InvalidEligibilityCriteriaException("Criteria cannot be blank.");
         }
+
+        if (yearLevels != null && !yearLevels.isEmpty()) {
+            for (Integer yearLevel : yearLevels) {
+                if (yearLevel == null || yearLevel < 1 || yearLevel > 4) {
+                    throw new InvalidEligibilityCriteriaException(
+                            "Year levels must be between 1 and 4. Invalid value: " + yearLevel
+                    );
+                }
+            }
+        }
     }
+
 
     private EventManagementResponse toEventCreationResponse(Event event, String regLocationId, String venueLocationId) {
         EventEligibility criteria = event.getEligibleStudents();
@@ -508,6 +651,11 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .allStudents(criteria == null || criteria.isAllStudents())
                 .facialVerificationEnabled(event.getFacialVerificationEnabled())
                 .attendanceLocationMonitoringEnabled(event.getAttendanceLocationMonitoringEnabled())
+                .academicYearId(event.getAcademicYearId())
+                .academicYearName(event.getAcademicYearName())
+                .semester(event.getSemester())
+                .semesterName(event.getSemesterName())
+                .targetYearLevels(criteria != null ? criteria.getTargetYearLevels() : null)
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {
@@ -524,6 +672,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         return response;
     }
+
 
     private EventManagementResponse toEventManagementResponse(Event event) {
         EventEligibility criteria = event.getEligibleStudents();
@@ -542,6 +691,11 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .allStudents(criteria == null || criteria.isAllStudents())
                 .facialVerificationEnabled(event.getFacialVerificationEnabled())
                 .attendanceLocationMonitoringEnabled(event.getAttendanceLocationMonitoringEnabled())
+                .academicYearId(event.getAcademicYearId())
+                .academicYearName(event.getAcademicYearName())
+                .semester(event.getSemester())
+                .semesterName(event.getSemesterName())
+                .targetYearLevels(criteria != null ? criteria.getTargetYearLevels() : null)
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {
@@ -556,6 +710,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
         return response;
     }
 
+
     private void validateLocationPurposes(Location registrationLocation, Location venueLocation) {
         if (registrationLocation != null && !LocationPurpose.REGISTRATION_AREA.equals(registrationLocation.getPurpose())) {
             throw new InvalidLocationPurposeException("Registration location must have purpose REGISTRATION_AREA (current: " + registrationLocation.getPurpose() + ")");
@@ -564,6 +719,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
             throw new InvalidLocationPurposeException("Venue location must have purpose EVENT_VENUE (current: " + venueLocation.getPurpose() + ")");
         }
     }
+
 
     private void validateAttendanceMonitoringWithVenueType(Location venueLocation, Boolean attendanceMonitoringEnabled) {
         if (Boolean.TRUE.equals(attendanceMonitoringEnabled) &&
@@ -574,5 +730,17 @@ public final class EventManagementServiceImpl implements EventManagementService 
                             "This feature is only available for OUTDOOR venues where GPS tracking is reliable."
             );
         }
+    }
+
+    private Academic getActiveAcademicYear(String requestedAcademicYearId) {
+        if (requestedAcademicYearId != null) {
+            return academicRepository.findById(requestedAcademicYearId)
+                    .orElseThrow(() -> new RuntimeException("Academic year not found: " + requestedAcademicYearId));
+        }
+
+        return academicRepository.findByIsActive(true)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No active academic year found. Please set an active academic year first."
+                ));
     }
 }

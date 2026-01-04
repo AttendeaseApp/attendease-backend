@@ -39,8 +39,14 @@ public final class EventManagementResponse {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endingDateTime;
 
+    private String academicYearId;
+    private String academicYearName;
+    private Integer semester;
+    private String semesterName;
+
     private EventStatus eventStatus;
     private boolean allStudents;
+    private List<Integer> targetYearLevels;
     private List<String> sectionIDs;
     private List<String> sectionNames;
     private List<String> courseIDs;

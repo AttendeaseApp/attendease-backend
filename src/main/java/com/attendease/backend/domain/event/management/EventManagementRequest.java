@@ -32,6 +32,8 @@ public final class EventManagementRequest {
     @Size(max = 100000, message = "The event description must not exceed 10000 characters")
     private String description;
 
+    private String academicYearId;
+
     @NotNull(message = "A location for registration is required")
     private String registrationLocationId;
 

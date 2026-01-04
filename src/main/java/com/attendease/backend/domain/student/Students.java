@@ -1,8 +1,11 @@
 package com.attendease.backend.domain.student;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.sections.Sections;
+import com.attendease.backend.domain.section.Section;
+import com.attendease.backend.domain.student.history.SectionHistory;
 import com.attendease.backend.domain.user.User;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,6 +16,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 /**
  * Domain entity representing a student in the Attendease system.
@@ -50,7 +55,15 @@ public class Students {
     private String studentNumber;
 
     @DBRef
-    private Sections section;
+    private Section section;
+
+    @Min(value = 1, message = "Year level must be between 1 and 4")
+    @Max(value = 4, message = "Year level must be between 1 and 4")
+    private Integer yearLevel;
+
+    private String currentSectionId;
+
+    private List<SectionHistory> sectionHistory;
 
     private String sectionName;
     private String courseName;
