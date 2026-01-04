@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.event;
 
+import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.location.Location;
@@ -20,6 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Domain entity representing a scheduled event session.
@@ -40,6 +42,8 @@ import java.time.LocalDateTime;
  * within the geofence during the session.</li>
  * </ul>
  * <p>
+ * Events are automatically linked to the active academic year and semester when created.
+ * This enables archival of attendance records by academic year.
  *
  * @see com.attendease.backend.domain.enums.location.LocationEnvironment
  * @see com.attendease.backend.domain.enums.location.LocationPurpose
@@ -117,9 +121,22 @@ public class Event {
     @Builder.Default
     private Boolean attendanceLocationMonitoringEnabled = false;
 
-    // TODO: IMPLEMENT THIS, STILL HAS DEPENDENCIES
-    private String academicYear;
-    private String semester;
+    @DBRef
+    @Indexed
+    private Academic academicYear;
+
+    @Field("academicYearId")
+    @Indexed
+    private String academicYearId;
+
+    @Field("academicYearName")
+    private String academicYearName;
+
+    @Indexed
+    private Integer semester;
+
+    @Field("semesterName")
+    private String semesterName;
 
     @CreatedBy
     private String createdBy;
