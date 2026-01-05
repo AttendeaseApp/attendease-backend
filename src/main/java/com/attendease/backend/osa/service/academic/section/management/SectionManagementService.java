@@ -1,7 +1,10 @@
 package com.attendease.backend.osa.service.academic.section.management;
 
 import com.attendease.backend.domain.section.Section;
+import com.attendease.backend.domain.section.management.BulkSectionRequest;
+import com.attendease.backend.domain.section.management.BulkSectionResult;
 import com.attendease.backend.domain.section.management.SectionResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +25,8 @@ public interface SectionManagementService {
      * @return the created section response
      */
     SectionResponse addNewSection(String courseId, Section section);
+
+    BulkSectionResult addSectionsBulk(String courseId, List<BulkSectionRequest> requests);
 
     /**
      * Retrieves all sections for a specific course.

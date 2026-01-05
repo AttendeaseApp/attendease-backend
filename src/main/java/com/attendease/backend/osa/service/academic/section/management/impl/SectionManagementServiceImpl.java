@@ -3,12 +3,15 @@ package com.attendease.backend.osa.service.academic.section.management.impl;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.section.management.SectionResponse;
+import com.attendease.backend.domain.section.management.BulkSectionRequest;
+import com.attendease.backend.domain.section.management.BulkSectionResult;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,8 +37,8 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     private final StudentRepository studentsRepository;
 
     /*
-    * these values are for fallback or default :)
-    */
+     * these values are for fallback or default :)
+     */
     @Value("${academic.year-level.min:1}")
     private Integer minYearLevel;
 
@@ -83,6 +86,64 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
         return SectionResponse.fromEntity(savedSection);
     }
 
+    @Transactional
+    @Override
+    public BulkSectionResult addSectionsBulk(String courseId, List<BulkSectionRequest> requests) {
+
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new RuntimeException("Course not found: " + courseId));
+        List<SectionResponse> successful = new ArrayList<>();
+        List<BulkSectionResult.BulkSectionError> errors = new ArrayList<>();
+
+        for (int index = 0; index < requests.size(); index++) {
+            BulkSectionRequest request = requests.get(index);
+
+			try {
+                String sectionName = request.getSectionName().trim();
+
+                if (sectionName.isEmpty()) {
+                    errors.add(new BulkSectionResult.BulkSectionError(index,sectionName,"Section name cannot be blank"));
+                    continue;
+                }
+                if (sectionRepository.findBySectionName(sectionName).isPresent()) {
+                    errors.add(new BulkSectionResult.BulkSectionError(index,sectionName,"Section with name '" + sectionName + "' already exists"));
+                    continue;
+                }
+                validateBasicSectionFormat(sectionName, course.getCourseName());
+
+                if (request.getYearLevel() == null) {
+                    errors.add(new BulkSectionResult.BulkSectionError(index,sectionName, "Year level must be specified"));
+                    continue;
+                }
+                if (request.getSemester() == null) {
+                    errors.add(new BulkSectionResult.BulkSectionError(index,sectionName,"Semester must be specified"));
+                    continue;
+                }
+                validateYearLevelAndSemester(request.getYearLevel(), request.getSemester());
+
+                Section section = Section.builder()
+                        .sectionName(sectionName)
+                        .course(course)
+                        .yearLevel(request.getYearLevel())
+                        .semester(request.getSemester())
+                        .build();
+
+                Section savedSection = sectionRepository.save(section);
+                successful.add(SectionResponse.fromEntity(savedSection));
+
+            } catch (IllegalArgumentException e) {
+                errors.add(new BulkSectionResult.BulkSectionError(index,request.getSectionName(),e.getMessage()));
+            } catch (Exception e) {
+                errors.add(new BulkSectionResult.BulkSectionError(index,request.getSectionName(),"Unexpected error: " + e.getMessage()));
+            }
+        }
+        return BulkSectionResult.builder()
+                .successful(successful)
+                .errors(errors)
+                .totalProcessed(requests.size())
+                .successCount(successful.size())
+                .errorCount(errors.size())
+                .build();
+    }
 
     @Override
     public List<SectionResponse> getSectionsByCourse(String courseId) {
