@@ -55,3 +55,12 @@ info:
   timezone: ${user.timezone:UTC}
   application:
     name: ${spring.application.name}
+
+# ACADEMIC CONFIGURATIONS
+academic:
+  year-level:
+    min: 1
+    max: 4
+  semester:
+    min: 1
+    max: 2

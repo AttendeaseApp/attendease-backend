@@ -53,18 +53,6 @@ public interface SectionRepository extends MongoRepository<Section, String> {
 
     List<Section> findByYearLevel(Integer yearLevel);
 
-    List<Section> findByAcademicYearAndIsActive(Academic academicYear, boolean isActive);
-
-    List<Section> findByAcademicYearAndSemesterAndIsActive(
-            Academic academicYear,
-            Integer semester,
-            boolean isActive
-    );
-
-    Optional<Section> findBySectionNameAndAcademicYear(String sectionName, Academic academicYear);
-
-    List<Section> findByAcademicYearAndSemester(Academic academicYear, int number);
-
 	List<Section> findByYearLevelAndSemesterAndIsActive(Integer yearLevel, Integer currentSemester, boolean b);
 
     List<Section> findByYearLevelAndIsActive(Integer yearLevel, boolean b);
