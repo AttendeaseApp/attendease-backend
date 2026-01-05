@@ -3,8 +3,10 @@ package com.attendease.backend.schedulers.academic;
 import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.enums.academic.AcademicYearStatus;
 import com.attendease.backend.domain.enums.academic.Semester;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.academic.AcademicRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,6 +38,7 @@ public class AcademicYearActivationScheduler {
 
 	private final AcademicRepository academicRepository;
 	private final AcademicYearManagementService academicYearManagementService;
+	private final SectionRepository sectionRepository;
 
 	@Scheduled(cron = "0 0 0 * * ?")
 	@Transactional
@@ -50,28 +53,6 @@ public class AcademicYearActivationScheduler {
 			log.info("=== Academic year activation check completed successfully ===");
 		} catch (Exception e) {
 			log.error("Error during academic year activation check", e);
-		}
-	}
-
-
-	private void deactivateEndedAcademicYear(LocalDate today) {
-		Optional<Academic> activeYearOpt = academicRepository.findByIsActive(true);
-		if (activeYearOpt.isEmpty()) {
-			log.debug("No active academic year to deactivate");
-			return;
-		}
-		Academic activeYear = activeYearOpt.get();
-		AcademicYearStatus status = calculateStatus(activeYear, today);
-
-		if (status == AcademicYearStatus.COMPLETED) {
-			try {
-				academicYearManagementService.deactivateAcademicYear(activeYear.getId());
-				log.info("Academic year '{}' has ended and been deactivated (ended on {})",
-						activeYear.getAcademicYearName(),
-						activeYear.getSecondSemesterEnd());
-			} catch (IllegalStateException e) {
-				log.warn("Could not deactivate completed academic year '{}': {}", activeYear.getAcademicYearName(), e.getMessage());
-			}
 		}
 	}
 
@@ -128,6 +109,8 @@ public class AcademicYearActivationScheduler {
 					oldSemesterName,
 					newSemester.getDisplayName());
 		}
+
+		activateSectionsForCurrentSemester(activeYear);
 	}
 
 
@@ -165,5 +148,58 @@ public class AcademicYearActivationScheduler {
 
 	private boolean isDateInRange(LocalDate date, LocalDate start, LocalDate end) {
 		return !date.isBefore(start) && !date.isAfter(end);
+	}
+
+	private void deactivateEndedAcademicYear(LocalDate today) {
+		Optional<Academic> activeYearOpt = academicRepository.findByIsActive(true);
+		if (activeYearOpt.isEmpty()) {
+			log.debug("No active academic year to deactivate");
+			return;
+		}
+		Academic activeYear = activeYearOpt.get();
+		AcademicYearStatus status = calculateStatus(activeYear, today);
+		if (status == AcademicYearStatus.COMPLETED) {
+			try {
+				deactivateSectionsForAcademicYear(activeYear);
+			} catch (IllegalStateException e) {
+				log.warn("Could not deactivate completed academic year '{}': {}", activeYear.getAcademicYearName(), e.getMessage());
+			}
+		}
+	}
+
+	private void deactivateSectionsForAcademicYear(Academic academic) {
+		List<Section> sectionsToDeactivate = sectionRepository.findBySemesterIn(List.of(1, 2));
+
+		if (sectionsToDeactivate.isEmpty()) {
+			log.debug("No sections found to deactivate for academic year '{}'", academic.getAcademicYearName());
+			return;
+		}
+
+		sectionsToDeactivate.forEach(section -> section.setIsActive(false));
+		sectionRepository.saveAll(sectionsToDeactivate);
+
+		log.info("All sections deactivated for academic year '{}'", academic.getAcademicYearName());
+	}
+
+	private void activateSectionsForCurrentSemester(Academic activeYear) {
+		if (activeYear.getCurrentSemester() == null) {
+			log.debug("No current semester set for active academic year '{}'", activeYear.getAcademicYearName());
+			return;
+		}
+
+		int currentSemesterNumber = activeYear.getCurrentSemester().getNumber(); // 1 or 2
+
+		List<Section> inactiveSections = sectionRepository.findBySemesterAndIsActiveFalse(currentSemesterNumber);
+
+		if (inactiveSections.isEmpty()) {
+			log.debug("No inactive sections found for semester {}", currentSemesterNumber);
+			return;
+		}
+
+		inactiveSections.forEach(section -> section.setIsActive(true));
+		sectionRepository.saveAll(inactiveSections);
+
+		log.info("Sections activated for semester {} of academic year '{}'",
+				currentSemesterNumber, activeYear.getAcademicYearName());
 	}
 }

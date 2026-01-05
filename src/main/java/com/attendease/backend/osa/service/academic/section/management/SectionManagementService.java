@@ -28,6 +28,8 @@ public interface SectionManagementService {
 
     BulkSectionResult addSectionsBulk(String courseId, List<BulkSectionRequest> requests);
 
+    SectionResponse activateSection(String sectionId);
+
     /**
      * Retrieves all sections for a specific course.
      *

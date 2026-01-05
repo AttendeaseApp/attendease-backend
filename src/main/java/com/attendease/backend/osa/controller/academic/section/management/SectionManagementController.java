@@ -92,6 +92,27 @@ public class SectionManagementController {
     }
 
     /**
+     * Activates a section based on the current semester.
+     *
+     * @param sectionId The ID of the section to activate.
+     * @return The activated section response.
+     */
+    @PostMapping("/{sectionId}/activate")
+    public ResponseEntity<?> activateSection(@PathVariable String sectionId) {
+        try {
+            SectionResponse activatedSection = sectionManagementService.activateSection(sectionId);
+            return ResponseEntity.ok(activatedSection);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+
+    /**
      * Creates a new section for a specific course.
      *
      * @param courseId The ID of the course.
@@ -179,15 +200,9 @@ public class SectionManagementController {
      * @return The updated section response.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSection(
-            @PathVariable String id,
-            @RequestBody Section updatedSection) {
+    public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Section updatedSection) {
         try {
             SectionResponse updated = sectionManagementService.updateSection(id, updatedSection);
-
-            if (updated.getSectionName().equals(updatedSection.getSectionName().trim())) {
-                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getSectionName() + "'.");
-            }
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());

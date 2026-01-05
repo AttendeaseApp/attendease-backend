@@ -1,11 +1,13 @@
 package com.attendease.backend.osa.service.academic.section.management.impl;
 
 import com.attendease.backend.domain.course.Course;
+import com.attendease.backend.domain.enums.academic.Semester;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.section.management.SectionResponse;
 import com.attendease.backend.domain.section.management.BulkSectionRequest;
 import com.attendease.backend.domain.section.management.BulkSectionResult;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
+import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.section.SectionRepository;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,8 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     private final EventRepository eventRepository;
     private final StudentRepository studentsRepository;
 
+    private final AcademicYearManagementService academicYearManagementService;
+
     /*
      * these values are for fallback or default :)
      */
@@ -45,11 +50,6 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     @Value("${academic.year-level.max:4}")
     private Integer maxYearLevel;
 
-    @Value("${academic.semester.min:1}")
-    private Integer minSemester;
-
-    @Value("${academic.semester.max:2}")
-    private Integer maxSemester;
 
     @Override
     @Transactional
@@ -143,6 +143,40 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
                 .successCount(successful.size())
                 .errorCount(errors.size())
                 .build();
+    }
+
+
+    @Transactional
+    @Override
+    public SectionResponse activateSection(String sectionId) {
+
+        Section section = sectionRepository.findById(sectionId).orElseThrow(() -> new RuntimeException("Section not found."));
+
+        if (Boolean.TRUE.equals(section.getIsActive())) {
+            throw new IllegalStateException(
+                    "Section '" + section.getSectionName() + "' is already active."
+            );
+        }
+
+        if (section.getSemester() == null) {
+            throw new IllegalArgumentException(
+                    "Section '" + section.getSectionName() + "' does not have a semester set."
+            );
+        }
+
+        final Integer currentSemester = getCurrentSemsterInteger(section);
+
+        List<Section> activeSections = sectionRepository.findByCourseAndSemesterAndIsActive(
+                section.getCourse(), currentSemester, true
+        );
+        for (Section active : activeSections) {
+            active.setIsActive(false);
+            sectionRepository.save(active);
+        }
+
+        section.setIsActive(true);
+        Section savedSection = sectionRepository.save(section);
+        return SectionResponse.fromEntity(savedSection);
     }
 
     @Override
@@ -245,6 +279,13 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
     public void deleteSection(String id) {
 
         Section section = sectionRepository.findById(id).orElseThrow(() -> new RuntimeException("Section not found."));
+
+        if (Boolean.TRUE.equals(section.getIsActive())) {
+            throw new IllegalStateException(
+                    "Cannot delete section '" + section.getSectionName() + "' because it is currently active."
+            );
+        }
+
         Long studentCount = studentsRepository.countBySection(section);
         Long eventCountById = eventRepository.countByEligibleStudentsSectionsContaining(section.getId());
         Long eventCountByName = eventRepository.countByEligibleStudentsSectionNamesContaining(section.getSectionName());
@@ -341,10 +382,41 @@ public final class SectionManagementServiceImpl implements SectionManagementServ
                     "Year level must be between " + minYearLevel + " and " + maxYearLevel + ". Provided: " + yearLevel
             );
         }
-        if (semester == null || semester < minSemester || semester > maxSemester) {
+        if (semester == null) {
+            throw new IllegalArgumentException("Semester must be specified.");
+        }
+
+        boolean validSemester = false;
+        for (Semester s : Semester.values()) {
+            if (s.getNumber() == semester) {
+                validSemester = true;
+                break;
+            }
+        }
+
+        if (!validSemester) {
             throw new IllegalArgumentException(
-                    "Semester must be between " + minSemester + " and " + maxSemester + ". Provided: " + semester
+                    "Semester " + semester + " does not exist. Valid values are: " + java.util.Arrays.toString(Semester.values())
             );
         }
     }
+
+
+    @Nonnull
+    private Integer getCurrentSemsterInteger(Section section) {
+        Integer currentSemester = academicYearManagementService.getCurrentSemester();
+        if (currentSemester == null) {
+            throw new IllegalStateException("No active academic year found. Cannot determine current semester.");
+        }
+
+        if (!section.getSemester().equals(currentSemester)) {
+            throw new IllegalArgumentException(
+                    "Cannot activate section '" + section.getSectionName() +
+                            "' because its semester (" + section.getSemester() +
+                            ") does not match the current semester (" + currentSemester + ")."
+            );
+        }
+        return currentSemester;
+    }
+
 }
