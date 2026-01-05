@@ -5,12 +5,12 @@ import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
+import com.attendease.backend.domain.exception.error.csv.CsvImportErrorResponse;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.user.account.management.users.csv.row.UserAccountManagementUsersCSVRowData;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.User;
-import com.attendease.backend.exceptions.domain.ImportException.CsvImportError;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import com.attendease.backend.osa.service.utility.csv.parser.UserCsvParser;
@@ -60,7 +60,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         }
 
         List<User> importedUsers = new ArrayList<>();
-        List<CsvImportError> errors = new ArrayList<>();
+        List<CsvImportErrorResponse.RowError> errors = new ArrayList<>();
 
         for (int i = 0; i < rows.size(); i++) {
             int rowNumber = i + 1;
@@ -69,27 +69,36 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
             try {
                 normalize(row);
                 if (!isValidRowData(row)) {
-                    errors.add(new CsvImportError(rowNumber, List.of("Missing required fields")));
+                    errors.add(new CsvImportErrorResponse.RowError(rowNumber, List.of("Missing required fields")));
                     continue;
                 }
-                // TODO: OPTIMIZE THIS QUERY BY QUERYING AT ONCE THEN CHECK EXISTING FIELD
+
                 if (studentRepository.existsByStudentNumber(row.getStudentNumber())) {
-                    errors.add(new CsvImportError(rowNumber, List.of("Duplicate student number: " + row.getStudentNumber())));
+                    errors.add(new CsvImportErrorResponse.RowError(
+                            rowNumber,
+                            List.of("Duplicate student number: " + row.getStudentNumber())
+                    ));
                     continue;
                 }
 
                 User user = createUserAndStudent(row);
                 importedUsers.add(user);
             } catch (IllegalArgumentException e) {
-                errors.add(new CsvImportError(rowNumber, List.of(e.getMessage())));
+                errors.add(new CsvImportErrorResponse.RowError(rowNumber, List.of(e.getMessage())));
             } catch (Exception e) {
                 log.error("Unexpected error at row {}", rowNumber, e);
-                errors.add(new CsvImportError(rowNumber, List.of("Unexpected error: " + e.getMessage())));
+                errors.add(new CsvImportErrorResponse.RowError(
+                        rowNumber,
+                        List.of("Unexpected error: " + e.getMessage())
+                ));
             }
         }
+
         if (!errors.isEmpty()) {
-            throw new CsvImportException("CSV import completed with errors", errors);
+            CsvImportErrorResponse errorResponse = CsvImportErrorResponse.fromErrors(errors, rows.size());
+            throw new CsvImportException(errorResponse.getMessage(), errorResponse);
         }
+
         log.info("Successfully imported {} students", importedUsers.size());
         return importedUsers;
     }
@@ -196,10 +205,17 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         userValidator.validateContactNumber(data.getContactNumber());
         userValidator.validatePassword(data.getPassword());
         userValidator.validateStudentNumber(data.getStudentNumber());
-        userValidator.validateFullCourseSectionFormat(data.getSectionName());
 
-        Section section = sectionRepository.findBySectionName(data.getSectionName())
-                .orElseThrow(() -> new IllegalArgumentException("Section not found: " + data.getSectionName()));
+        Section section = null;
+        if (data.getSectionName() != null && !data.getSectionName().isBlank()) {
+            userValidator.validateFullCourseSectionFormat(data.getSectionName());
+            section = sectionRepository.findBySectionName(data.getSectionName())
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Section '" + data.getSectionName() + "' does not exist. " +
+                                    "Please create this section first using the Academic Management, " +
+                                    "then re-import the CSV."
+                    ));
+        }
 
         User user = User.builder()
                 .userType(UserType.STUDENT)
@@ -219,12 +235,11 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 .userId(savedUser.getUserId())
                 .studentNumber(data.getStudentNumber())
                 .section(section)
-                .sectionName(section.getSectionName())
+                .sectionName(section != null ? section.getSectionName() : null)
                 .build();
 
         studentRepository.save(student);
-
-        log.info("Imported student saved: {}", savedUser.getUserId());
+        log.info("Imported student saved: {} (Section: {})", savedUser.getUserId(), section != null ? section.getSectionName() : "Not assigned");
         return savedUser;
     }
 

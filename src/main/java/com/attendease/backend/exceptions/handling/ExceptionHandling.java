@@ -82,13 +82,7 @@ public class ExceptionHandling {
 
     @ExceptionHandler(CsvImportException.class)
     public ResponseEntity<CsvImportErrorResponse> handleCsvImportException(CsvImportException ex) {
-        CsvImportErrorResponse error = new CsvImportErrorResponse(
-                "CSV_IMPORT_ERROR",
-                ex.getMessage(),
-                ex.getErrors(),
-                LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErrorResponse());
     }
 
     /*

@@ -6,6 +6,7 @@ import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
+import com.attendease.backend.domain.user.account.management.users.information.BulkStudentSectionUpdateRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
 import com.attendease.backend.domain.user.User;
@@ -14,6 +15,8 @@ import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentBiometrics.StudentBiometrics;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
+
+import java.util.List;
 import java.util.function.Consumer;
 import com.attendease.backend.validation.UserValidator;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +45,7 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
 
     @Transactional
     @Override
-    public UserAccountManagementUsersInformationResponse osaUpdateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
+    public UserAccountManagementUsersInformationResponse updateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
         User user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
         updateUserFields(user, request, updatedByUserId);
         UserStudentResponse studentResponse = null;
@@ -53,6 +56,22 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
 
         return UserAccountManagementUsersInformationResponse.builder().user(user).studentResponse(studentResponse).build();
     }
+
+
+    @Transactional
+    @Override
+    public int bulkUpdateStudentSection(BulkStudentSectionUpdateRequest request) {
+
+        Section section = sectionRepository.findById(request.getSectionId()).orElseThrow(() -> new IllegalArgumentException("Section not found"));
+        List<Students> students = studentRepository.findAllById(request.getStudentIds());
+        if (students.isEmpty()) {
+            throw new IllegalArgumentException("No students found to update.");
+        }
+        students.forEach(student -> student.setSection(section));
+        studentRepository.saveAll(students);
+        return students.size();
+    }
+
 
     /**
      * PRIVATE HELPERS

@@ -2,6 +2,8 @@ package com.attendease.backend.osa.controller.management.user.information;
 
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
+import com.attendease.backend.domain.user.account.management.users.information.BulkSectionUpdateResponse;
+import com.attendease.backend.domain.user.account.management.users.information.BulkStudentSectionUpdateRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
 import com.attendease.backend.domain.user.User;
@@ -72,17 +74,26 @@ public class ManagementUserInformationController {
      * @return {@link ResponseEntity} with status 200 and the updated user or student response
      * @throws ChangeSetPersister.NotFoundException if the user or referenced entities (e.g., section) are not found
      * @throws IllegalArgumentException if validation fails (e.g., invalid password, duplicate student number)
-     * @see ManagementUserInformationService#osaUpdateUserInfo(String, UserAccountManagementUsersInformationRequest, String)
+     * @see ManagementUserInformationService#updateUserInfo(String, UserAccountManagementUsersInformationRequest, String)
      */
     @PatchMapping("/{userId}")
     public ResponseEntity<?> updateUserInfo(@PathVariable String userId, @Valid @RequestBody UserAccountManagementUsersInformationRequest request) throws ChangeSetPersister.NotFoundException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
-        UserAccountManagementUsersInformationResponse result = managementUserInformationService.osaUpdateUserInfo(userId, request, updatedByUserId);
+        UserAccountManagementUsersInformationResponse result = managementUserInformationService.updateUserInfo(userId, request, updatedByUserId);
         if (result.getUser().getUserType() == UserType.STUDENT) {
             return ResponseEntity.ok(result.getStudentResponse());
         } else {
             return ResponseEntity.ok(result.getUser());
         }
+    }
+
+    /**
+     * Bulk update students to a specific section
+     */
+    @PutMapping("/section/bulk")
+    public ResponseEntity<?> bulkUpdateStudentSection(@RequestBody BulkStudentSectionUpdateRequest request) {
+        int updatedCount = managementUserInformationService.bulkUpdateStudentSection(request);
+        return ResponseEntity.ok().body(new BulkSectionUpdateResponse(updatedCount, "Students successfully assigned to section"));
     }
 }

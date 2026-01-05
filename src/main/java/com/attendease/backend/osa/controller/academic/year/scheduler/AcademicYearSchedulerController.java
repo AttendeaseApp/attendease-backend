@@ -49,7 +49,7 @@ public class AcademicYearSchedulerController {
 		academicYearActivationScheduler.manualTrigger();
 		return ResponseEntity.ok(Map.of(
 				"status", "success",
-				"message", "Academic year activation check has been triggered successfully. Check logs for details."
+				"message", "Academic year activation check has been triggered successfully."
 		));
 	}
 }

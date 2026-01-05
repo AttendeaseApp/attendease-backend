@@ -1,5 +1,6 @@
 package com.attendease.backend.osa.service.management.user.information;
 
+import com.attendease.backend.domain.user.account.management.users.information.BulkStudentSectionUpdateRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationRequest;
 import com.attendease.backend.domain.user.account.management.users.information.UserAccountManagementUsersInformationResponse;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -28,7 +29,7 @@ public interface ManagementUserInformationService {
     long deleteAllStudentsAndAssociatedUserAndFacialData();
 
     /**
-     * {@code osaUpdateUserInfo} allows osa to update user information (with optional student-specific fields).
+     * {@code updateUserInfo} allows osa to update user information (with optional student-specific fields).
      * User field updates automatically propagate to referenced student via DBRef.
      * Student-specific fields require explicit update to the Students collection.
      *
@@ -43,5 +44,7 @@ public interface ManagementUserInformationService {
      * @throws IllegalArgumentException if validation fails (e.g., invalid password, duplicate student number)
      */
     @Transactional
-    UserAccountManagementUsersInformationResponse osaUpdateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException;
+    UserAccountManagementUsersInformationResponse updateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException;
+
+    int bulkUpdateStudentSection(BulkStudentSectionUpdateRequest request);
 }

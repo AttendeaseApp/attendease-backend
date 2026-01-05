@@ -1,6 +1,8 @@
 package com.attendease.backend.osa.controller.academic.section.management;
 
 import com.attendease.backend.domain.section.Section;
+import com.attendease.backend.domain.section.management.BulkSectionRequest;
+import com.attendease.backend.domain.section.management.BulkSectionResult;
 import com.attendease.backend.domain.section.management.SectionResponse;
 import com.attendease.backend.osa.service.academic.section.management.SectionManagementService;
 
@@ -59,6 +61,56 @@ public class SectionManagementController {
             return ResponseEntity.ok(sections);
         }
     }
+
+    /**
+     * Bulk create sections for a course
+     * POST /api/osa/sections/bulk?courseId=THECOURSEID
+     * sample body:
+     * [
+     *   {
+     *     "sectionName": "BSCS-101",
+     *     "yearLevel": 1,
+     *     "semester": 1
+     *   },
+     *   {
+     *     "sectionName": "BSCS-102",
+     *     "yearLevel": 1,
+     *     "semester": 1
+     *   }
+     * ]
+     */
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkSectionResult> createSectionsBulk(@RequestParam String courseId, @RequestBody List<BulkSectionRequest> requests) {
+        BulkSectionResult result = sectionManagementService.addSectionsBulk(courseId, requests);
+        if (result.getErrorCount() > 0 && result.getSuccessCount() == 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        } else if (result.getErrorCount() > 0) {
+            return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        }
+    }
+
+    /**
+     * Activates a section based on the current semester.
+     *
+     * @param sectionId The ID of the section to activate.
+     * @return The activated section response.
+     */
+    @PostMapping("/{sectionId}/activate")
+    public ResponseEntity<?> activateSection(@PathVariable String sectionId) {
+        try {
+            SectionResponse activatedSection = sectionManagementService.activateSection(sectionId);
+            return ResponseEntity.ok(activatedSection);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
 
     /**
      * Creates a new section for a specific course.
@@ -148,15 +200,9 @@ public class SectionManagementController {
      * @return The updated section response.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSection(
-            @PathVariable String id,
-            @RequestBody Section updatedSection) {
+    public ResponseEntity<?> updateSection(@PathVariable String id, @RequestBody Section updatedSection) {
         try {
             SectionResponse updated = sectionManagementService.updateSection(id, updatedSection);
-
-            if (updated.getSectionName().equals(updatedSection.getSectionName().trim())) {
-                return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("No changes detected. Section name is already '" + updated.getSectionName() + "'.");
-            }
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
