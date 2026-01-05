@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -29,6 +30,7 @@ public class ManagementStudentRegistrationServiceImpl implements ManagementStude
     private final UserValidator userValidator;
 
     @Override
+    @Transactional
     public String registerNewStudentAccount(StudentRegistrationRequest registrationRequest) {
         userValidator.validateFirstName(registrationRequest.getFirstName(), "First name");
         userValidator.validateLastName(registrationRequest.getLastName(), "Last name");
