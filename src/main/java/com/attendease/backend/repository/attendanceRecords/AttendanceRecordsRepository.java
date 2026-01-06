@@ -70,4 +70,6 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
     Long countByEventLocationId(String eventLocationId);
 
     Long countByEventEventId(String id);
+
+    Optional<AttendanceRecords> findByStudentAndEvent(Students student, Event event);
 }

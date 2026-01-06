@@ -1,6 +1,7 @@
 package com.attendease.backend.student.service.attendance.registration.tracking;
 
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
+import com.attendease.backend.domain.location.Location;
 
 /**
  * {@link AttendanceRegistrationTrackingService} is responsible for attendance verification during an event.
@@ -33,4 +34,13 @@ public interface AttendanceRegistrationTrackingService {
      * @return {@code true} if the student is inside the event boundary; {@code false} otherwise
      */
     boolean attendanceRegistrationTracker(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs);
+
+	/**
+	 * Retrieves the current venue location for an ongoing event.
+	 * Useful for client apps to display which location is being monitored.
+	 *
+	 * @param eventId the event ID
+	 * @return the venue location for monitoring
+	 */
+	Location getEventVenueForMonitoring(String eventId);
 }
