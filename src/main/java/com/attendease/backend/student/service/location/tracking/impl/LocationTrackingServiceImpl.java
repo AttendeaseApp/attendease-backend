@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.attendance.registration.tracking.impl;
+package com.attendease.backend.student.service.location.tracking.impl;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
@@ -11,7 +11,7 @@ import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepo
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.student.service.attendance.registration.tracking.AttendanceRegistrationTrackingService;
+import com.attendease.backend.student.service.location.tracking.LocationTrackingService;
 import com.attendease.backend.student.service.utils.LocationValidator;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegistrationTrackingService {
+public class LocationTrackingServiceImpl implements LocationTrackingService {
 
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
@@ -48,7 +48,7 @@ public class AttendanceRegistrationTrackingServiceImpl implements AttendanceRegi
     private final LocationValidator locationValidator;
 
     @Override
-    public boolean attendanceRegistrationTracker(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs) {
+    public boolean venueLocationMonitoring(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs) {
 
         User user = userRepository.findById(authenticatedUserId)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
