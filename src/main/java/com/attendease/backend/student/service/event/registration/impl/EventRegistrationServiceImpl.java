@@ -23,6 +23,8 @@ import com.attendease.backend.student.service.event.registration.EventRegistrati
 import com.attendease.backend.student.service.utils.BiometricsVerificationClient;
 import com.attendease.backend.student.service.utils.LocationValidator;
 import java.time.LocalDateTime;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,23 +61,59 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
 
         Location registrationLocation = event.getRegistrationLocation();
+        Location venueLocation = event.getVenueLocation();
+
         if (registrationLocation == null) {
             log.error("Event {} has no registration location configured", event.getEventId());
             throw new IllegalStateException("Event registration location is not configured");
         }
 
-        if (!locationValidator.isWithinLocationBoundary(
-                registrationLocation,
-                registrationRequest.getLatitude(),
-                registrationRequest.getLongitude())) {
-            log.warn("Student {} attempted registration outside registration location boundary for event {}",
-                    student.getStudentNumber(), event.getEventId());
-            throw new IllegalStateException(
-                    String.format("You must be at the registration location (%s) to check in for this event.",
-                            registrationLocation.getLocationName()));
+        if (venueLocation == null) {
+            log.error("Event {} has no venue location configured", event.getEventId());
+            throw new IllegalStateException("Event venue location is not configured");
         }
 
-        isAlreadyRegistered(student, event, registrationLocation);
+        boolean withinRegistrationLocation = locationValidator.isWithinLocationBoundary(
+                registrationLocation,
+                registrationRequest.getLatitude(),
+                registrationRequest.getLongitude());
+
+        boolean withinVenueLocation = locationValidator.isWithinLocationBoundary(
+                venueLocation,
+                registrationRequest.getLatitude(),
+                registrationRequest.getLongitude());
+
+        if (!withinRegistrationLocation && !withinVenueLocation) {
+            log.warn("Student {} attempted registration outside both registration and venue location boundaries for event {}",
+                    student.getStudentNumber(), event.getEventId());
+            throw new IllegalStateException(
+                    String.format("You must be at either the registration location (%s) or venue location (%s) to check in for this event.",
+                            registrationLocation.getLocationName(),
+                            venueLocation.getLocationName()));
+        }
+
+        Optional<AttendanceRecords> existingRecord = attendanceRecordsRepository.findByStudentAndEvent(student, event);
+        boolean strictValidation = event.getStrictLocationValidation() != null && event.getStrictLocationValidation();
+
+        if (existingRecord.isPresent()) {
+            AttendanceRecords record = existingRecord.get();
+
+            if (strictValidation &&
+                    record.getAttendanceStatus() == AttendanceStatus.PARTIALLY_REGISTERED &&
+                    withinVenueLocation) {
+
+                upgradeToFullRegistration(record, venueLocation, now, event);
+
+                log.info("Student {} upgraded from PARTIALLY_REGISTERED to REGISTERED at venue for event {}",
+                        student.getStudentNumber(), event.getEventId());
+
+                return registrationRequest;
+            }
+
+            throw new IllegalStateException(
+                    String.format("You are already registered for this event (Status: %s, Registered at: %s)",
+                            record.getAttendanceStatus(), record.getTimeIn()));
+        }
 
         if (event.getFacialVerificationEnabled() && !event.getAttendanceLocationMonitoringEnabled()) {
             if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64().isEmpty()) {
@@ -84,18 +122,27 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
             verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
         }
 
-        AttendanceStatus initialStatus = now.isAfter(event.getStartingDateTime())
-                ? AttendanceStatus.LATE
-                : AttendanceStatus.REGISTERED;
+        AttendanceStatus initialStatus = determineInitialStatus(
+                strictValidation,
+                withinVenueLocation,
+                now,
+                event.getStartingDateTime());
+
+        Location checkedInLocation = withinVenueLocation ? venueLocation : registrationLocation;
 
         AttendanceRecords record = AttendanceRecords.builder()
                 .student(student)
                 .event(event)
-                .location(registrationLocation)
-                .eventLocationId(registrationLocation.getLocationId())
+                .location(checkedInLocation)
+                .eventLocationId(checkedInLocation.getLocationId())
+                .academicYear(event.getAcademicYear())
+                .academicYearId(event.getAcademicYearId())
+                .academicYearName(event.getAcademicYearName())
+                .semester(event.getSemester())
+                .semesterName(event.getSemesterName())
                 .timeIn(now)
                 .attendanceStatus(initialStatus)
-                .reason(now.isAfter(event.getStartingDateTime()) ? "Late registration" : null)
+                .reason(getInitialReason(initialStatus))
                 .build();
 
         attendanceRecordsRepository.save(record);
@@ -105,6 +152,40 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     /**
      * PRIVATE HELPERS
      */
+
+    private AttendanceStatus determineInitialStatus(boolean strictValidation, boolean withinVenueLocation, LocalDateTime now, LocalDateTime eventStart) {
+        boolean isLate = now.isAfter(eventStart);
+        if (!strictValidation) {
+            return isLate ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
+        }
+
+        if (withinVenueLocation) {
+            return isLate ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED;
+        } else {
+            return AttendanceStatus.PARTIALLY_REGISTERED;
+        }
+    }
+
+    private String getInitialReason(AttendanceStatus status) {
+        if (status == AttendanceStatus.LATE) {
+            return "Late registration";
+        }
+        if (status == AttendanceStatus.PARTIALLY_REGISTERED) {
+            return "Checked in at registration area. Please proceed to the venue to complete registration.";
+        }
+
+        return null;
+    }
+
+    private void upgradeToFullRegistration(AttendanceRecords record,Location venueLocation,LocalDateTime now,Event event) {
+        boolean isLate = now.isAfter(event.getStartingDateTime());
+        record.setAttendanceStatus(isLate ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED);
+        record.setLocation(venueLocation);
+        record.setEventLocationId(venueLocation.getLocationId());
+        record.setReason(isLate ? "Late arrival at venue" : "Completed registration at venue");
+        record.setTimeIn(now);
+        attendanceRecordsRepository.save(record);
+    }
 
     private void validateEventStatus(Event event) {
         EventStatus status = event.getEventStatus();
@@ -156,18 +237,6 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         } catch (Exception e) {
             log.error("Facial verification error for student {}: {}", studentNumber, e.getMessage(), e);
             throw new IllegalStateException("Facial verification error: " + e.getMessage());
-        }
-    }
-
-    private void isAlreadyRegistered(Students student, Event event, Location registrationLocation) {
-        boolean alreadyRegistered =
-                !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(
-                        student, event, registrationLocation, AttendanceStatus.REGISTERED).isEmpty()
-                        || !attendanceRecordsRepository.findByStudentAndEventAndLocationAndAttendanceStatus(
-                        student, event, registrationLocation, AttendanceStatus.LATE).isEmpty();
-
-        if (alreadyRegistered) {
-            throw new IllegalStateException("Student is already checked in for this event.");
         }
     }
 

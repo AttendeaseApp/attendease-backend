@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 /**
@@ -31,22 +32,22 @@ public class LocationVerificationController {
 
     private final LocationVerificationServiceImpl locationVerificationService;
 
-    /**
-     * Receives the student's geolocation via WebSocket and returns whether
-     * they are inside or outside the specified location boundary.
-     * <p>
-     * This is a generic endpoint that works with any location ID.
-     * Each user receives only their own result (not broadcasted).
-     * </p>
-     *
-     * @param request contains locationId, latitude, and longitude
-     * @return verification response indicating if student is inside/outside
-     */
-    @MessageMapping("/observe-current-location")
-    @SendToUser("/queue/location-verification")
-    public LocationTrackingResponse trackCurrentLocation(@Payload LocationTrackingRequest request) {
-        return locationVerificationService.trackCurrentLocation(request);
-    }
+//    /**
+//     * Receives the student's geolocation via WebSocket and returns whether
+//     * they are inside or outside the specified location boundary.
+//     * <p>
+//     * This is a generic endpoint that works with any location ID.
+//     * Each user receives only their own result (not broadcasted).
+//     * </p>
+//     *
+//     * @param request contains locationId, latitude, and longitude
+//     * @return verification response indicating if student is inside/outside
+//     */
+//    @MessageMapping("/observe-current-location")
+//    @SendToUser("/queue/location-verification")
+//    public LocationTrackingResponse verifyCurrentLocation(@Payload LocationTrackingRequest request) {
+//        return locationVerificationService.verifyCurrentLocation(request);
+//    }
 
     /**
      * Verifies if the student is within the event's registration location.
@@ -64,8 +65,8 @@ public class LocationVerificationController {
      */
     @MessageMapping("/verify-registration-location")
     @SendToUser("/queue/registration-location-verification")
-    public LocationTrackingResponse verifyRegistrationLocation(@Payload EventLocationTrackingRequest request) {
-        return locationVerificationService.trackEventRegistrationLocation(
+    public LocationTrackingResponse verifyEventRegistrationLocation(@Payload EventLocationTrackingRequest request) {
+        return locationVerificationService.verifyEventRegistrationLocation(
                 request.getEventId(),
                 request.getLatitude(),
                 request.getLongitude()
@@ -88,11 +89,27 @@ public class LocationVerificationController {
      */
     @MessageMapping("/verify-venue-location")
     @SendToUser("/queue/venue-location-verification")
-    public LocationTrackingResponse verifyVenueLocation(@Payload EventLocationTrackingRequest request) {
-        return locationVerificationService.trackEventVenueLocation(
+    public LocationTrackingResponse verifyEventVenueLocation(@Payload EventLocationTrackingRequest request) {
+        return locationVerificationService.verifyEventVenueLocation(
                 request.getEventId(),
                 request.getLatitude(),
                 request.getLongitude()
         );
+    }
+
+    /**
+     * Verifies if the student is within the event's venue location AND automatically
+     * upgrades PARTIALLY_REGISTERED students to REGISTERED status.
+     * <p>
+     * This endpoint is specifically designed for strict location validation mode.
+     * When a student with PARTIALLY_REGISTERED status enters the venue geofence,
+     * their status is automatically upgraded to REGISTERED (or LATE if after event start).
+     * </p>
+     */
+    @MessageMapping("/verify-venue-location-with-upgrade")
+    @SendToUser("/queue/venue-location-auto-upgrade")
+    public LocationTrackingResponse verifyEventVenueLocationWithAutoUpgrade(@Payload EventLocationTrackingRequest request, Authentication authentication) {
+        String authenticatedUserId = authentication.getName();
+        return locationVerificationService.verifyEventVenueLocationWithAutoUpgrade(authenticatedUserId,request.getEventId(),request.getLatitude(),request.getLongitude());
     }
 }

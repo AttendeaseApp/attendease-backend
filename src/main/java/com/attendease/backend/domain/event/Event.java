@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Domain entity representing a scheduled event session.
@@ -120,6 +119,10 @@ public class Event {
     @Field("attendanceLocationMonitoringEnabled")
     @Builder.Default
     private Boolean attendanceLocationMonitoringEnabled = false;
+
+    @Field("strictLocationValidation")
+    @Builder.Default
+    private Boolean strictLocationValidation = false;
 
     @DBRef
     @Indexed

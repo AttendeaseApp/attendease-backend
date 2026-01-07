@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.attendance;
 
+import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.event.Event;
@@ -31,6 +32,10 @@ import java.util.List;
  * Tracks check-in/out times, status (e.g., PRESENT, ABSENT), reasons, and ping logs for geofence validation.
  * Finalized post-event via ratio calculations (e.g., 70% inside time = PRESENT). Compound unique index
  * on student+event prevents duplicates. Supports late detection and partial attendance (IDLE).
+ * </p>
+ * <p>
+ * Records are linked to the academic year and semester active at the time of the event.
+ * This enables historical tracking and filtering of attendance data by academic period.
  * </p>
  * <p><b>Usage Notes:</b> Ping logs appended during ONGOING events. Use finalizer service after endDateTime.
  * Indexes on student/event for efficient queries.</p>
@@ -67,8 +72,26 @@ public class AttendanceRecords {
     @Indexed
     private String eventLocationId;
 
+    @DBRef
+    @Indexed
+    private Academic academicYear;
+
+    @Field("academicYearId")
+    @Indexed
+    private String academicYearId;
+
+    @Field("academicYearName")
+    private String academicYearName;
+
+    @Indexed
+    private Integer semester;
+
+    @Field("semesterName")
+    private String semesterName;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeIn;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeOut;
 

@@ -14,4 +14,6 @@ public class LocationTrackingResponse {
 
     private boolean isInside;
     private String message;
+    private Boolean autoUpgraded;
+    private Long timestamp;
 }

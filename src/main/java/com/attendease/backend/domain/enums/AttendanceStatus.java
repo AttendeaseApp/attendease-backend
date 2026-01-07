@@ -7,6 +7,7 @@ public enum AttendanceStatus {
     PRESENT,
     ABSENT,
     REGISTERED,
+    PARTIALLY_REGISTERED,
     IDLE,
     LATE,
     EXCUSED,
