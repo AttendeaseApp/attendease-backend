@@ -69,11 +69,6 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
     }
 
     @Override
-    public Optional<Event> findById(String id) {
-        return eventRepository.findById(id);
-    }
-
-    @Override
     public EventAttendeesResponse getAttendeesByEvent(String eventId) {
         List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
         List<AttendeesResponse> attendees = records

@@ -81,4 +81,8 @@ public interface StudentRepository extends MongoRepository<Students, String> {
 	List<Students> findBySectionName(String sectionName);
 
     List<Students> findByCurrentSectionId(String id);
+
+    List<Students> findByUserIdIn(List<String> activeUserIds);
+
+    List<Students> findBySectionIdInAndUserIdIn(List<String> sections, List<String> activeUserIds);
 }

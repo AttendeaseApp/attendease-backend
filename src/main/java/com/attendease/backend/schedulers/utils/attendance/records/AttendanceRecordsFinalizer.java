@@ -5,10 +5,12 @@ import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrac
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.course.CourseRepository;
 import com.attendease.backend.repository.section.SectionRepository;
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.attendease.backend.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,7 @@ public class AttendanceRecordsFinalizer {
 
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
     private final SectionRepository sectionRepository;
     private final CourseRepository courseRepository;
 
@@ -44,14 +49,21 @@ public class AttendanceRecordsFinalizer {
         boolean locationMonitoringEnabled = event.getAttendanceLocationMonitoringEnabled() != null
                 && event.getAttendanceLocationMonitoringEnabled();
 
-        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventId(eventId);
-        List<Students> expectedStudents = getExpectedStudentsForEvent(event);
+        List<String> activeUserIds = userRepository.findByUserTypeAndAccountStatus(UserType.STUDENT, AccountStatus.ACTIVE)
+                .stream()
+                .map(User::getUserId)
+                .collect(Collectors.toList());
+
+        List<AttendanceRecords> attendanceRecords = attendanceRecordsRepository.findByEventEventIdAndStudentUserIdIn(eventId, activeUserIds);
+
+        List<Students> expectedStudents = getExpectedStudentsForEvent(event, activeUserIds);
         Set<String> studentsWithRecords = attendanceRecords.stream()
                 .map(r -> r.getStudent().getId())
                 .collect(Collectors.toSet());
 
         LocalDateTime now = LocalDateTime.now();
 
+        List<AttendanceRecords> changedRecords = new ArrayList<>();
         for (AttendanceRecords record : attendanceRecords) {
             AttendanceStatus oldStatus = record.getAttendanceStatus();
             AttendanceStatus finalStatus;
@@ -80,14 +92,23 @@ public class AttendanceRecordsFinalizer {
 
             if (finalStatus != oldStatus) {
                 record.setAttendanceStatus(finalStatus);
-                record.setTimeOut(now);
-                attendanceRecordsRepository.save(record);
+                if (finalStatus == AttendanceStatus.PRESENT || finalStatus == AttendanceStatus.LATE) {
+                    record.setTimeOut(now);
+                } else {
+                    record.setTimeOut(null);
+                }
+                changedRecords.add(record);
                 log.info("Finalized attendance for student {} as {} in event {}",
                         record.getStudent().getStudentNumber(), finalStatus, eventName);
             }
         }
 
-        // mark missing students as ABSENT
+        if (!changedRecords.isEmpty()) {
+            attendanceRecordsRepository.saveAll(changedRecords);
+        }
+
+        // Mark missing active students as ABSENT
+        List<AttendanceRecords> absentRecords = new ArrayList<>();
         for (Students student : expectedStudents) {
             if (!studentsWithRecords.contains(student.getId())) {
                 AttendanceRecords absentRecord = AttendanceRecords.builder()
@@ -105,11 +126,14 @@ public class AttendanceRecordsFinalizer {
                         .timeIn(null)
                         .timeOut(null)
                         .build();
-                attendanceRecordsRepository.save(absentRecord);
+                absentRecords.add(absentRecord);
                 log.info("Recorded as absent for student {} in event {}, {} (Academic Year: {}, Semester: {})",
                         student.getStudentNumber(), eventId, eventName,
                         event.getAcademicYearName(), event.getSemesterName());
             }
+        }
+        if (!absentRecords.isEmpty()) {
+            attendanceRecordsRepository.saveAll(absentRecords);
         }
         log.info("Attendance finalization completed for event {}, {}", eventId, eventName);
     }
@@ -185,40 +209,39 @@ public class AttendanceRecordsFinalizer {
     }
 
 
-    private List<Students> getExpectedStudentsForEvent(Event event) {
+    private List<Students> getExpectedStudentsForEvent(Event event, List<String> activeUserIds) {
         EventEligibility criteria = event.getEligibleStudents();
         List<Students> expectedStudents;
 
         if (criteria == null || criteria.isAllStudents()) {
-            expectedStudents = studentRepository.findAll();
+            expectedStudents = studentRepository.findByUserIdIn(activeUserIds);
         } else if (!CollectionUtils.isEmpty(criteria.getSections())) {
-            expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
+            expectedStudents = studentRepository.findBySectionIdInAndUserIdIn(criteria.getSections(), activeUserIds);
         } else {
             Set<Students> uniqueStudents = new HashSet<>();
 
             if (!CollectionUtils.isEmpty(criteria.getCourses())) {
                 List<Section> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
-                List<String> sectionIds = courseSections.stream().map(Section::getId).toList();
+                List<String> sectionIds = courseSections.stream().map(Section::getId).collect(Collectors.toList());
                 if (!sectionIds.isEmpty()) {
-                    uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
+                    uniqueStudents.addAll(studentRepository.findBySectionIdInAndUserIdIn(sectionIds, activeUserIds));
                 }
             }
 
             if (!CollectionUtils.isEmpty(criteria.getClusters())) {
                 List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
-                List<String> courseIds = clusterCourses.stream().map(Course::getId).toList();
+                List<String> courseIds = clusterCourses.stream().map(Course::getId).collect(Collectors.toList());
                 if (!courseIds.isEmpty()) {
                     List<Section> clusterSections = sectionRepository.findByCourseIdIn(courseIds);
-                    List<String> sectionIds = clusterSections.stream().map(Section::getId).toList();
+                    List<String> sectionIds = clusterSections.stream().map(Section::getId).collect(Collectors.toList());
                     if (!sectionIds.isEmpty()) {
-                        uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
+                        uniqueStudents.addAll(studentRepository.findBySectionIdInAndUserIdIn(sectionIds, activeUserIds));
                     }
                 }
             }
             expectedStudents = new ArrayList<>(uniqueStudents);
         }
 
-        expectedStudents = expectedStudents.stream().filter(s -> s.getUser() != null && s.getUser().getAccountStatus() == AccountStatus.ACTIVE).toList();
         log.info("Total expected ACTIVE students for event {}: {}", event.getEventId(), expectedStudents.size());
         return expectedStudents;
     }

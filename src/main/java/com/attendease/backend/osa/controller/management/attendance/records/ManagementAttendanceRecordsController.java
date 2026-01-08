@@ -55,18 +55,6 @@ public class ManagementAttendanceRecordsController {
     }
 
     /**
-     * Retrieves a specific event by its unique ID.
-     *
-     * @param id the ID of the event
-     * @return the {@link Event} corresponding to the given ID
-     * @throws RuntimeException if no event is found with the provided ID
-     */
-    @GetMapping("/event/{id}")
-    public Event getEventById(@PathVariable String id) {
-        return managementAttendanceRecordsService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
-    }
-
-    /**
      * Retrieves all attendance records for a specific student.
      *
      * @param studentId the ID of the student

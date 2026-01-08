@@ -60,6 +60,12 @@ public class AttendanceRecords {
     @Indexed
     private Students student;
 
+    @Indexed
+    private String studentId;
+
+    @Indexed
+    private String studentUserId;
+
     @DBRef
     @NotNull(message = "Event reference is required")
     @Indexed
