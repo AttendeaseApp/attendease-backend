@@ -112,6 +112,28 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     }
 
     @Override
+    public List<UserStudentResponse> retrieveActiveStudents() {
+        return retrieveStudentsByAccountStatus(AccountStatus.ACTIVE);
+    }
+
+    @Override
+    public List<UserStudentResponse> retrieveInactiveStudents() {
+        return retrieveStudentsByAccountStatus(AccountStatus.INACTIVE);
+    }
+
+    @Override
+    @Transactional
+    public void bulkActivateStudents(List<String> userIds) {
+        bulkUpdateStudentAccountStatus(userIds, AccountStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional
+    public void bulkDeactivateStudents(List<String> userIds) {
+        bulkUpdateStudentAccountStatus(userIds, AccountStatus.INACTIVE);
+    }
+
+    @Override
     public List<UserStudentResponse> retrieveAllStudents() {
         List<Students> students = studentRepository.findAll();
         if (students.isEmpty())
@@ -179,6 +201,53 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     /**
      * PRIVATE HELPERS
      */
+
+    private List<UserStudentResponse> retrieveStudentsByAccountStatus(AccountStatus status) {
+        List<User> users = userRepository.findByUserTypeAndAccountStatus(UserType.STUDENT, status);
+        if (users.isEmpty()) {
+            log.info("No {} students found", status);
+            return Collections.emptyList();
+        }
+        List<Students> students = studentRepository.findByUserIn(users);
+        Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
+        return users.stream()
+                .map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId())))
+                .collect(Collectors.toList());
+    }
+
+    private void bulkUpdateStudentAccountStatus(List<String> userIds, AccountStatus targetStatus) {
+        if (userIds == null || userIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID list must not be empty");
+        }
+
+        List<User> users = userRepository.findAllById(userIds);
+
+        if (users.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found for the provided IDs");
+        }
+
+        List<User> nonStudents = users.stream().filter(u -> u.getUserType() != UserType.STUDENT).toList();
+
+        if (!nonStudents.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bulk operation allowed for STUDENT accounts only");
+        }
+
+        List<User> toUpdate = users.stream()
+                .filter(u -> u.getAccountStatus() != targetStatus)
+                .peek(u -> {
+                    u.setAccountStatus(targetStatus);
+                    u.setUpdatedBy(String.valueOf(UserType.OSA));
+                }).toList();
+
+        if (toUpdate.isEmpty()) {
+            log.info("No student accounts needed status update to {}", targetStatus);
+            return;
+        }
+
+        userRepository.saveAll(toUpdate);
+        log.info("Bulk updated {} student accounts to status {}", toUpdate.size(), targetStatus);
+    }
+
 
     private boolean isValidRowData(UserAccountManagementUsersCSVRowData data) {
         return data.getFirstName() != null &&
