@@ -22,7 +22,7 @@ import java.util.Optional;
  * </p>
  */
 @RestController
-@RequestMapping("/api/auth/biometrics")
+@RequestMapping("/api/manage/biometrics")
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
@@ -49,10 +49,10 @@ public class AccountBiometricsManagementController {
      * @return ResponseEntity with success message
      */
     @DeleteMapping("/delete")
-    public ResponseEntity<String> delateFacialData(Authentication authentication) {
+    public ResponseEntity<String> deleteFacialData(Authentication authentication) {
         String authenticatedUserId = authentication.getName();
         accountBiometricsManagementService.deleteFacialData(authenticatedUserId);
-        return ResponseEntity.ok("Facial data deleted from database successfully");
+        return ResponseEntity.ok("Your facial data has been deleted from our database successfully");
     }
 
 }
