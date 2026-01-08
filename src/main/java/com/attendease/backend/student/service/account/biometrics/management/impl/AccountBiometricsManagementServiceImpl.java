@@ -1,10 +1,13 @@
 package com.attendease.backend.student.service.account.biometrics.management.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.biometrics.status.BiometricStatusResponse;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.student.service.account.biometrics.management.AccountBiometricsManagementService;
+
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +22,21 @@ public class AccountBiometricsManagementServiceImpl implements AccountBiometrics
     private final StudentRepository studentRepository;
 
     @Override
-    public Optional<BiometricData> getFacialStatus(String authenticatedUserId) {
+    public Optional<BiometricStatusResponse> getFacialStatus(String authenticatedUserId) {
         Students student = studentRepository.findByUserId(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
         String studentNumber = student.getStudentNumber();
-        if (!biometricsRepository.existsByStudentNumber(studentNumber)) {
-            throw new IllegalArgumentException("No facial biometric data found for this student " + studentNumber);
+
+        Optional<BiometricData> biometricDataOpt = biometricsRepository.findByStudentNumber(studentNumber);
+        if (biometricDataOpt.isEmpty()) {
+            return Optional.empty();
         }
-        return biometricsRepository.findByStudentNumber(studentNumber);
+
+        BiometricData biometricData = biometricDataOpt.get();
+        BiometricStatusResponse response = new BiometricStatusResponse();
+        response.setStatus(String.valueOf(biometricData.getBiometricsStatus()));
+        response.setMessage("Facial biometrics registered");
+        log.info("Facial status retrieved for student: {} (encoding NOT exposed)", studentNumber);
+        return Optional.of(response);
     }
 
     @Override
