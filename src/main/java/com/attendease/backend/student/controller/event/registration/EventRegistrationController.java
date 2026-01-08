@@ -2,7 +2,7 @@ package com.attendease.backend.student.controller.event.registration;
 
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.event.registration.EventRegistrationRequest;
-import com.attendease.backend.student.service.attendance.registration.tracking.AttendanceRegistrationTrackingService;
+import com.attendease.backend.student.service.location.tracking.LocationTrackingService;
 import com.attendease.backend.student.service.event.registration.EventRegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class EventRegistrationController {
 
     private final EventRegistrationService eventRegistrationService;
-    private final AttendanceRegistrationTrackingService attendanceRegistrationTrackingService;
+    private final LocationTrackingService locationTrackingService;
 
     /**
      * Endpoint for student event registration.
@@ -36,9 +36,11 @@ public class EventRegistrationController {
      * The authenticated user ID is automatically resolved from the security context.
      */
     @PostMapping("/ping")
-    public ResponseEntity<?> pingAttendance(Authentication authentication, @RequestBody AttendanceTrackingResponse attendancePingLogs) {
+    public ResponseEntity<?> venueLocationMonitoring(Authentication authentication, @RequestBody AttendanceTrackingResponse attendancePingLogs) {
         String authenticatedUserId = authentication.getName();
-        boolean isInside = attendanceRegistrationTrackingService.attendanceRegistrationTracker(authenticatedUserId, attendancePingLogs);
+        boolean isInside = locationTrackingService.venueLocationMonitoring(authenticatedUserId, attendancePingLogs);
         return ResponseEntity.ok().body("Ping recorded successfully. Inside area: " + isInside);
     }
+
+
 }

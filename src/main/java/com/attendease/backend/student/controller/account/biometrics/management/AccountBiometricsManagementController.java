@@ -1,5 +1,6 @@
 package com.attendease.backend.student.controller.account.biometrics.management;
 
+import com.attendease.backend.domain.biometrics.status.BiometricStatusResponse;
 import com.attendease.backend.student.service.account.biometrics.management.AccountBiometricsManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
-
 /**
  * REST controller for managing student facial biometrics.
  * <p>
@@ -22,7 +21,7 @@ import java.util.Optional;
  * </p>
  */
 @RestController
-@RequestMapping("/api/auth/biometrics")
+@RequestMapping("/api/manage/biometrics")
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
@@ -32,14 +31,15 @@ public class AccountBiometricsManagementController {
 
     /**
      * GET endpoint to retrieve the current facial biometric status of the authenticated student.
+     * This endpoint will NOT expose facial encoding data for security reasons.
      *
      * @param authentication the Spring Security authentication object containing the user's details
-     * @return ResponseEntity with the biometric status message
+     * @return ResponseEntity with the biometric status
      */
     @GetMapping("/status")
-    public Optional<ResponseEntity<String>> getFacialStatus(Authentication authentication) {
+    public ResponseEntity<BiometricStatusResponse> getFacialStatus(Authentication authentication) {
         String authenticatedUserId = authentication.getName();
-        return accountBiometricsManagementService.getFacialStatus(authenticatedUserId).map(data -> ResponseEntity.ok("Biometric status: " + data.getBiometricsStatus()));
+        return accountBiometricsManagementService.getFacialStatus(authenticatedUserId).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
@@ -49,10 +49,10 @@ public class AccountBiometricsManagementController {
      * @return ResponseEntity with success message
      */
     @DeleteMapping("/delete")
-    public ResponseEntity<String> delateFacialData(Authentication authentication) {
+    public ResponseEntity<String> deleteFacialData(Authentication authentication) {
         String authenticatedUserId = authentication.getName();
         accountBiometricsManagementService.deleteFacialData(authenticatedUserId);
-        return ResponseEntity.ok("Facial data deleted from database successfully");
+        return ResponseEntity.ok("Your facial data has been deleted from our database successfully");
     }
 
 }

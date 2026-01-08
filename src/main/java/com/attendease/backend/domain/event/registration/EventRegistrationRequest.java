@@ -6,7 +6,6 @@ import lombok.Data;
 public final class EventRegistrationRequest {
 
     private String eventId;
-    private String locationId;
     private Double latitude;
     private Double longitude;
     private String faceImageBase64;

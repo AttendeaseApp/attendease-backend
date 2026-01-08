@@ -1,6 +1,7 @@
 package com.attendease.backend.student.service.account.biometrics.management;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.biometrics.status.BiometricStatusResponse;
 
 import java.util.Optional;
 
@@ -18,12 +19,11 @@ import java.util.Optional;
 public interface AccountBiometricsManagementService {
 
     /**
-     * Retrieves the facial biometric status for a given student number.
-     *
-     * @param authenticatedUserId the authenticated user id of the user
-     * @return Optional containing BiometricData if present, otherwise empty
+     * Get facial biometric status without exposing encoding data
+     * @param authenticatedUserId the authenticated user ID
+     * @return BiometricStatusResponse with safe information only
      */
-    Optional<BiometricData> getFacialStatus(String authenticatedUserId);
+    Optional<BiometricStatusResponse> getFacialStatus(String authenticatedUserId);
 
     /**
      * Recalibrates (deletes) the facial biometric data for the given student number.

@@ -1,9 +1,10 @@
-package com.attendease.backend.student.service.attendance.registration.tracking;
+package com.attendease.backend.student.service.location.tracking;
 
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
+import com.attendease.backend.domain.location.Location;
 
 /**
- * {@link AttendanceRegistrationTrackingService} is responsible for attendance verification during an event.
+ * {@link LocationTrackingService} is responsible for attendance verification during an event.
  * <p>
  * This service processes periodic geolocation "pings" sent by the student app to:
  * <ul>
@@ -14,7 +15,7 @@ import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrac
  * It is typically used to monitor presence throughout the duration of an event.
  * </p>
  */
-public interface AttendanceRegistrationTrackingService {
+public interface LocationTrackingService {
 
     /**
      * Processes and records a student's real-time location ping during an ongoing event.
@@ -32,5 +33,14 @@ public interface AttendanceRegistrationTrackingService {
      * @param attendancePingLogs  the ping information containing GPS coordinates, event ID, and location ID
      * @return {@code true} if the student is inside the event boundary; {@code false} otherwise
      */
-    boolean attendanceRegistrationTracker(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs);
+    boolean venueLocationMonitoring(String authenticatedUserId, AttendanceTrackingResponse attendancePingLogs);
+
+	/**
+	 * Retrieves the current venue location for an ongoing event.
+	 * Useful for client apps to display which location is being monitored.
+	 *
+	 * @param eventId the event ID
+	 * @return the venue location for monitoring
+	 */
+	Location getEventVenueForMonitoring(String eventId);
 }

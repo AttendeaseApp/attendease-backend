@@ -55,4 +55,5 @@ public final class EventManagementResponse {
     private List<String> clusterNames;
     private Boolean facialVerificationEnabled;
     private Boolean attendanceLocationMonitoringEnabled;
+    private Boolean strictLocationValidation;
 }

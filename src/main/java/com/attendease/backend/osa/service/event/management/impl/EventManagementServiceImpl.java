@@ -91,6 +91,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .eligibleStudents(domainCriteria)
                 .facialVerificationEnabled(request.getFacialVerificationEnabled())
                 .attendanceLocationMonitoringEnabled(request.getAttendanceLocationMonitoringEnabled())
+                .strictLocationValidation(request.getStrictLocationValidation())
                 .academicYear(activeAcademicYear)
                 .academicYearId(activeAcademicYear.getId())
                 .academicYearName(activeAcademicYear.getAcademicYearName())
@@ -122,6 +123,8 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         eventSession.setVenueLocation(venueLocation);
         eventSession.setVenueLocationName(venueLocation.getLocationName());
+
+        validateStrictLocationValidation(eventSession);
 
         validateDateRange(eventSession.getRegistrationDateTime(), eventSession.getStartingDateTime(), eventSession.getEndingDateTime());
         eventSession.setEventStatus(EventStatus.UPCOMING);
@@ -213,6 +216,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
         if (updateEvent.getAttendanceLocationMonitoringEnabled() != null) {
             existingEvent.setAttendanceLocationMonitoringEnabled(updateEvent.getAttendanceLocationMonitoringEnabled());
         }
+        if (updateEvent.getStrictLocationValidation() != null) {
+            existingEvent.setStrictLocationValidation(updateEvent.getStrictLocationValidation());
+        }
 
         if (updateEvent.getAcademicYearId() != null) {
             Academic newAcademicYear = academicRepository
@@ -273,6 +279,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
             }
 
             validateLocationPurposes(existingEvent.getRegistrationLocation(), existingEvent.getVenueLocation());
+            validateStrictLocationValidation(existingEvent);
         } else if (existingEvent.getRegistrationLocationId() == null || existingEvent.getVenueLocationId() == null) {
             throw new IllegalArgumentException("Registration and venue location cannot be removed or left unset");
         }
@@ -651,6 +658,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .allStudents(criteria == null || criteria.isAllStudents())
                 .facialVerificationEnabled(event.getFacialVerificationEnabled())
                 .attendanceLocationMonitoringEnabled(event.getAttendanceLocationMonitoringEnabled())
+                .strictLocationValidation(event.getStrictLocationValidation())
                 .academicYearId(event.getAcademicYearId())
                 .academicYearName(event.getAcademicYearName())
                 .semester(event.getSemester())
@@ -691,6 +699,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .allStudents(criteria == null || criteria.isAllStudents())
                 .facialVerificationEnabled(event.getFacialVerificationEnabled())
                 .attendanceLocationMonitoringEnabled(event.getAttendanceLocationMonitoringEnabled())
+                .strictLocationValidation(event.getStrictLocationValidation())
                 .academicYearId(event.getAcademicYearId())
                 .academicYearName(event.getAcademicYearName())
                 .semester(event.getSemester())
@@ -742,5 +751,17 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .orElseThrow(() -> new IllegalStateException(
                         "No active academic year found. Please set an active academic year first."
                 ));
+    }
+    private void validateStrictLocationValidation(Event event) {
+        if (Boolean.TRUE.equals(event.getStrictLocationValidation())) {
+            if (event.getRegistrationLocationId() != null &&
+                    event.getVenueLocationId() != null &&
+                    event.getRegistrationLocationId().equals(event.getVenueLocationId())) {
+                throw new IllegalArgumentException(
+                        "Strict location validation cannot be enabled when registration and venue locations are the same. " +
+                                "This feature requires separate registration and venue areas."
+                );
+            }
+        }
     }
 }

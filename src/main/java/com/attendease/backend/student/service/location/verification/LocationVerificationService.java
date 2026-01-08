@@ -36,5 +36,33 @@ public interface LocationVerificationService {
      *             <li>The target location does not exist</li>
      *         </ul>
      */
-    LocationTrackingResponse trackCurrentLocation(LocationTrackingRequest request);
+    LocationTrackingResponse verifyCurrentLocation(LocationTrackingRequest request);
+
+    /**
+     * Verifies if student is within the event's venue location.
+     * This is specifically for ongoing monitoring during the event.
+     *
+     * @param eventId the event ID
+     * @param latitude student's current latitude
+     * @param longitude student's current longitude
+     * @return tracking response with verification status
+     */
+    LocationTrackingResponse verifyEventVenueLocation(String eventId, double latitude, double longitude);
+
+    /**
+     * Verifies if student is within the event's registration location.
+     * This is used during the registration/check-in phase.
+     *
+     * @param eventId the event ID
+     * @param latitude student's current latitude
+     * @param longitude student's current longitude
+     * @return tracking response with verification status
+     */
+    LocationTrackingResponse verifyEventRegistrationLocation(String eventId, double latitude, double longitude);
+
+    LocationTrackingResponse verifyEventVenueLocationWithAutoUpgrade(
+            String authenticatedUserId,
+            String eventId,
+            double latitude,
+            double longitude);
 }

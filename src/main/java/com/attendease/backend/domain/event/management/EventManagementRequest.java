@@ -62,4 +62,7 @@ public final class EventManagementRequest {
 
     @JsonProperty("attendanceLocationMonitoringEnabled")
     private Boolean attendanceLocationMonitoringEnabled;
+
+    @JsonProperty("strictLocationValidation")
+    private Boolean strictLocationValidation;
 }
