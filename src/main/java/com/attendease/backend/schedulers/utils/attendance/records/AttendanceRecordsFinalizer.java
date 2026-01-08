@@ -3,6 +3,7 @@ package com.attendease.backend.schedulers.utils.attendance.records;
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;
 import com.attendease.backend.domain.course.Course;
+import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.event.Event;
@@ -186,41 +187,39 @@ public class AttendanceRecordsFinalizer {
 
     private List<Students> getExpectedStudentsForEvent(Event event) {
         EventEligibility criteria = event.getEligibleStudents();
+        List<Students> expectedStudents;
+
         if (criteria == null || criteria.isAllStudents()) {
-            return studentRepository.findAll();
-        }
-        if (!CollectionUtils.isEmpty(criteria.getSections())) {
-            List<Students> expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
-            log.info("Total expected student for event {}: {} (from {} sections)",
-                    event.getEventId(), expectedStudents.size(), criteria.getSections().size());
-            return expectedStudents;
-        }
-        Set<Students> uniqueStudents = new HashSet<>();
+            expectedStudents = studentRepository.findAll();
+        } else if (!CollectionUtils.isEmpty(criteria.getSections())) {
+            expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
+        } else {
+            Set<Students> uniqueStudents = new HashSet<>();
 
-        if (!CollectionUtils.isEmpty(criteria.getCourses())) {
-            List<Section> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
-            List<String> allSectionIds = courseSections.stream().map(Section::getId).collect(Collectors.toList());
-            if (!allSectionIds.isEmpty()) {
-                List<Students> courseStudents = studentRepository.findBySectionIdIn(allSectionIds);
-                uniqueStudents.addAll(courseStudents);
-            }
-        }
-
-        if (!CollectionUtils.isEmpty(criteria.getClusters())) {
-            List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
-            List<String> allCourseIds = clusterCourses.stream().map(Course::getId).collect(Collectors.toList());
-            if (!allCourseIds.isEmpty()) {
-                List<Section> clusterSections = sectionRepository.findByCourseIdIn(allCourseIds);
-                List<String> allClusterSectionIds = clusterSections.stream().map(Section::getId).collect(Collectors.toList());
-                if (!allClusterSectionIds.isEmpty()) {
-                    List<Students> clusterStudents = studentRepository.findBySectionIdIn(allClusterSectionIds);
-                    uniqueStudents.addAll(clusterStudents);
+            if (!CollectionUtils.isEmpty(criteria.getCourses())) {
+                List<Section> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
+                List<String> sectionIds = courseSections.stream().map(Section::getId).toList();
+                if (!sectionIds.isEmpty()) {
+                    uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
                 }
             }
+
+            if (!CollectionUtils.isEmpty(criteria.getClusters())) {
+                List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
+                List<String> courseIds = clusterCourses.stream().map(Course::getId).toList();
+                if (!courseIds.isEmpty()) {
+                    List<Section> clusterSections = sectionRepository.findByCourseIdIn(courseIds);
+                    List<String> sectionIds = clusterSections.stream().map(Section::getId).toList();
+                    if (!sectionIds.isEmpty()) {
+                        uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
+                    }
+                }
+            }
+            expectedStudents = new ArrayList<>(uniqueStudents);
         }
 
-        List<Students> expected = new ArrayList<>(uniqueStudents);
-        log.info("Total expected student for event {}: {} (fallback from courses/clusters)", event.getEventId(), expected.size());
-        return expected;
+        expectedStudents = expectedStudents.stream().filter(s -> s.getUser() != null && s.getUser().getAccountStatus() == AccountStatus.ACTIVE).toList();
+        log.info("Total expected ACTIVE students for event {}: {}", event.getEventId(), expectedStudents.size());
+        return expectedStudents;
     }
 }
