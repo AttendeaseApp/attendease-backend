@@ -54,6 +54,28 @@ public class ManagementUserAccountController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/students/active")
+    public List<UserStudentResponse> activeStudents() {
+        return managementUserAccountService.retrieveActiveStudents();
+    }
+
+    @GetMapping("/students/inactive")
+    public List<UserStudentResponse> inactiveStudents() {
+        return managementUserAccountService.retrieveInactiveStudents();
+    }
+
+    @PostMapping("/students/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bulkActivate(@RequestBody List<String> userIds) {
+        managementUserAccountService.bulkActivateStudents(userIds);
+    }
+
+    @PostMapping("/students/deactivate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bulkDeactivate(@RequestBody List<String> userIds) {
+        managementUserAccountService.bulkDeactivateStudents(userIds);
+    }
+
     /**
      * Imports student from an uploaded CSV file, creating new user accounts and student entities.
      *

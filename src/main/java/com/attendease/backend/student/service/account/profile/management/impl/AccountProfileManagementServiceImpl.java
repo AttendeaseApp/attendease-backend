@@ -1,10 +1,12 @@
 package com.attendease.backend.student.service.account.profile.management.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
+import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.domain.student.Students;
 import com.attendease.backend.domain.student.user.student.UserStudentResponse;
 import com.attendease.backend.domain.user.User;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
+import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import java.util.Optional;
@@ -22,6 +24,7 @@ public class AccountProfileManagementServiceImpl implements AccountProfileManage
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final BiometricsRepository biometricsRepository;
+    private final SectionRepository sectionRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserValidator userValidator;
 
@@ -52,19 +55,31 @@ public class AccountProfileManagementServiceImpl implements AccountProfileManage
             builder.studentId(student.getId())
                     .studentNumber(student.getStudentNumber());
 
-            if (student.getSection() != null) {
-                builder.sectionId(student.getSection().getId())
-                        .section(student.getSection().getSectionName());
+            Section fullSection = null;
+            if (student.getCurrentSectionId() != null) {
+                fullSection = sectionRepository.findById(student.getCurrentSectionId()).orElse(null);
+            } else if (student.getSection() != null) {
+                fullSection = student.getSection();
+            } else if (student.getSectionName() != null) {
+                fullSection = sectionRepository.findBySectionName(student.getSectionName()).orElse(null);
+            }
 
-                if (student.getSection().getCourse() != null) {
-                    builder.courseId(student.getSection().getCourse().getId())
-                            .course(student.getSection().getCourse().getCourseName());
-
-                    if (student.getSection().getCourse().getCluster() != null) {
-                        builder.clusterId(student.getSection().getCourse().getCluster().getClusterId())
-                                .cluster(student.getSection().getCourse().getCluster().getClusterName());
+            if (fullSection != null) {
+                builder.sectionId(fullSection.getId())
+                        .section(fullSection.getSectionName());
+                if (fullSection.getCourse() != null) {
+                    builder.courseId(fullSection.getCourse().getId())
+                            .course(fullSection.getCourse().getCourseName());
+                    if (fullSection.getCourse().getCluster() != null) {
+                        builder.clusterId(fullSection.getCourse().getCluster().getClusterId())
+                                .cluster(fullSection.getCourse().getCluster().getClusterName());
                     }
                 }
+            } else {
+                builder.section(student.getSectionName())
+                        .sectionId(student.getCurrentSectionId())
+                        .course(student.getCourseName())
+                        .cluster(student.getClusterName());
             }
 
             /*if only available, this data will be added*/

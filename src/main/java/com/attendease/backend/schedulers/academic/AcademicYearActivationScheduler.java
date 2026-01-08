@@ -1,12 +1,19 @@
 package com.attendease.backend.schedulers.academic;
 
 import com.attendease.backend.domain.academic.Academic;
+import com.attendease.backend.domain.enums.AccountStatus;
+import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.enums.academic.AcademicYearStatus;
 import com.attendease.backend.domain.enums.academic.Semester;
 import com.attendease.backend.domain.section.Section;
+import com.attendease.backend.domain.student.Students;
+import com.attendease.backend.domain.student.history.SectionHistory;
+import com.attendease.backend.domain.user.User;
 import com.attendease.backend.osa.service.academic.year.management.AcademicYearManagementService;
 import com.attendease.backend.repository.academic.AcademicRepository;
 import com.attendease.backend.repository.section.SectionRepository;
+import com.attendease.backend.repository.students.StudentRepository;
+import com.attendease.backend.repository.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +47,8 @@ public class AcademicYearActivationScheduler {
 	private final AcademicRepository academicRepository;
 	private final AcademicYearManagementService academicYearManagementService;
 	private final SectionRepository sectionRepository;
+	private final StudentRepository studentRepository;
+	private final UserRepository userRepository;
 
 	@Scheduled(cron = "0 0 0 * * ?")
 	@Transactional
@@ -160,6 +170,7 @@ public class AcademicYearActivationScheduler {
 		AcademicYearStatus status = calculateStatus(activeYear, today);
 		if (status == AcademicYearStatus.COMPLETED) {
 			try {
+				deactivateStudentsForAcademicYear(activeYear);
 				deactivateSectionsForAcademicYear(activeYear);
 			} catch (IllegalStateException e) {
 				log.warn("Could not deactivate completed academic year '{}': {}", activeYear.getAcademicYearName(), e.getMessage());
@@ -167,8 +178,32 @@ public class AcademicYearActivationScheduler {
 		}
 	}
 
+	private void deactivateStudentsForAcademicYear(Academic academic) {
+		List<Section> completedSections = sectionRepository.findBySemesterIn(List.of(Semester.FIRST.getNumber(), Semester.SECOND.getNumber()));
+		if (completedSections.isEmpty()) {
+			log.debug("No sections found, skipping student deactivation");
+			return;
+		}
+		int totalDeactivated = 0;
+		for (Section section : completedSections) {
+			List<Students> studentsInSection = studentRepository.findBySection(section);
+			for (Students student : studentsInSection) {
+				archiveSectionToHistory(student, section, academic);
+				User user = student.getUser();
+				if (user.getAccountStatus() == AccountStatus.ACTIVE) {
+					user.setAccountStatus(AccountStatus.INACTIVE);
+					user.setUpdatedBy(String.valueOf(UserType.SYSTEM));
+					userRepository.save(user);
+					totalDeactivated++;
+					log.debug("Deactivated student: {} ({})", student.getStudentNumber(), student.getUser().getEmail());
+				}
+			}
+		}
+		log.info("Deactivated {} student accounts for completed academic year '{}'", totalDeactivated, academic.getAcademicYearName());
+	}
+
 	private void deactivateSectionsForAcademicYear(Academic academic) {
-		List<Section> sectionsToDeactivate = sectionRepository.findBySemesterIn(List.of(1, 2));
+		List<Section> sectionsToDeactivate = sectionRepository.findBySemesterIn(List.of(Semester.FIRST.getNumber(), Semester.SECOND.getNumber()));
 
 		if (sectionsToDeactivate.isEmpty()) {
 			log.debug("No sections found to deactivate for academic year '{}'", academic.getAcademicYearName());
@@ -187,7 +222,7 @@ public class AcademicYearActivationScheduler {
 			return;
 		}
 
-		int currentSemesterNumber = activeYear.getCurrentSemester().getNumber(); // 1 or 2
+		int currentSemesterNumber = activeYear.getCurrentSemester().getNumber();
 
 		List<Section> inactiveSections = sectionRepository.findBySemesterAndIsActiveFalse(currentSemesterNumber);
 
@@ -199,7 +234,32 @@ public class AcademicYearActivationScheduler {
 		inactiveSections.forEach(section -> section.setIsActive(true));
 		sectionRepository.saveAll(inactiveSections);
 
-		log.info("Sections activated for semester {} of academic year '{}'",
-				currentSemesterNumber, activeYear.getAcademicYearName());
+		log.info("Activated {} sections for semester {} of academic year '{}'", inactiveSections.size(), currentSemesterNumber, activeYear.getAcademicYearName());
+	}
+
+	private void archiveSectionToHistory(Students student, Section section, Academic academic) {
+		if (student.getSectionHistory() == null) {
+			student.setSectionHistory(new ArrayList<>());
+		}
+
+		boolean alreadyArchived = student.getSectionHistory().stream()
+				.anyMatch(history ->
+						history.getSectionId().equals(section.getId()) &&
+								history.getAcademicYearId().equals(academic.getId())
+				);
+
+		if (!alreadyArchived) {
+			SectionHistory history = SectionHistory.builder()
+					.sectionId(section.getId())
+					.sectionName(section.getSectionName())
+					.academicYearId(academic.getId())
+					.academicYearName(academic.getAcademicYearName())
+					.yearLevel(String.valueOf(student.getYearLevel()))
+					.startDate(academic.getFirstSemesterStart())
+					.endDate(academic.getSecondSemesterEnd())
+					.build();
+			student.getSectionHistory().add(history);
+			studentRepository.save(student);
+		}
 	}
 }

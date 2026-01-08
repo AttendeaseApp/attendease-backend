@@ -47,6 +47,26 @@ public interface ManagementUserAccountService {
     List<UserStudentResponse> retrieveUsers();
 
     /**
+     * {@code retrieveActiveStudents} is used to retrieve all students that has AccountStatus ACTIVE status, this retrieves also
+     * with their associated student details, if applicable.
+     *
+     * @return a list of {@link UserStudentResponse} objects enriched with student information where relevant
+     */
+    List<UserStudentResponse> retrieveActiveStudents();
+
+    /**
+     * {@code retrieveInactiveStudents} is used to retrieve all students that has AccountStatus INACTIVE status, this retrieves also
+     * with their associated student details, if applicable.
+     *
+     * @return a list of {@link UserStudentResponse} objects enriched with student information where relevant
+     */
+    List<UserStudentResponse> retrieveInactiveStudents();
+
+    void bulkActivateStudents(List<String> userIds);
+
+    void bulkDeactivateStudents(List<String> userIds);
+
+    /**
      * {@code retrieveAllStudents} is used to retrieve all student entities from the database.
      *
      * @return a list of all {@link Students} objects

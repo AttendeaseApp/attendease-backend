@@ -1,8 +1,6 @@
 package com.attendease.backend.osa.service.management.user.account.impl;
 
 import com.attendease.backend.domain.biometrics.BiometricData;
-import com.attendease.backend.domain.cluster.Cluster;
-import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.AccountStatus;
 import com.attendease.backend.domain.enums.UserType;
 import com.attendease.backend.domain.exception.error.csv.CsvImportErrorResponse;
@@ -114,6 +112,28 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     }
 
     @Override
+    public List<UserStudentResponse> retrieveActiveStudents() {
+        return retrieveStudentsByAccountStatus(AccountStatus.ACTIVE);
+    }
+
+    @Override
+    public List<UserStudentResponse> retrieveInactiveStudents() {
+        return retrieveStudentsByAccountStatus(AccountStatus.INACTIVE);
+    }
+
+    @Override
+    @Transactional
+    public void bulkActivateStudents(List<String> userIds) {
+        bulkUpdateStudentAccountStatus(userIds, AccountStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional
+    public void bulkDeactivateStudents(List<String> userIds) {
+        bulkUpdateStudentAccountStatus(userIds, AccountStatus.INACTIVE);
+    }
+
+    @Override
     public List<UserStudentResponse> retrieveAllStudents() {
         List<Students> students = studentRepository.findAll();
         if (students.isEmpty())
@@ -121,10 +141,16 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
             log.info("No students found");
             return Collections.emptyList();
         }
-        List<String> userIds = students.stream().map(Students::getUserId).filter(Objects::nonNull).distinct().toList();
+        List<String> userIds = students.stream()
+                .map(Students::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
         List<User> users = userRepository.findAllById(userIds);
         Map<String, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, u -> u));
-        return students.stream().map(student -> mapToResponseDTO(userMap.get(student.getUserId()), student)).collect(Collectors.toList());
+        return students.stream()
+                .map(student -> mapToResponseDTO(userMap.get(student.getUserId()), student))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -147,22 +173,81 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     public void deleteStudentsBySection(String sectionName) {
         userValidator.validateFullCourseSectionFormat(sectionName);
         Section section = sectionRepository.findBySectionName(sectionName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found: " + sectionName));
-        List<Students> students = studentRepository.findBySection(section);
-        if (students.isEmpty())
-        {
+
+        List<Students> studentsByName = studentRepository.findBySectionName(sectionName);
+        List<Students> studentsBySectionId = studentRepository.findByCurrentSectionId(section.getId());
+        List<Students> studentsByDBRef = studentRepository.findBySection(section);
+        Set<Students> allStudents = new HashSet<>();
+        allStudents.addAll(studentsByName);
+        allStudents.addAll(studentsBySectionId);
+        allStudents.addAll(studentsByDBRef);
+
+        List<Students> students = new ArrayList<>(allStudents);
+
+        if (students.isEmpty()) {
             log.info("No students found in section: {}", sectionName);
             return;
         }
         List<String> userIds = students.stream().map(Students::getUserId).toList();
-        students.stream().filter(s -> s.getFacialData() != null).forEach(s -> biometricsRepository.deleteById(s.getFacialData().getFacialId()));
+        students.stream()
+                .filter(s -> s.getFacialData() != null)
+                .forEach(s -> biometricsRepository.deleteById(s.getFacialData().getFacialId()));
         studentRepository.deleteAll(students);
         userRepository.deleteAllById(userIds);
-        log.info("Deleted {} students and their associated user accounts from section: {}", students.size(), sectionName);
+        log.info("Deleted {} students and their associated user accounts from section: {}",
+                students.size(), sectionName);
     }
 
     /**
      * PRIVATE HELPERS
      */
+
+    private List<UserStudentResponse> retrieveStudentsByAccountStatus(AccountStatus status) {
+        List<User> users = userRepository.findByUserTypeAndAccountStatus(UserType.STUDENT, status);
+        if (users.isEmpty()) {
+            log.info("No {} students found", status);
+            return Collections.emptyList();
+        }
+        List<Students> students = studentRepository.findByUserIn(users);
+        Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
+        return users.stream()
+                .map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId())))
+                .collect(Collectors.toList());
+    }
+
+    private void bulkUpdateStudentAccountStatus(List<String> userIds, AccountStatus targetStatus) {
+        if (userIds == null || userIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID list must not be empty");
+        }
+
+        List<User> users = userRepository.findAllById(userIds);
+
+        if (users.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No users found for the provided IDs");
+        }
+
+        List<User> nonStudents = users.stream().filter(u -> u.getUserType() != UserType.STUDENT).toList();
+
+        if (!nonStudents.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bulk operation allowed for STUDENT accounts only");
+        }
+
+        List<User> toUpdate = users.stream()
+                .filter(u -> u.getAccountStatus() != targetStatus)
+                .peek(u -> {
+                    u.setAccountStatus(targetStatus);
+                    u.setUpdatedBy(String.valueOf(UserType.OSA));
+                }).toList();
+
+        if (toUpdate.isEmpty()) {
+            log.info("No student accounts needed status update to {}", targetStatus);
+            return;
+        }
+
+        userRepository.saveAll(toUpdate);
+        log.info("Bulk updated {} student accounts to status {}", toUpdate.size(), targetStatus);
+    }
+
 
     private boolean isValidRowData(UserAccountManagementUsersCSVRowData data) {
         return data.getFirstName() != null &&
@@ -207,6 +292,9 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         userValidator.validateStudentNumber(data.getStudentNumber());
 
         Section section = null;
+        String courseName = null;
+        String clusterName = null;
+
         if (data.getSectionName() != null && !data.getSectionName().isBlank()) {
             userValidator.validateFullCourseSectionFormat(data.getSectionName());
             section = sectionRepository.findBySectionName(data.getSectionName())
@@ -215,6 +303,12 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                                     "Please create this section first using the Academic Management, " +
                                     "then re-import the CSV."
                     ));
+            if (section.getCourse() != null) {
+                courseName = section.getCourse().getCourseName();
+                if (section.getCourse().getCluster() != null) {
+                    clusterName = section.getCourse().getCluster().getClusterName();
+                }
+            }
         }
 
         User user = User.builder()
@@ -235,7 +329,10 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 .userId(savedUser.getUserId())
                 .studentNumber(data.getStudentNumber())
                 .section(section)
+                .currentSectionId(section != null ? section.getId() : null)
                 .sectionName(section != null ? section.getSectionName() : null)
+                .courseName(courseName)
+                .clusterName(clusterName)
                 .build();
 
         studentRepository.save(student);
@@ -244,13 +341,14 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
     }
 
     public UserStudentResponse mapToResponseDTO(User user, Students student) {
-        Optional<Students> optStudent = Optional.ofNullable(student);
-        Optional<Section> optSection = optStudent.map(Students::getSection);
-        Optional<Course> optCourse = optSection.map(Section::getCourse);
-        Optional<Cluster> optCluster = optCourse.map(Course::getCluster);
-        Optional<BiometricData> optBiometric = optStudent.map(Students::getFacialData);
+        if (student == null) {
+            return buildUserOnlyResponse(user);
+        }
 
-        return UserStudentResponse.builder()
+        Section fullSection = resolveSection(student);
+        Optional<BiometricData> optBiometric = Optional.ofNullable(student.getFacialData());
+
+        UserStudentResponse.UserStudentResponseBuilder builder = UserStudentResponse.builder()
                 // parent data of USER/STUDENT
                 .userId(user != null ? user.getUserId() : null)
                 .firstName(user != null ? user.getFirstName() : null)
@@ -263,23 +361,67 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
                 .updatedAt(user != null ? user.getUpdatedAt() : null)
 
                 // basic data of STUDENT
-                .studentId(optStudent.map(Students::getId).orElse(null))
-                .studentNumber(optStudent.map(Students::getStudentNumber).orElse(null))
-
-                // academic data of STUDENT
-                .section(optSection.map(Section::getSectionName).orElse(null))
-                .sectionId(optSection.map(Section::getId).orElse(null))
-                .course(optCourse.map(Course::getCourseName).orElse(null))
-                .courseId(optCourse.map(Course::getId).orElse(null))
-                .cluster(optCluster.map(Cluster::getClusterName).orElse(null))
-                .clusterId(optCluster.map(Cluster::getClusterId).orElse(null))
+                .studentId(student.getId())
+                .studentNumber(student.getStudentNumber())
 
                 // biometric data of STUDENT
                 .biometricId(optBiometric.map(BiometricData::getFacialId).orElse(null))
                 .biometricStatus(optBiometric.map(BiometricData::getBiometricsStatus).orElse(null))
                 .biometricCreatedAt(optBiometric.map(BiometricData::getCreatedAt).orElse(null))
                 .biometricLastUpdated(optBiometric.map(BiometricData::getLastUpdated).orElse(null))
-                .hasBiometricData(optBiometric.isPresent())
+                .hasBiometricData(optBiometric.isPresent());
+
+        if (fullSection != null) {
+            builder.section(fullSection.getSectionName())
+                    .sectionId(fullSection.getId());
+
+            if (fullSection.getCourse() != null) {
+                builder.course(fullSection.getCourse().getCourseName())
+                        .courseId(fullSection.getCourse().getId());
+
+                if (fullSection.getCourse().getCluster() != null) {
+                    builder.cluster(fullSection.getCourse().getCluster().getClusterName())
+                            .clusterId(fullSection.getCourse().getCluster().getClusterId());
+                }
+            }
+        } else {
+            builder.section(student.getSectionName())
+                    .sectionId(student.getCurrentSectionId())
+                    .course(student.getCourseName())
+                    .cluster(student.getClusterName());
+        }
+
+        return builder.build();
+    }
+
+    private Section resolveSection(Students student) {
+        if (student.getCurrentSectionId() != null) {
+            Optional<Section> sectionOpt = sectionRepository.findById(student.getCurrentSectionId());
+            if (sectionOpt.isPresent()) {
+                return sectionOpt.get();
+            }
+        }
+        if (student.getSection() != null) {
+            return student.getSection();
+        }
+        if (student.getSectionName() != null) {
+            return sectionRepository.findBySectionName(student.getSectionName()).orElse(null);
+        }
+        return null;
+    }
+
+    private UserStudentResponse buildUserOnlyResponse(User user) {
+        return UserStudentResponse.builder()
+                .userId(user != null ? user.getUserId() : null)
+                .firstName(user != null ? user.getFirstName() : null)
+                .lastName(user != null ? user.getLastName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .contactNumber(user != null ? user.getContactNumber() : null)
+                .accountStatus(user != null ? user.getAccountStatus() : null)
+                .userType(user != null ? user.getUserType() : null)
+                .createdAt(user != null ? user.getCreatedAt() : null)
+                .updatedAt(user != null ? user.getUpdatedAt() : null)
+                .hasBiometricData(false)
                 .build();
     }
 }
