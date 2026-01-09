@@ -22,7 +22,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Value("${spring.data.mongodb.database:attendease_db}")
     private String databaseName;
 
-    @Value("${spring.data.mongodb.uri:#{null}}")
+    @Value("${spring.data.mongodb.uri:}")
     private String mongoUri;
 
     @Value("${spring.data.mongodb.host:localhost}")
@@ -40,9 +40,10 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Bean
     public MongoClient mongoClient() {
         String uri;
-        if (mongoUri != null && !mongoUri.isEmpty()) {
+
+        if (mongoUri != null && !mongoUri.trim().isEmpty()) {
             uri = mongoUri;
-            log.info("Connecting to MongoDB Atlas with URI");
+            log.info("Connecting to MongoDB using URI (Atlas or remote)");
         } else {
             uri = String.format("mongodb://%s:%d/%s", mongoHost, mongoPort, databaseName);
             log.info("Connecting to MongoDB at {}:{}/{}", mongoHost, mongoPort, databaseName);
