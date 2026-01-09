@@ -1,0 +1,27 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/attendease_db
+      database: attendease_db
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:0gIcxb4s5qmWscBo58iu4BBb7FczeCVrOqldrTta98iwkSW9LTxAtMh0cUJ5dobmXHmntxbn55wkWOFxtAgXTA==}
+
+# FACIAL RECOGNITION SERVICE (LOCAL)
+facial:
+  recognition:
+    service:
+      url: http://127.0.0.1:8001/
+  verification:
+    endpoint: ${facial.recognition.service.url}verification/authenticate-face
+
+extract:
+  multiple:
+    facial:
+      encoding:
+        endpoint: ${facial.recognition.service.url}extract-multiple-face-encodings
+  single:
+    facial:
+      encoding:
+        endpoint: ${facial.recognition.service.url}extract-face-encoding
