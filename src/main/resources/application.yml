@@ -2,9 +2,7 @@ spring:
   application:
     name: attendease-backend
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:prod} # change this local if running locally
-  config:
-    import: "optional:file:/etc/secrets/application-prod.yml"
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   data:
     mongodb:
       auto-index-creation: true
@@ -42,16 +40,6 @@ logging:
           configurations: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-
-# SYSTEM INFORMATION
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  info:
-    env:
-      enabled: true
 
 info:
   timezone: ${user.timezone:UTC}
