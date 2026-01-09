@@ -3,6 +3,8 @@ spring:
     name: attendease-backend
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod} # change this local if running locally
+  config:
+    import: "optional:file:/etc/secrets/application-prod.yml"
   data:
     mongodb:
       auto-index-creation: true
