@@ -2,7 +2,7 @@ spring:
   application:
     name: attendease-backend
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: ${SPRING_PROFILES_ACTIVE:prod} # change this local if running locally
   data:
     mongodb:
       auto-index-creation: true
