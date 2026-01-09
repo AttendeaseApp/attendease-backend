@@ -19,17 +19,11 @@ import java.util.concurrent.TimeUnit;
 @EnableMongoRepositories(basePackages = "com.attendease.backend.repository")
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Value("${spring.data.mongodb.database:attendease_db}")
+    @Value("${spring.data.mongodb.database}")
     private String databaseName;
 
-    @Value("${spring.data.mongodb.uri:}")
+    @Value("${spring.data.mongodb.uri}")
     private String mongoUri;
-
-    @Value("${spring.data.mongodb.host:localhost}")
-    private String mongoHost;
-
-    @Value("${spring.data.mongodb.port:27017}")
-    private int mongoPort;
 
     @Override
     protected String getDatabaseName() {
@@ -39,21 +33,12 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Override
     @Bean
     public MongoClient mongoClient() {
-        String uri;
-
-        if (mongoUri != null && !mongoUri.trim().isEmpty()) {
-            uri = mongoUri;
-            log.info("Connecting to MongoDB using URI (Atlas or remote)");
-        } else {
-            uri = String.format("mongodb://%s:%d/%s", mongoHost, mongoPort, databaseName);
-            log.info("Connecting to MongoDB at {}:{}/{}", mongoHost, mongoPort, databaseName);
-        }
-
-        String sanitizedUri = uri.replaceAll("://[^@]*@", "://***:***@");
+        log.info("Connecting to MongoDB using URI");
+        String sanitizedUri = mongoUri.replaceAll("://[^@]*@", "://***:***@");
         log.info("MongoDB URI: {}", sanitizedUri);
 
         MongoClientSettings settings = MongoClientSettings.builder()
-                .applyConnectionString(new ConnectionString(uri))
+                .applyConnectionString(new ConnectionString(mongoUri))
                 .applyToConnectionPoolSettings(builder ->
                         builder.maxSize(10)
                                 .minSize(5)
