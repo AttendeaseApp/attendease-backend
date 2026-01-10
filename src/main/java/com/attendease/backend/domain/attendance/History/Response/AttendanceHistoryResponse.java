@@ -15,6 +15,8 @@ public class AttendanceHistoryResponse {
 
     private String eventId;
     private String eventName;
+    private String academicYearName;
+    private String semesterName;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeIn;

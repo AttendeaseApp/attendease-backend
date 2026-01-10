@@ -35,6 +35,8 @@ public class AttendanceHistoryServiceImpl implements AttendanceHistoryService {
                 AttendanceHistoryResponse.builder()
                     .eventId(record.getEvent().getEventId())
                     .eventName(record.getEvent().getEventName())
+                        .academicYearName(record.getEvent().getAcademicYearName())
+                        .semesterName(record.getSemesterName())
                     .timeIn(record.getTimeIn())
                     .timeOut(record.getTimeOut())
                     .attendanceStatus(record.getAttendanceStatus())
