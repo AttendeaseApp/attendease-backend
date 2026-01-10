@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-Sep-19
  */
 @RestController
-@RequestMapping("/api/clusters")
+@RequestMapping("/api/osa/clusters")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class ClusterManagementController {

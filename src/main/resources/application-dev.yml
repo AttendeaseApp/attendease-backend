@@ -8,6 +8,14 @@ spring:
 jwt:
   secret: ${JWT_SECRET:0gIcxb4s5qmWscBo58iu4BBb7FczeCVrOqldrTta98iwkSW9LTxAtMh0cUJ5dobmXHmntxbn55wkWOFxtAgXTA==}
 
+# DEVELOPER ENVIRONMENT CORS CONFIGURATIONS
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:3001
+    - http://localhost:5173
+  osa-path-pattern: /api/osa/**
+
 # FACIAL RECOGNITION SERVICE (LOCAL)
 facial:
   recognition:
