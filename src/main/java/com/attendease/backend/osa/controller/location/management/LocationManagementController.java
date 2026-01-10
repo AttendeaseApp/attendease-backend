@@ -21,7 +21,7 @@ import java.util.List;
  * @since 2025-09-16
  */
 @RestController
-@RequestMapping("/api/locations")
+@RequestMapping("/api/osa/location/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class LocationManagementController {
@@ -38,10 +38,23 @@ public class LocationManagementController {
      * @param request the {@link LocationManagementRequest} containing details such as location name, type, and geometry
      * @return the {@link LocationManagementResponse} representing the newly created location, including centroid
      */
-    @PostMapping
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public LocationManagementResponse createLocation(@Valid @RequestBody LocationManagementRequest request) {
         return locationManagementService.createNewLocation(request);
+    }
+
+    /**
+     * Retrieves all event locations stored in the system.
+     *
+     * <p>Returns a list of all locations with their details, including computed centroid coordinates for each.
+     * Suitable for listing or dashboard views.</p>
+     *
+     * @return a {@link List} of {@link LocationManagementResponse} objects, each containing location details and centroid
+     */
+    @GetMapping("/all")
+    public List<LocationManagementResponse> getAllLocations() {
+        return locationManagementService.getAllLocations();
     }
 
     /**
@@ -55,22 +68,9 @@ public class LocationManagementController {
      * @param request the {@link LocationManagementRequest} containing the fields to update (partial updates supported)
      * @return the {@link LocationManagementResponse} representing the updated location, including centroid
      */
-    @PatchMapping("/{locationId}")
+    @PatchMapping("/{locationId}/update")
     public LocationManagementResponse updateLocation(@PathVariable String locationId, @Valid @RequestBody LocationManagementRequest request) {
         return locationManagementService.updateLocation(locationId, request);
-    }
-
-    /**
-     * Retrieves all event locations stored in the system.
-     *
-     * <p>Returns a list of all locations with their details, including computed centroid coordinates for each.
-     * Suitable for listing or dashboard views.</p>
-     *
-     * @return a {@link List} of {@link LocationManagementResponse} objects, each containing location details and centroid
-     */
-    @GetMapping
-    public List<LocationManagementResponse> getAllLocations() {
-        return locationManagementService.getAllLocations();
     }
 
     /**
@@ -80,7 +80,7 @@ public class LocationManagementController {
      *
      * @param locationId the unique identifier of the event location to delete
      */
-    @DeleteMapping("/{locationId}")
+    @DeleteMapping("/{locationId}/delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLocation(@PathVariable String locationId) {
         locationManagementService.deleteLocationById(locationId);
