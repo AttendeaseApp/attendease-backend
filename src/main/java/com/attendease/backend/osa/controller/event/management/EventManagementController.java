@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-Sep-16
  */
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/api/osa/event/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class EventManagementController {
@@ -44,7 +44,7 @@ public class EventManagementController {
      *
      * @param request the validated {@link EventManagementRequest} object
      */
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<EventManagementResponse> createEvent(@Valid @RequestBody EventManagementRequest request) {
         EventManagementResponse response = eventManagementService.createEvent(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -74,7 +74,7 @@ public class EventManagementController {
      * Consider adding pagination parameters in future iterations for large datasets.</p>
      *
      */
-    @GetMapping
+    @GetMapping("/all-events")
     public ResponseEntity<List<EventManagementResponse>> getAllEvents() {
         List<EventManagementResponse> events = eventManagementService.getAllEvents();
         return ResponseEntity.ok(events);
@@ -114,7 +114,7 @@ public class EventManagementController {
      * @param id the unique ID of the event to update
      * @param updateRequest the {@link Event} containing updated fields
      */
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/update")
     public ResponseEntity<?> updateEvent(@PathVariable("id") String id, @RequestBody EventManagementRequest updateRequest) {
         EventManagementResponse updatedEvent = eventManagementService.updateEvent(id, updateRequest);
         return ResponseEntity.ok(updatedEvent);
@@ -147,7 +147,7 @@ public class EventManagementController {
      *
      * @param id the unique ID of the event to delete
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/delete")
     public ResponseEntity<Void> deleteEvent(@PathVariable("id") String id) {
         eventManagementService.deleteEventById(id);
         return ResponseEntity.noContent().build();

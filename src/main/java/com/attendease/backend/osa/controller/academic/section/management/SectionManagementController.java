@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-11-23
  */
 @RestController
-@RequestMapping("/api/sections")
+@RequestMapping("/api/osa/section/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class SectionManagementController {

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/osa/profile")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class ProfileServiceController {

@@ -20,7 +20,7 @@ import java.util.List;
  * @since 2025-Nov-25
  */
 @RestController
-@RequestMapping("/api/events/monitoring")
+@RequestMapping("/api/osa/event/monitoring")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class ManagementEventMonitoringController {
@@ -33,7 +33,7 @@ public class ManagementEventMonitoringController {
      *
      * @return a list of {@link Event} that are in any of the specified statuses
      */
-    @GetMapping("/all")
+    @GetMapping("/all-events")
     public ResponseEntity<List<Event>> getAllEventsForMonitoring() {
         List<Event> events = managementEventMonitoringService.getEventWithUpcomingRegistrationOngoingStatuses();
         return ResponseEntity.ok(events);

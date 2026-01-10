@@ -11,6 +11,7 @@ import com.attendease.backend.osa.service.management.attendance.records.Manageme
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,15 +48,16 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
                 .filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE)
                 .count();
 
-            String locationName = event.getVenueLocation() != null ? event.getVenueLocation().getLocationName() : null;
+            String venueLocationName = event.getVenueLocation() != null ? event.getVenueLocation().getLocationName() : null;
+            String registrationLocationName = event.getVenueLocation() != null ? event.getRegistrationLocation().getLocationName() : null;
 
             FinalizedAttendanceRecordsResponse response = FinalizedAttendanceRecordsResponse.builder()
                 .eventId(event.getEventId())
                 .eventName(event.getEventName())
-                .locationName(locationName)
-                .timeInRegistrationStartDateTime(event.getRegistrationDateTime())
-                .startDateTime(event.getStartingDateTime())
-                .endDateTime(event.getEndingDateTime())
+                .registrationLocationName(registrationLocationName).venueLocationName(venueLocationName)
+                .registrationDateTime(event.getRegistrationDateTime())
+                .startingDateTime(event.getStartingDateTime())
+                .endingDateTime(event.getEndingDateTime())
                 .eventStatus(event.getEventStatus())
                 .totalPresent((int) totalPresent)
                 .totalAbsent((int) totalAbsent)
@@ -66,11 +68,6 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
         }
 
         return responses;
-    }
-
-    @Override
-    public Optional<Event> findById(String id) {
-        return eventRepository.findById(id);
     }
 
     @Override

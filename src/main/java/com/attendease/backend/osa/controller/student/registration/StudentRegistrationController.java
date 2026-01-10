@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.controller.management.student.registration;
+package com.attendease.backend.osa.controller.student.registration;
 
 import com.attendease.backend.domain.student.registration.StudentRegistrationRequest;
 import com.attendease.backend.osa.service.management.student.registration.ManagementStudentRegistrationService;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-Sep-16
  */
 @RestController
-@RequestMapping("/api/auth/student")
+@RequestMapping("/api/osa/account/student/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class StudentRegistrationController {
