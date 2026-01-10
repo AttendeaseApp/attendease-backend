@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-Nov-26
  */
 @RestController
-@RequestMapping("/api/user/information/management")
+@RequestMapping("/api/osa/user/information/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class ManagementUserInformationController {
