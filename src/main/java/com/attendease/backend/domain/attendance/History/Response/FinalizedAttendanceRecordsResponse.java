@@ -16,16 +16,17 @@ public class FinalizedAttendanceRecordsResponse {
     private String eventId;
     private String eventName;
 
-    private String locationName;
+    private String registrationLocationName;
+    private String venueLocationName;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timeInRegistrationStartDateTime;
+    private LocalDateTime registrationDateTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime startDateTime;
+    private LocalDateTime startingDateTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime endDateTime;
+    private LocalDateTime endingDateTime;
 
     private EventStatus eventStatus;
 
