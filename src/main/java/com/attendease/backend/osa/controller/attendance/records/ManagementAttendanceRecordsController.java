@@ -1,10 +1,9 @@
-package com.attendease.backend.osa.controller.management.attendance.records;
+package com.attendease.backend.osa.controller.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Request.UpdateAttendanceRequest;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
-import com.attendease.backend.domain.event.Event;
 import java.util.List;
 
 import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-Nov-11
  */
 @RestController
-@RequestMapping("/api/attendance/records")
+@RequestMapping("/api/osa/attendance-records/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class ManagementAttendanceRecordsController {
@@ -33,11 +32,21 @@ public class ManagementAttendanceRecordsController {
     private final ManagementAttendanceRecordsService managementAttendanceRecordsService;
 
     /**
+     * Retrieves all attendance records.
+     *
+     * @return a list of all {@link AttendanceRecords}
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
+        List<AttendanceRecords> records = managementAttendanceRecordsService.getAllAttendanceRecords();
+        return ResponseEntity.ok(records);
+    }
+    /**
      * Retrieves all events with EventStatus.FINALIZED.
      *
      * @return a list of {@link FinalizedAttendanceRecordsResponse}
      */
-    @GetMapping("/event/finalized")
+    @GetMapping("/finalized/summary")
     public List<FinalizedAttendanceRecordsResponse> getAllEventsWithFinalizedStatus() {
         return managementAttendanceRecordsService.getFinalizedEvents();
     }
@@ -49,21 +58,9 @@ public class ManagementAttendanceRecordsController {
      * @param eventId the ID of the event
      * @return an {@link EventAttendeesResponse} containing attendee details and the total number of attendees
      */
-    @GetMapping("/attendees/event/{eventId}")
+    @GetMapping("/event/{eventId}/attendees")
     public EventAttendeesResponse getAttendeesByEvent(@PathVariable String eventId) {
         return managementAttendanceRecordsService.getAttendeesByEvent(eventId);
-    }
-
-    /**
-     * Retrieves a specific event by its unique ID.
-     *
-     * @param id the ID of the event
-     * @return the {@link Event} corresponding to the given ID
-     * @throws RuntimeException if no event is found with the provided ID
-     */
-    @GetMapping("/event/{id}")
-    public Event getEventById(@PathVariable String id) {
-        return managementAttendanceRecordsService.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
     }
 
     /**
@@ -72,7 +69,7 @@ public class ManagementAttendanceRecordsController {
      * @param studentId the ID of the student
      * @return a {@link ResponseEntity} containing a list of {@link AttendanceRecords}
      */
-    @GetMapping("/student/{studentId}")
+    @GetMapping("/student/{studentId}/records")
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
         List<AttendanceRecords> records = managementAttendanceRecordsService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
@@ -80,32 +77,18 @@ public class ManagementAttendanceRecordsController {
 
     /**
      * Updates the attendance status for a student's record in a specific event.
-     * Uses Spring Security's Authentication to identify the updating user for audit logging.
      *
      * @param studentId the ID of the student
      * @param eventId the ID of the event session
      * @param request the update request containing status and reason.
      * @return a {@link ResponseEntity} containing the updated {@link AttendanceRecords}
      */
-    @PutMapping("/{studentId}/event/{eventId}")
+    @PutMapping("/{studentId}/event/{eventId}/update-status")
     public ResponseEntity<AttendanceRecords> updateAttendanceStatus(@PathVariable String studentId, @PathVariable String eventId, @RequestBody UpdateAttendanceRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
-
         AttendanceRecords updatedRecord = managementAttendanceRecordsService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
-
         return ResponseEntity.ok(updatedRecord);
-    }
-
-    /**
-     * Retrieves all attendance records.
-     *
-     * @return a list of all {@link AttendanceRecords}
-     */
-    @GetMapping
-    public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
-        List<AttendanceRecords> records = managementAttendanceRecordsService.getAllAttendanceRecords();
-        return ResponseEntity.ok(records);
     }
 
     /**
@@ -113,9 +96,8 @@ public class ManagementAttendanceRecordsController {
      *
      * @param recordId the unique ID of the attendance record to delete
      * @return a {@link ResponseEntity} with no content if successful
-     * @throws RuntimeException if the record is not found
      */
-    @DeleteMapping("/{recordId}")
+    @DeleteMapping("/{recordId}/delete")
     public ResponseEntity<Void> deleteAttendanceRecordById(@PathVariable String recordId) {
         managementAttendanceRecordsService.deleteAttendanceRecordById(recordId);
         return ResponseEntity.noContent().build();
@@ -127,7 +109,7 @@ public class ManagementAttendanceRecordsController {
      *
      * @return a {@link ResponseEntity} with no content if successful
      */
-    @DeleteMapping
+    @DeleteMapping("/delete/all")
     public ResponseEntity<Void> deleteAllAttendanceRecords() {
         managementAttendanceRecordsService.deleteAllAttendanceRecords();
         return ResponseEntity.noContent().build();

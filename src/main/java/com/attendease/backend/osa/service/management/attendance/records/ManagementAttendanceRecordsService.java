@@ -4,11 +4,8 @@ import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
-import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.event.Event;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * {@link ManagementAttendanceRecordsService} is a service responsible for managing attendance records of student.
@@ -26,13 +23,6 @@ public interface ManagementAttendanceRecordsService {
      */
     List<FinalizedAttendanceRecordsResponse> getFinalizedEvents();
 
-    /**
-     * (@code findById) is used to retrieve an event session by its unique identifier.
-     *
-     * @param id the unique ID of the event session
-     * @return an {@link Optional} containing the {@link Event} if found, otherwise empty
-     */
-    Optional<Event> findById(String id);
 
     /**
      * {@code getAttendeesByEvent} is used to retrieve all attendees for a specific event, including student information, attendance status,

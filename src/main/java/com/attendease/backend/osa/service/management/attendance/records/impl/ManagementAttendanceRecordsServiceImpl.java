@@ -11,6 +11,8 @@ import com.attendease.backend.osa.service.management.attendance.records.Manageme
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import java.util.*;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -66,11 +68,6 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
         }
 
         return responses;
-    }
-
-    @Override
-    public Optional<Event> findById(String id) {
-        return eventRepository.findById(id);
     }
 
     @Override
