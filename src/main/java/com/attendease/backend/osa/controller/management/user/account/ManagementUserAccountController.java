@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @since 2025-Dec-06
  */
 @RestController
-@RequestMapping("/api/user/management")
+@RequestMapping("/api/osa/user/account/management")
 @Slf4j
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
@@ -45,7 +45,7 @@ public class ManagementUserAccountController {
      * @return {@link ResponseEntity} with status 200 and the list, or 404 with empty list if none found
      * @see ManagementUserAccountService#retrieveUsers()
      */
-    @GetMapping
+    @GetMapping("/all-users")
     public ResponseEntity<List<UserStudentResponse>> retrieveAllUsers() {
         List<UserStudentResponse> users = managementUserAccountService.retrieveUsers();
         if (users.isEmpty()) {
@@ -92,7 +92,7 @@ public class ManagementUserAccountController {
      * @throws CsvImportException if import has row-specific errors
      * @see ManagementUserAccountService#importStudentsViaCSV(MultipartFile)
      */
-    @PostMapping("/import")
+    @PostMapping("/import-students")
     public ResponseEntity<?> importStudents(@RequestParam("file") MultipartFile file) {
         List<User> importedUsers = managementUserAccountService.importStudentsViaCSV(file);
         return ResponseEntity.ok(importedUsers);
@@ -109,7 +109,7 @@ public class ManagementUserAccountController {
      * @return {@link ResponseEntity} with status 200 and the list, or 404 with empty list if none found
      * @see ManagementUserAccountService#retrieveAllStudents()
      */
-    @GetMapping("/student")
+    @GetMapping("/all-students")
     public ResponseEntity<List<UserStudentResponse>> retrieveAllStudents() {
         List<UserStudentResponse> students = managementUserAccountService.retrieveAllStudents();
         if (students.isEmpty()) {
@@ -132,7 +132,7 @@ public class ManagementUserAccountController {
      * @throws ResponseStatusException with 404 status if the user is not found
      * @see ManagementUserAccountService#deleteUserById(String)
      */
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{userId}/delete-user")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable String userId) {
         managementUserAccountService.deleteUserById(userId);

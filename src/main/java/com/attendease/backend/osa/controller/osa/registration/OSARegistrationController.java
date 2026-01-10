@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.controller.management.osa.registration;
+package com.attendease.backend.osa.controller.osa.registration;
 
 import com.attendease.backend.domain.user.account.osa.registration.UserAccountOsaRegistrationRequest;
 import com.attendease.backend.osa.service.management.osa.registration.ManagementOSARegistrationService;
