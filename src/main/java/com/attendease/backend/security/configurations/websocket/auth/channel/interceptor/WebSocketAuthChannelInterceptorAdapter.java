@@ -30,43 +30,62 @@ public class WebSocketAuthChannelInterceptorAdapter implements ChannelIntercepto
         final StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor == null) {
+            log.debug("No StompHeaderAccessor found in message");
             return message;
         }
-
+        log.debug("Processing STOMP command: {}", accessor.getCommand());
         if (StompCommand.CONNECT == accessor.getCommand()) {
+            log.info("Processing CONNECT command");
             String jwt = extractJwtFromAccessor(accessor);
-            log.debug("Extracted JWT from CONNECT: {}", jwt != null ? "present" : "missing");
             if (jwt == null || jwt.trim().isEmpty()) {
-                log.warn("Missing or empty JWT token");
-                return createStompErrorMessage("Missing or empty JWT token");
+                log.warn("Missing or empty JWT token in CONNECT frame");
+                log.warn("Available headers: {}", accessor.toNativeHeaderMap());
+                return createStompErrorMessage("Authentication required: Missing or empty JWT token");
             }
+            log.debug("JWT token found, attempting authentication");
             try {
                 final UsernamePasswordAuthenticationToken user = this.webSocketAuthenticatorService.getAuthenticatedOrFail(jwt);
                 accessor.setUser(user);
-                log.debug("User authenticated: {}", user.getName());
-            } catch (Exception e) {
-                log.warn("Auth failed for JWT: {}", e.getMessage());
+                log.info("WebSocket authentication successful for user: {}", user.getName());
+            } catch (AuthenticationException e) {
+                log.error("WebSocket authentication failed: {}", e.getMessage(), e);
                 return createStompErrorMessage("Authentication failed: " + e.getMessage());
+            } catch (Exception e) {
+                log.error("Unexpected error during WebSocket authentication: {}", e.getMessage(), e);
+                return createStompErrorMessage("Authentication error: " + e.getMessage());
             }
         }
         return message;
     }
 
     private Message<?> createStompErrorMessage(String errorMessage) {
+        log.warn("Creating STOMP ERROR message: {}", errorMessage);
         StompHeaderAccessor errorAccessor = StompHeaderAccessor.create(StompCommand.ERROR);
         errorAccessor.setMessage(errorMessage);
         errorAccessor.setLeaveMutable(true);
+        errorAccessor.addNativeHeader("message", errorMessage);
         return MessageBuilder.createMessage(new byte[0], errorAccessor.getMessageHeaders());
     }
 
     private String extractJwtFromAccessor(StompHeaderAccessor accessor) {
         String jwt = null;
         final String authHeader = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+        log.debug("Authorization header: {}", authHeader != null ? "present" : "missing");
         if (authHeader != null && authHeader.startsWith(TOKEN_PREFIX)) {
             jwt = authHeader.substring(TOKEN_PREFIX.length());
+            log.debug("JWT extracted from Authorization header");
         }
         if (jwt == null || jwt.trim().isEmpty()) {
             jwt = accessor.getFirstNativeHeader(JWT_TOKEN_HEADER);
+            if (jwt != null) {
+                log.debug("JWT extracted from {} header", JWT_TOKEN_HEADER);
+            }
+        }
+        if (jwt == null || jwt.trim().isEmpty()) {
+            jwt = accessor.getFirstNativeHeader("token");
+            if (jwt != null) {
+                log.debug("JWT extracted from 'token' header");
+            }
         }
         return jwt != null ? jwt.trim() : null;
     }
