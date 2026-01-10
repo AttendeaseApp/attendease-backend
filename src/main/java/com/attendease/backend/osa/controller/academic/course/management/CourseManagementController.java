@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-09-19
  */
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping("/api/osa/course/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class CourseManagementController {

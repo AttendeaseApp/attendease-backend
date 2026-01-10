@@ -20,7 +20,7 @@ import java.util.Map;
  * @since 2025-Dec-28
  */
 @RestController
-@RequestMapping("/api/scheduler")
+@RequestMapping("/api/osa/academic-year/scheduler")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class AcademicYearSchedulerController {

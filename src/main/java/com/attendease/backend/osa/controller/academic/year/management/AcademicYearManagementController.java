@@ -26,7 +26,7 @@ import java.util.Map;
  * @since 2025-Dec-24
  */
 @RestController
-@RequestMapping("/api/academic-years")
+@RequestMapping("/api/osa/academic-year/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
 public class AcademicYearManagementController {
