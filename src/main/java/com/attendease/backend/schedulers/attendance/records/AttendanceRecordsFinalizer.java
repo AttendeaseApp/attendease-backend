@@ -1,4 +1,4 @@
-package com.attendease.backend.schedulers.utils.attendance.records;
+package com.attendease.backend.schedulers.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.Tracking.Response.AttendanceTrackingResponse;

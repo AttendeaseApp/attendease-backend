@@ -29,6 +29,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.attendease.backend.repository.section.SectionRepository;
+import com.attendease.backend.student.controller.event.retrieval.EventBroadcastService;
+import com.attendease.backend.student.service.event.retrieval.impl.EventRetrievalServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -57,6 +59,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final AcademicRepository academicRepository;
+
+    private final EventBroadcastService eventBroadcastService;
+    private final EventRetrievalServiceImpl eventRetrievalService;
 
     private static final long MIN_EVENT_DURATION_MINUTES = 30;
     private static final long MAX_EVENT_DURATION_MINUTES = 360;
@@ -138,6 +143,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 savedEvent.getAcademicYearName(),
                 savedEvent.getSemester());
 
+        eventRetrievalService.clearHomepageEventsCache();
+        eventBroadcastService.triggerImmediateBroadcast();
+
         return toEventCreationResponse(savedEvent, regLocationId, venueLocationId);
     }
 
@@ -183,6 +191,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
             };
             throw new EventDeletionNotAllowedException(message);
         }
+
+        eventRetrievalService.clearHomepageEventsCache();
+        eventBroadcastService.triggerImmediateBroadcast();
 
         eventRepository.deleteById(id);
         log.debug("Deleted event with ID: {}", id);
@@ -297,6 +308,8 @@ public final class EventManagementServiceImpl implements EventManagementService 
         existingEvent.setLastModified(LocalDateTime.now());
         checkLocationConflict(existingEvent, eventId);
         Event updatedEvent = eventRepository.save(existingEvent);
+        eventRetrievalService.clearHomepageEventsCache();
+        eventBroadcastService.triggerImmediateBroadcast();
         log.debug("Successfully updated event session with ID: {}", eventId);
         return toEventManagementResponse(updatedEvent);
     }
@@ -306,6 +319,8 @@ public final class EventManagementServiceImpl implements EventManagementService 
         Event existingEvent = eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(eventId, true));
         existingEvent.setEventStatus(EventStatus.CANCELLED);
         existingEvent.setLastModified(LocalDateTime.now());
+        eventRetrievalService.clearHomepageEventsCache();
+        eventBroadcastService.triggerImmediateBroadcast();
         return eventRepository.save(existingEvent);
     }
 

@@ -6,7 +6,7 @@ import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.student.Students;
-import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
+import com.attendease.backend.schedulers.attendance.records.AttendanceRecordsFinalizer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

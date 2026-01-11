@@ -1,8 +1,8 @@
 package com.attendease.backend.security.configurations.websocket;
 
 import com.attendease.backend.security.configurations.websocket.auth.channel.interceptor.WebSocketAuthChannelInterceptorAdapter;
-import com.attendease.backend.security.jwt.websocket.WebSocketAuthenticatorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -14,16 +14,17 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import java.util.List;
 
-
+@Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketAuthenticatorService webSocketAuthenticatorService;
+    private final WebSocketAuthChannelInterceptorAdapter webSocketAuthChannelInterceptor;
 
     @Override
     public void configureMessageBroker(final MessageBrokerRegistry config) {
+        log.info("Configuring message broker...");
         config.enableSimpleBroker("/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
@@ -31,7 +32,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
-        registry.addEndpoint("/attendease-websocket").setAllowedOriginPatterns("*").withSockJS();
+        log.info("Registering STOMP endpoints...");
+        registry.addEndpoint("/attendease-websocket")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
+        registry.addEndpoint("/attendease-websocket")
+                .setAllowedOriginPatterns("*");
+        log.info("STOMP endpoints registered successfully");
     }
 
     @Override
@@ -41,7 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new WebSocketAuthChannelInterceptorAdapter(webSocketAuthenticatorService));
+        log.info("Configuring client inbound channel with auth interceptor");
+        registration.interceptors(webSocketAuthChannelInterceptor);
     }
-
 }

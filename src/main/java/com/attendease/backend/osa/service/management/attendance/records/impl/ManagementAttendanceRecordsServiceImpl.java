@@ -114,7 +114,7 @@ public final class ManagementAttendanceRecordsServiceImpl implements ManagementA
 
     @Override
     public List<AttendanceRecords> getAttendanceRecordsByStudentId(String studentId) {
-        return attendanceRecordsRepository.findByStudentId(studentId);
+        return attendanceRecordsRepository.findByStudentIdOrderByCreatedAtDesc(studentId);
     }
 
     @Override
