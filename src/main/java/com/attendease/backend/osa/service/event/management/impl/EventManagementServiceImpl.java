@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.attendease.backend.repository.section.SectionRepository;
-import com.attendease.backend.student.controller.event.retrieval.EventBroadcastService;
+import com.attendease.backend.student.service.event.broadcast.EventBroadcastService;
 import com.attendease.backend.student.service.event.retrieval.impl.EventRetrievalServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
