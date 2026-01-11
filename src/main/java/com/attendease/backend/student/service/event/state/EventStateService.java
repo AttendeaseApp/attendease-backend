@@ -21,4 +21,6 @@ public interface EventStateService {
      * @throws IllegalStateException if the event with the given ID is not found
      */
     EventStateCheckingResponse getEventStartStatus(String eventId);
+
+    void broadcastEventStateChange(String eventId);
 }

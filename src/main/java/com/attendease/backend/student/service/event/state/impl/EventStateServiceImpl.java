@@ -6,13 +6,17 @@ import com.attendease.backend.domain.event.state.checking.EventStateCheckingResp
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.student.service.event.state.EventStateService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventStateServiceImpl implements EventStateService {
 
     private final EventRepository eventRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public EventStateCheckingResponse getEventStartStatus(String eventId) {
@@ -33,5 +37,16 @@ public class EventStateServiceImpl implements EventStateService {
         };
 
         return new EventStateCheckingResponse(eventId, hasStarted, isOngoing, hasEnded, message);
+    }
+
+    @Override
+    public void broadcastEventStateChange(String eventId) {
+        try {
+            EventStateCheckingResponse response = getEventStartStatus(eventId);
+            messagingTemplate.convertAndSend("/topic/read-event-state", response);
+            log.info("Broadcasted event state change for event: {} - Status: {}", eventId, response.getStatusMessage());
+        } catch (Exception e) {
+            log.error("Failed to broadcast event state for event: {}", eventId, e);
+        }
     }
 }

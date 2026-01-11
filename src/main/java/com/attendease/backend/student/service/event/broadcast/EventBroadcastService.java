@@ -1,10 +1,9 @@
-package com.attendease.backend.student.controller.event.retrieval;
+package com.attendease.backend.student.service.event.broadcast;
 
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.student.service.event.retrieval.EventRetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

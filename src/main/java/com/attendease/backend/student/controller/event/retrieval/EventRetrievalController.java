@@ -3,30 +3,30 @@ package com.attendease.backend.student.controller.event.retrieval;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.student.service.event.retrieval.EventRetrievalService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Slf4j
-@Controller
+@RestController
+@RequestMapping("/api/student/event/registration")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STUDENT')")
 public class EventRetrievalController {
 
-    private final EventRetrievalService eventRetrievalService;
+	private final EventRetrievalService eventRetrievalService;
 
-    @MessageMapping("/events/{id}")
-    @SendToUser("/queue/events/{id}")
-    public Event getEventById(@DestinationVariable String id) {
-        log.info("Client requested event: {}", id);
-        long startTime = System.currentTimeMillis();
-        Event event = eventRetrievalService.getEventById(id).orElse(null);
-        long duration = System.currentTimeMillis() - startTime;
-        log.info("Retrieved event {} in {}ms", id, duration);
-        return event;
-    }
+	@GetMapping("/homepage")
+	public List<Event> getHomepageEvents() {
+		return eventRetrievalService.getOngoingRegistrationAndActiveEvents();
+	}
+
+	@GetMapping("/{eventId}")
+	public ResponseEntity<Event> getEventById(@PathVariable String eventId) {
+		return eventRetrievalService.getEventById(eventId).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
 }

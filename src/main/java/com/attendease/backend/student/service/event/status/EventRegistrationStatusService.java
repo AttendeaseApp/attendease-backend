@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.event.registration.status;
+package com.attendease.backend.student.service.event.status;
 
 import com.attendease.backend.domain.event.registration.EventRegistrationStatusResponse;
 
