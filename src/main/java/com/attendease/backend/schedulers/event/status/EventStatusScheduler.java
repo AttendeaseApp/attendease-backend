@@ -3,6 +3,8 @@ package com.attendease.backend.schedulers.event.status;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.repository.event.EventRepository;
+import com.attendease.backend.student.controller.event.retrieval.EventBroadcastService;
+import com.attendease.backend.student.service.event.retrieval.impl.EventRetrievalServiceImpl;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -17,13 +19,17 @@ import org.springframework.stereotype.Service;
 public class EventStatusScheduler {
 
     private final EventRepository eventSessionRepository;
+    private final EventBroadcastService eventBroadcastService;
+    private final EventRetrievalServiceImpl eventRetrievalService;
 
     @Scheduled(fixedRate = 15000)
     public void updateEventStatuses() {
         try {
             LocalDateTime now = LocalDateTime.now();
 
-            List<Event> events = eventSessionRepository.findByEventStatusIn(Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
+            List<Event> events = eventSessionRepository.findByEventStatusIn(
+                    Arrays.asList(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING)
+            );
 
             boolean updated = false;
 
@@ -56,6 +62,10 @@ public class EventStatusScheduler {
 
             if (updated) {
                 eventSessionRepository.saveAll(events);
+                eventRetrievalService.clearHomepageEventsCache();
+                log.info("Cache cleared after status updates");
+                eventBroadcastService.triggerImmediateBroadcast();
+                log.info("Triggered immediate broadcast after status updates");
             }
 
             log.debug("Checked {} events for status updates", events.size());

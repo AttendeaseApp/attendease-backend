@@ -26,7 +26,7 @@ public class AttendanceHistoryServiceImpl implements AttendanceHistoryService {
         User user = userRepository.findById(authenticatedUserId).orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
         Students student = studentRepository.findByUser(user).orElseThrow(() -> new IllegalStateException("Student record not found for authenticated user"));
 
-        List<AttendanceRecords> records = attendanceRecordsRepository.findByStudentId(student.getId());
+        List<AttendanceRecords> records = attendanceRecordsRepository.findByStudentIdOrderByCreatedAtDesc(student.getId());
 
         return records
             .stream()

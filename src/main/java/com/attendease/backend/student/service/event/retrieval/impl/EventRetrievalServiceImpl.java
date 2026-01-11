@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -41,8 +42,33 @@ public class EventRetrievalServiceImpl implements EventRetrievalService {
         return events;
     }
 
+    /**
+     * Clear homepage events cache
+     * Called by schedulers and admin endpoints when events change
+     */
     @CacheEvict(value = "homepage-events", allEntries = true)
     public void clearHomepageEventsCache() {
         log.info("Cleared homepage events cache");
+    }
+
+    /**
+     * Clear specific event from cache
+     * Use when a single event is updated
+     */
+    @CacheEvict(value = "events", key = "#eventId")
+    public void clearEventCache(String eventId) {
+        log.info("Cleared cache for event: {}", eventId);
+    }
+
+    /**
+     * Clear all event-related caches
+     * Use for bulk operations or full cache refresh
+     */
+    @Caching(evict = {
+            @CacheEvict(value = "events", allEntries = true),
+            @CacheEvict(value = "homepage-events", allEntries = true)
+    })
+    public void clearAllEventCaches() {
+        log.info("Cleared all event caches");
     }
 }

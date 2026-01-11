@@ -21,16 +21,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface AttendanceRecordsRepository extends MongoRepository<AttendanceRecords, String> {
-    /**
-     * Retrieves a list of attendance records filtered by student, event, location, and attendance status.
-     *
-     * @param student the student whose attendance records are being queried
-     * @param event the event session associated with the attendance records
-     * @param location the event location associated with the attendance records
-     * @param status the attendance status to filter by (e.g., PRESENT, ABSENT)
-     * @return a list of {@link AttendanceRecords} matching the given criteria
-     */
-    List<AttendanceRecords> findByStudentAndEventAndLocationAndAttendanceStatus(Students student, Event event, Location location, AttendanceStatus status);
 
     /**
      * Retrieves a list of attendance records associated with a specific event ID.
@@ -41,22 +31,13 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
     List<AttendanceRecords> findByEventEventId(String eventId);
 
     /**
-     * Retrieves an optional attendance record for a specific student, event, and location.
-     *
-     * @param student the student whose attendance record is being queried
-     * @param event the event session associated with the attendance record
-     * @param location the event location associated with the attendance record
-     * @return an {@link Optional} containing the {@link AttendanceRecords} if found, otherwise empty
-     */
-    Optional<AttendanceRecords> findByStudentAndEventAndLocation(Students student, Event event, Location location);
-
-    /**
-     * Retrieves a list of attendance records for a specific student by their student ID.
+     * Retrieves a list of attendance records for a specific student by their student ID,
+     * sorted by creation date in descending order (most recent first).
      *
      * @param studentId the unique identifier of the student
-     * @return a list of {@link AttendanceRecords} associated with the student
+     * @return a list of {@link AttendanceRecords} associated with the student, sorted by createdAt DESC
      */
-    List<AttendanceRecords> findByStudentId(String studentId);
+    List<AttendanceRecords> findByStudentIdOrderByCreatedAtDesc(String studentId);
 
     /**
      * Retrieves an optional attendance record for a specific student ID and event ID.
