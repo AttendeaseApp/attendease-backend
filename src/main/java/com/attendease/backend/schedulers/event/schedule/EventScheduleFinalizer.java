@@ -3,7 +3,7 @@ package com.attendease.backend.schedulers.event.schedule;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
 import com.attendease.backend.repository.event.EventRepository;
-import com.attendease.backend.schedulers.utils.attendance.records.AttendanceRecordsFinalizer;
+import com.attendease.backend.schedulers.attendance.records.AttendanceRecordsFinalizer;
 import com.attendease.backend.student.controller.event.retrieval.EventBroadcastService;
 import com.attendease.backend.student.service.event.retrieval.impl.EventRetrievalServiceImpl;
 import java.util.List;

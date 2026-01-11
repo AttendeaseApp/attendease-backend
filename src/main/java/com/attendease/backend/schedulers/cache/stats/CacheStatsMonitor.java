@@ -1,4 +1,4 @@
-package com.attendease.backend.configurations.cache;
+package com.attendease.backend.schedulers.cache.stats;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
@@ -9,9 +9,6 @@ import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/**
- * Optional: Monitor cache performance metrics
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,7 +24,7 @@ public class CacheStatsMonitor {
 				Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
 				CacheStats stats = nativeCache.stats();
 
-				log.info("Cache '{}' stats - Hits: {}, Misses: {}, Hit Rate: {:.2f}%, Evictions: {}, Size: {}",
+				log.info("Cache '{}' stats - Hits: {}, Misses: {}, Hit Rate: {}, Evictions: {}, Size: {}",
 						cacheName,
 						stats.hitCount(),
 						stats.missCount(),
