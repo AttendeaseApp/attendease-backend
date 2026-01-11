@@ -6,8 +6,11 @@ import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.student.service.event.broadcast.EventBroadcastService;
 import com.attendease.backend.student.service.event.retrieval.impl.EventRetrievalServiceImpl;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.attendease.backend.student.service.event.state.EventStateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +24,7 @@ public class EventStatusScheduler {
     private final EventRepository eventSessionRepository;
     private final EventBroadcastService eventBroadcastService;
     private final EventRetrievalServiceImpl eventRetrievalService;
+    private final EventStateService eventStateService;
 
     @Scheduled(fixedRate = 15000)
     public void updateEventStatuses() {
@@ -32,6 +36,7 @@ public class EventStatusScheduler {
             );
 
             boolean updated = false;
+            List<String> updatedEventIds = new ArrayList<>();
 
             for (Event event : events) {
                 LocalDateTime registrationStart = event.getRegistrationDateTime();
@@ -56,6 +61,7 @@ public class EventStatusScheduler {
                 if (newStatus != null && currentStatus != newStatus) {
                     event.setEventStatus(newStatus);
                     updated = true;
+                    updatedEventIds.add(event.getEventId());
                     log.info("Event {} status updated from {} to {}", event.getEventId(), currentStatus, newStatus);
                 }
             }
@@ -66,6 +72,10 @@ public class EventStatusScheduler {
                 log.info("Cache cleared after status updates");
                 eventBroadcastService.triggerImmediateBroadcast();
                 log.info("Triggered immediate broadcast after status updates");
+                for (String eventId : updatedEventIds) {
+                    eventStateService.broadcastEventStateChange(eventId);
+                }
+                log.info("Broadcasted state changes for {} events", updatedEventIds.size());
             }
 
             log.debug("Checked {} events for status updates", events.size());

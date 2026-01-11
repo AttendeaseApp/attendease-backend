@@ -1,7 +1,7 @@
 package com.attendease.backend.student.controller.event.registration;
 
 import com.attendease.backend.domain.event.registration.EventRegistrationStatusResponse;
-import com.attendease.backend.student.service.event.registration.status.EventRegistrationStatusService;
+import com.attendease.backend.student.service.event.status.EventRegistrationStatusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

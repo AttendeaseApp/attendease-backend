@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.event.registration.status.impl;
+package com.attendease.backend.student.service.event.status.impl;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.enums.AttendanceStatus;
@@ -10,7 +10,7 @@ import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepo
 import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
-import com.attendease.backend.student.service.event.registration.status.EventRegistrationStatusService;
+import com.attendease.backend.student.service.event.status.EventRegistrationStatusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
