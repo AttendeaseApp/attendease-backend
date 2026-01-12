@@ -43,7 +43,6 @@ public interface ManagementUserInformationService {
      * @throws ChangeSetPersister.NotFoundException if the user, student, or referenced entities (e.g., section) are not found
      * @throws IllegalArgumentException if validation fails (e.g., invalid password, duplicate student number)
      */
-    @Transactional
     UserAccountManagementUsersInformationResponse updateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException;
 
     int bulkUpdateStudentSection(BulkStudentSectionUpdateRequest request);

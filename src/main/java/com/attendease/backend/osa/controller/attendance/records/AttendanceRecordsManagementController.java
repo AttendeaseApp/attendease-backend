@@ -6,7 +6,9 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import java.util.List;
 
-import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
+import com.attendease.backend.domain.attendance.sorted.SortedAttendanceRecordsResponse;
+import com.attendease.backend.domain.enums.attendance.AttendanceSortCriteria;
+import com.attendease.backend.osa.service.attendance.records.AttendanceRecordsManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,9 +29,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/osa/attendance-records/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementAttendanceRecordsController {
+public class AttendanceRecordsManagementController {
 
-    private final ManagementAttendanceRecordsService managementAttendanceRecordsService;
+    private final AttendanceRecordsManagementService attendanceRecordsManagementService;
 
     /**
      * Retrieves all attendance records.
@@ -38,7 +40,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
-        List<AttendanceRecords> records = managementAttendanceRecordsService.getAllAttendanceRecords();
+        List<AttendanceRecords> records = attendanceRecordsManagementService.getAllAttendanceRecords();
         return ResponseEntity.ok(records);
     }
     /**
@@ -48,7 +50,49 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/finalized/summary")
     public List<FinalizedAttendanceRecordsResponse> getAllEventsWithFinalizedStatus() {
-        return managementAttendanceRecordsService.getFinalizedEvents();
+        return attendanceRecordsManagementService.getFinalizedEvents();
+    }
+
+    /**
+     * Retrieves all finalized events for a specific academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @return a list of {@link FinalizedAttendanceRecordsResponse}
+     */
+    @GetMapping("/finalized/academic-year/{academicYearId}")
+    public ResponseEntity<List<FinalizedAttendanceRecordsResponse>> getFinalizedEventsByAcademicYear(
+            @PathVariable String academicYearId) {
+        List<FinalizedAttendanceRecordsResponse> responses =
+                attendanceRecordsManagementService.getFinalizedEventsByAcademicYear(academicYearId);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Retrieves all finalized events for a specific semester within an academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @param semester       the semester number (e.g., 1, 2)
+     * @return a list of {@link FinalizedAttendanceRecordsResponse}
+     */
+    @GetMapping("/finalized/academic-year/{academicYearId}/semester/{semester}")
+    public ResponseEntity<List<FinalizedAttendanceRecordsResponse>> getFinalizedEventsBySemester(
+            @PathVariable String academicYearId,
+            @PathVariable Integer semester) {
+        List<FinalizedAttendanceRecordsResponse> responses =
+                attendanceRecordsManagementService.getFinalizedEventsBySemester(academicYearId, semester);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Deletes all attendance records for a given academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @return a {@link ResponseEntity} with no content if successful
+     */
+    @DeleteMapping("/delete/academic-year/{academicYearId}")
+    public ResponseEntity<Void> deleteAttendanceRecordsByAcademicYear(@PathVariable String academicYearId) {
+        attendanceRecordsManagementService.deleteByAcademicYear(academicYearId);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -60,7 +104,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/event/{eventId}/attendees")
     public EventAttendeesResponse getAttendeesByEvent(@PathVariable String eventId) {
-        return managementAttendanceRecordsService.getAttendeesByEvent(eventId);
+        return attendanceRecordsManagementService.getAttendeesByEvent(eventId);
     }
 
     /**
@@ -71,8 +115,29 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/student/{studentId}/records")
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
-        List<AttendanceRecords> records = managementAttendanceRecordsService.getAttendanceRecordsByStudentId(studentId);
+        List<AttendanceRecords> records = attendanceRecordsManagementService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
+    }
+
+    /**
+     * Retrieves attendance records for a specific event, sorted by academic hierarchy.
+     * samples:
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=CLUSTER
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=COURSE
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=SECTION
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=YEAR_LEVEL
+     */
+    @GetMapping("/event/{eventId}/sorted")
+    public ResponseEntity<SortedAttendanceRecordsResponse> getSortedAttendanceRecords(@PathVariable String eventId, @RequestParam(defaultValue = "SECTION") String sortBy) {
+        try {
+            AttendanceSortCriteria criteria = AttendanceSortCriteria.valueOf(sortBy.toUpperCase());
+            SortedAttendanceRecordsResponse response = attendanceRecordsManagementService.getSortedAttendanceRecords(eventId, criteria);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
@@ -87,7 +152,7 @@ public class ManagementAttendanceRecordsController {
     public ResponseEntity<AttendanceRecords> updateAttendanceStatus(@PathVariable String studentId, @PathVariable String eventId, @RequestBody UpdateAttendanceRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
-        AttendanceRecords updatedRecord = managementAttendanceRecordsService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
+        AttendanceRecords updatedRecord = attendanceRecordsManagementService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
         return ResponseEntity.ok(updatedRecord);
     }
 
@@ -99,7 +164,7 @@ public class ManagementAttendanceRecordsController {
      */
     @DeleteMapping("/{recordId}/delete")
     public ResponseEntity<Void> deleteAttendanceRecordById(@PathVariable String recordId) {
-        managementAttendanceRecordsService.deleteAttendanceRecordById(recordId);
+        attendanceRecordsManagementService.deleteAttendanceRecordById(recordId);
         return ResponseEntity.noContent().build();
     }
 
@@ -111,7 +176,7 @@ public class ManagementAttendanceRecordsController {
      */
     @DeleteMapping("/delete/all")
     public ResponseEntity<Void> deleteAllAttendanceRecords() {
-        managementAttendanceRecordsService.deleteAllAttendanceRecords();
+        attendanceRecordsManagementService.deleteAllAttendanceRecords();
         return ResponseEntity.noContent().build();
     }
 }
