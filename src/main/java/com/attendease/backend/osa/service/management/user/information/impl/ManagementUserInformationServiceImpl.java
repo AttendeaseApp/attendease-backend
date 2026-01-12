@@ -43,8 +43,8 @@ public class ManagementUserInformationServiceImpl implements ManagementUserInfor
         return studentBiometrics.deleteAllStudentsAndAssociatedUserAndFacialData();
     }
 
-    @Transactional
     @Override
+    @Transactional
     public UserAccountManagementUsersInformationResponse updateUserInfo(String userId, UserAccountManagementUsersInformationRequest request, String updatedByUserId) throws ChangeSetPersister.NotFoundException {
         User user = userRepository.findById(userId).orElseThrow(ChangeSetPersister.NotFoundException::new);
         updateUserFields(user, request, updatedByUserId);

@@ -86,4 +86,10 @@ public interface EventRepository extends MongoRepository<Event, String> {
      * Useful for detecting location-based conflicts during the registration phase.
      */
     List<Event> findByRegistrationLocationIdAndEventStatusNotIn(String registrationLocationId, List<EventStatus> excludedConflictStatuses);
+
+	List<Event> findByEventStatusInAndAcademicYearId(List<EventStatus> finalized, String academicYearId);
+
+    List<Event> findByEventStatusInAndAcademicYearIdAndSemester(List<EventStatus> finalized, String academicYearId, Integer semester);
+
+    List<Event> findByAcademicYearId(String academicYearId);
 }
