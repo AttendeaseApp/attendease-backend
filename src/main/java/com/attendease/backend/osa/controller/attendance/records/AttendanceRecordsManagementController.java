@@ -54,6 +54,48 @@ public class AttendanceRecordsManagementController {
     }
 
     /**
+     * Retrieves all finalized events for a specific academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @return a list of {@link FinalizedAttendanceRecordsResponse}
+     */
+    @GetMapping("/finalized/academic-year/{academicYearId}")
+    public ResponseEntity<List<FinalizedAttendanceRecordsResponse>> getFinalizedEventsByAcademicYear(
+            @PathVariable String academicYearId) {
+        List<FinalizedAttendanceRecordsResponse> responses =
+                attendanceRecordsManagementService.getFinalizedEventsByAcademicYear(academicYearId);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Retrieves all finalized events for a specific semester within an academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @param semester       the semester number (e.g., 1, 2)
+     * @return a list of {@link FinalizedAttendanceRecordsResponse}
+     */
+    @GetMapping("/finalized/academic-year/{academicYearId}/semester/{semester}")
+    public ResponseEntity<List<FinalizedAttendanceRecordsResponse>> getFinalizedEventsBySemester(
+            @PathVariable String academicYearId,
+            @PathVariable Integer semester) {
+        List<FinalizedAttendanceRecordsResponse> responses =
+                attendanceRecordsManagementService.getFinalizedEventsBySemester(academicYearId, semester);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Deletes all attendance records for a given academic year.
+     *
+     * @param academicYearId the ID of the academic year
+     * @return a {@link ResponseEntity} with no content if successful
+     */
+    @DeleteMapping("/delete/academic-year/{academicYearId}")
+    public ResponseEntity<Void> deleteAttendanceRecordsByAcademicYear(@PathVariable String academicYearId) {
+        attendanceRecordsManagementService.deleteByAcademicYear(academicYearId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * Retrieves all attendees for a specific event, including student information,
      * attendance status, and reasons for absence or tardiness.
      *

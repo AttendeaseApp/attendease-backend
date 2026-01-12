@@ -26,7 +26,13 @@ public interface AttendanceRecordsManagementService {
     List<FinalizedAttendanceRecordsResponse> getFinalizedEvents();
 
 
-    /**
+    List<FinalizedAttendanceRecordsResponse> getFinalizedEventsByAcademicYear(String academicYearId);
+
+    List<FinalizedAttendanceRecordsResponse> getFinalizedEventsBySemester(String academicYearId, Integer semester);
+
+    void deleteByAcademicYear(String academicYearId);
+
+	/**
      * {@code getAttendeesByEvent} is used to retrieve all attendees for a specific event, including student information, attendance status,
      * and reasons for absence.
      *

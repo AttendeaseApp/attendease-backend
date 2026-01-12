@@ -74,6 +74,42 @@ public final class AttendanceRecordsManagementServiceImpl implements AttendanceR
 	}
 
 	@Override
+	public List<FinalizedAttendanceRecordsResponse> getFinalizedEventsByAcademicYear(String academicYearId) {
+		List<Event> finalizedEvents = eventRepository.findByEventStatusInAndAcademicYearId(
+				List.of(EventStatus.FINALIZED), academicYearId);
+
+		return finalizedEvents.stream()
+				.map(this::mapEventToFinalizedResponse)
+				.toList();
+	}
+
+	@Override
+	public List<FinalizedAttendanceRecordsResponse> getFinalizedEventsBySemester(String academicYearId, Integer semester) {
+		List<Event> finalizedEvents = eventRepository.findByEventStatusInAndAcademicYearIdAndSemester(
+				List.of(EventStatus.FINALIZED), academicYearId, semester);
+
+		return finalizedEvents.stream()
+				.map(this::mapEventToFinalizedResponse)
+				.toList();
+	}
+
+	@Override
+	public void deleteByAcademicYear(String academicYearId) {
+		List<Event> events = eventRepository.findByAcademicYearId(academicYearId);
+
+		for (Event event : events) {
+			List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(event.getEventId());
+			if (!records.isEmpty()) {
+				attendanceRecordsRepository.deleteAll(records);
+				log.info("Deleted {} attendance records for event {}", records.size(), event.getEventId());
+			}
+		}
+
+		log.warn("Deleted all attendance records linked to academic year: {}", academicYearId);
+	}
+
+
+	@Override
 	public EventAttendeesResponse getAttendeesByEvent(String eventId) {
 		List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
 		List<AttendeesResponse> attendees = records
@@ -311,5 +347,28 @@ public final class AttendanceRecordsManagementServiceImpl implements AttendanceR
 			default -> "th";
 		};
 		return yearLevel + suffix + " Year";
+	}
+
+	private FinalizedAttendanceRecordsResponse mapEventToFinalizedResponse(Event event) {
+		List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(event.getEventId());
+		long totalPresent = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.PRESENT).count();
+		long totalAbsent = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.ABSENT).count();
+		long totalIdle = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.IDLE).count();
+		long totalLate = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE).count();
+
+		return FinalizedAttendanceRecordsResponse.builder()
+				.eventId(event.getEventId())
+				.eventName(event.getEventName())
+				.registrationLocationName(event.getRegistrationLocationName())
+				.venueLocationName(event.getVenueLocationName())
+				.registrationDateTime(event.getRegistrationDateTime())
+				.startingDateTime(event.getStartingDateTime())
+				.endingDateTime(event.getEndingDateTime())
+				.eventStatus(event.getEventStatus())
+				.totalPresent((int) totalPresent)
+				.totalAbsent((int) totalAbsent)
+				.totalIdle((int) totalIdle)
+				.totalLate((int) totalLate)
+				.build();
 	}
 }
