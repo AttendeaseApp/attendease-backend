@@ -6,7 +6,7 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import java.util.List;
 
-import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
+import com.attendease.backend.osa.service.attendance.records.AttendanceRecordsManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,9 +27,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/osa/attendance-records/management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OSA')")
-public class ManagementAttendanceRecordsController {
+public class AttendanceRecordsManagementController {
 
-    private final ManagementAttendanceRecordsService managementAttendanceRecordsService;
+    private final AttendanceRecordsManagementService attendanceRecordsManagementService;
 
     /**
      * Retrieves all attendance records.
@@ -38,7 +38,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<AttendanceRecords>> getAllAttendanceRecords() {
-        List<AttendanceRecords> records = managementAttendanceRecordsService.getAllAttendanceRecords();
+        List<AttendanceRecords> records = attendanceRecordsManagementService.getAllAttendanceRecords();
         return ResponseEntity.ok(records);
     }
     /**
@@ -48,7 +48,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/finalized/summary")
     public List<FinalizedAttendanceRecordsResponse> getAllEventsWithFinalizedStatus() {
-        return managementAttendanceRecordsService.getFinalizedEvents();
+        return attendanceRecordsManagementService.getFinalizedEvents();
     }
 
     /**
@@ -60,7 +60,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/event/{eventId}/attendees")
     public EventAttendeesResponse getAttendeesByEvent(@PathVariable String eventId) {
-        return managementAttendanceRecordsService.getAttendeesByEvent(eventId);
+        return attendanceRecordsManagementService.getAttendeesByEvent(eventId);
     }
 
     /**
@@ -71,7 +71,7 @@ public class ManagementAttendanceRecordsController {
      */
     @GetMapping("/student/{studentId}/records")
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
-        List<AttendanceRecords> records = managementAttendanceRecordsService.getAttendanceRecordsByStudentId(studentId);
+        List<AttendanceRecords> records = attendanceRecordsManagementService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
     }
 
@@ -87,7 +87,7 @@ public class ManagementAttendanceRecordsController {
     public ResponseEntity<AttendanceRecords> updateAttendanceStatus(@PathVariable String studentId, @PathVariable String eventId, @RequestBody UpdateAttendanceRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String updatedByUserId = auth.getName();
-        AttendanceRecords updatedRecord = managementAttendanceRecordsService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
+        AttendanceRecords updatedRecord = attendanceRecordsManagementService.updateAttendanceStatus(studentId, eventId, request.getStatus(), request.getReason(), updatedByUserId);
         return ResponseEntity.ok(updatedRecord);
     }
 
@@ -99,7 +99,7 @@ public class ManagementAttendanceRecordsController {
      */
     @DeleteMapping("/{recordId}/delete")
     public ResponseEntity<Void> deleteAttendanceRecordById(@PathVariable String recordId) {
-        managementAttendanceRecordsService.deleteAttendanceRecordById(recordId);
+        attendanceRecordsManagementService.deleteAttendanceRecordById(recordId);
         return ResponseEntity.noContent().build();
     }
 
@@ -111,7 +111,7 @@ public class ManagementAttendanceRecordsController {
      */
     @DeleteMapping("/delete/all")
     public ResponseEntity<Void> deleteAllAttendanceRecords() {
-        managementAttendanceRecordsService.deleteAllAttendanceRecords();
+        attendanceRecordsManagementService.deleteAllAttendanceRecords();
         return ResponseEntity.noContent().build();
     }
 }

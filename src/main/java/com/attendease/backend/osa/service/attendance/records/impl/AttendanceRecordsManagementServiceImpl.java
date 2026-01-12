@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.attendance.records.impl;
+package com.attendease.backend.osa.service.attendance.records.impl;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
@@ -7,7 +7,7 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.enums.AttendanceStatus;
 import com.attendease.backend.domain.enums.EventStatus;
 import com.attendease.backend.domain.event.Event;
-import com.attendease.backend.osa.service.management.attendance.records.ManagementAttendanceRecordsService;
+import com.attendease.backend.osa.service.attendance.records.AttendanceRecordsManagementService;
 import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.event.EventRepository;
 import java.util.*;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public final class ManagementAttendanceRecordsServiceImpl implements ManagementAttendanceRecordsService {
+public final class AttendanceRecordsManagementServiceImpl implements AttendanceRecordsManagementService {
 
     private final EventRepository eventRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;

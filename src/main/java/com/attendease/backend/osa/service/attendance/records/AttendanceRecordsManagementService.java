@@ -1,4 +1,4 @@
-package com.attendease.backend.osa.service.management.attendance.records;
+package com.attendease.backend.osa.service.attendance.records;
 
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
@@ -8,7 +8,7 @@ import com.attendease.backend.domain.enums.AttendanceStatus;
 import java.util.List;
 
 /**
- * {@link ManagementAttendanceRecordsService} is a service responsible for managing attendance records of student.
+ * {@link AttendanceRecordsManagementService} is a service responsible for managing attendance records of student.
  *
  * <p>Provides methods to retrieve ongoing and finalized events, fetch attendee details, and update attendance statuses
  * with audit logging support.</p>
@@ -16,7 +16,7 @@ import java.util.List;
  * @author jakematthewviado204@gmail.com
  * @since 2025-Nov-11
  */
-public interface ManagementAttendanceRecordsService {
+public interface AttendanceRecordsManagementService {
 
     /**
      * {@code getFinalizedEvents} is used to retrieve all finalized event sessions with attendees per attendance status.
