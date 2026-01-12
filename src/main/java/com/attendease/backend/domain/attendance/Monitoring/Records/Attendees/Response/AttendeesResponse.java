@@ -41,7 +41,7 @@ public class AttendeesResponse {
 
     private String studentId;
     private String studentNumber;
-    
+    private Integer yearLevel;
     private String sectionName;
     private String courseName;
     private String clusterName;

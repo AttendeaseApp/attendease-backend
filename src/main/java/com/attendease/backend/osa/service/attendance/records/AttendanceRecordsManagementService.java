@@ -3,7 +3,9 @@ package com.attendease.backend.osa.service.attendance.records;
 import com.attendease.backend.domain.attendance.AttendanceRecords;
 import com.attendease.backend.domain.attendance.History.Response.FinalizedAttendanceRecordsResponse;
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
+import com.attendease.backend.domain.attendance.sorted.SortedAttendanceRecordsResponse;
 import com.attendease.backend.domain.enums.AttendanceStatus;
+import com.attendease.backend.domain.enums.attendance.AttendanceSortCriteria;
 
 import java.util.List;
 
@@ -32,6 +34,8 @@ public interface AttendanceRecordsManagementService {
      * @return an {@link EventAttendeesResponse} containing the total number of attendees and their details
      */
     EventAttendeesResponse getAttendeesByEvent(String eventId);
+
+    SortedAttendanceRecordsResponse getSortedAttendanceRecords(String eventId, AttendanceSortCriteria sortCriteria);
 
     /**
      * {@code getAttendanceRecordsByStudentId} is used to retrieve all attendance records for a specific student.

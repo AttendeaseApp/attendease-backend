@@ -6,6 +6,8 @@ import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Re
 import com.attendease.backend.domain.attendance.Monitoring.Records.Management.Response.EventAttendeesResponse;
 import java.util.List;
 
+import com.attendease.backend.domain.attendance.sorted.SortedAttendanceRecordsResponse;
+import com.attendease.backend.domain.enums.attendance.AttendanceSortCriteria;
 import com.attendease.backend.osa.service.attendance.records.AttendanceRecordsManagementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -73,6 +75,27 @@ public class AttendanceRecordsManagementController {
     public ResponseEntity<List<AttendanceRecords>> getRecordsByStudentId(@PathVariable String studentId) {
         List<AttendanceRecords> records = attendanceRecordsManagementService.getAttendanceRecordsByStudentId(studentId);
         return ResponseEntity.ok(records);
+    }
+
+    /**
+     * Retrieves attendance records for a specific event, sorted by academic hierarchy.
+     * samples:
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=CLUSTER
+     * - GET /api/osa/attendance-records/management/{eventId}/sorted?sortBy=COURSE
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=SECTION
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=YEAR_LEVEL
+     */
+    @GetMapping("/event/{eventId}/sorted")
+    public ResponseEntity<SortedAttendanceRecordsResponse> getSortedAttendanceRecords(@PathVariable String eventId, @RequestParam(defaultValue = "SECTION") String sortBy) {
+        try {
+            AttendanceSortCriteria criteria = AttendanceSortCriteria.valueOf(sortBy.toUpperCase());
+            SortedAttendanceRecordsResponse response = attendanceRecordsManagementService.getSortedAttendanceRecords(eventId, criteria);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
