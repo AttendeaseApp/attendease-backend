@@ -81,7 +81,7 @@ public class AttendanceRecordsManagementController {
      * Retrieves attendance records for a specific event, sorted by academic hierarchy.
      * samples:
      * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=CLUSTER
-     * - GET /api/osa/attendance-records/management/{eventId}/sorted?sortBy=COURSE
+     * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=COURSE
      * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=SECTION
      * - GET /api/osa/attendance-records/management/event/{eventId}/sorted?sortBy=YEAR_LEVEL
      */
