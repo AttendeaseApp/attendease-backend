@@ -10,8 +10,12 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.attendease.backend.domain.biometrics.Registration.Response.BiometricsRegistrationResponse;
 
@@ -29,6 +33,7 @@ public class BiometricsRegistrationClient {
 
     private final RestTemplate restTemplate;
     private final HttpHeaders httpHeaders;
+    private final ObjectMapper objectMapper;
 
     /**
      * Endpoint URL for extracting multiple facial encodings from images.
@@ -70,9 +75,33 @@ public class BiometricsRegistrationClient {
             ResponseEntity<BiometricsRegistrationResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, BiometricsRegistrationResponse.class);
 
             return response.getBody();
+        } catch (HttpClientErrorException e) {
+            String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
+            log.error("Facial recognition service returned client error ({}): {}", e.getStatusCode(), errorMessage);
+            throw new IllegalStateException(errorMessage);
+        } catch (HttpServerErrorException e) {
+            String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
+            log.error("Facial recognition service returned server error ({}): {}", e.getStatusCode(), errorMessage);
+            throw new IllegalStateException("Face processing service error: " + errorMessage);
         } catch (Exception e) {
-            log.error("Failed to communicate with facial recognition service: {}", e.getMessage());
-            throw new IllegalStateException("Face processing service unavailable");
+            log.error("Failed to communicate with facial recognition service: {}", e.getMessage(), e);
+            throw new IllegalStateException("Face processing service unavailable: " + e.getMessage());
+        }
+    }
+
+
+    private String extractErrorDetail(String responseBody) {
+        try {
+            if (responseBody != null && !responseBody.isEmpty()) {
+                JsonNode jsonNode = objectMapper.readTree(responseBody);
+                if (jsonNode.has("detail")) {
+                    return jsonNode.get("detail").asText();
+                }
+            }
+            return responseBody;
+        } catch (Exception e) {
+            log.warn("Failed to parse error response, returning raw body: {}", e.getMessage());
+            return responseBody;
         }
     }
 }

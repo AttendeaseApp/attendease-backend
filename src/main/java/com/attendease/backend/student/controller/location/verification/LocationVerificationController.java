@@ -32,23 +32,6 @@ public class LocationVerificationController {
 
     private final LocationVerificationServiceImpl locationVerificationService;
 
-//    /**
-//     * Receives the student's geolocation via WebSocket and returns whether
-//     * they are inside or outside the specified location boundary.
-//     * <p>
-//     * This is a generic endpoint that works with any location ID.
-//     * Each user receives only their own result (not broadcasted).
-//     * </p>
-//     *
-//     * @param request contains locationId, latitude, and longitude
-//     * @return verification response indicating if student is inside/outside
-//     */
-//    @MessageMapping("/observe-current-location")
-//    @SendToUser("/queue/location-verification")
-//    public LocationTrackingResponse verifyCurrentLocation(@Payload LocationTrackingRequest request) {
-//        return locationVerificationService.verifyCurrentLocation(request);
-//    }
-
     /**
      * Verifies if the student is within the event's registration location.
      * <p>
