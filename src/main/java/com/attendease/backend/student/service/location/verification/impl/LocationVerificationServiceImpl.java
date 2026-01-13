@@ -35,35 +35,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LocationVerificationServiceImpl implements LocationVerificationService {
 
-    private final LocationRepository locationRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final AttendanceRecordsRepository attendanceRecordsRepository;
     private final StudentRepository studentRepository;
     private final LocationValidator locationValidator;
-
-    @Override
-    public LocationTrackingResponse verifyCurrentLocation(LocationTrackingRequest request) {
-        Location location = locationRepository.findById(request.getLocationId())
-                .orElseThrow(() -> new IllegalStateException("Location not found"));
-
-        boolean isInside = locationValidator.isWithinLocationBoundary(
-                location,
-                request.getLatitude(),
-                request.getLongitude());
-
-        LocationTrackingResponse response = new LocationTrackingResponse();
-        response.setInside(isInside);
-        response.setMessage(isInside
-                ? String.format("Your location has been verified. You are inside %s.", location.getLocationName())
-                : String.format("You are outside %s. Please move closer to the venue.", location.getLocationName()));
-
-        log.info("Location verification for location {}: Student is {}",
-                location.getLocationName(),
-                isInside ? "INSIDE" : "OUTSIDE");
-
-        return response;
-    }
 
     @Override
     public LocationTrackingResponse verifyEventVenueLocation(String eventId, double latitude, double longitude) {

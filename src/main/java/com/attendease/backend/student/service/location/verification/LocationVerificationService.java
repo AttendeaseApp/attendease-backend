@@ -1,9 +1,7 @@
 package com.attendease.backend.student.service.location.verification;
 
-import com.attendease.backend.domain.location.tracking.LocationTrackingRequest;
 import com.attendease.backend.domain.location.tracking.LocationTrackingResponse;
 import com.attendease.backend.student.service.location.verification.impl.LocationVerificationServiceImpl;
-import com.attendease.backend.student.service.utils.LocationValidator;
 
 /**
  * {@link LocationVerificationServiceImpl} responsible for checking a student's current geolocation relative to a specific event location.
@@ -13,30 +11,6 @@ import com.attendease.backend.student.service.utils.LocationValidator;
  * </p>
  */
 public interface LocationVerificationService {
-
-    /**
-     * Checks whether the authenticated student's current GPS location falls inside a specified event location.
-     * <p>
-     * This method:
-     * <ul>
-     *     <li>Validates the authenticated user and associated student record</li>
-     *     <li>Retrieves the target event location</li>
-     *     <li>Uses {@link LocationValidator} to determine positional accuracy</li>
-     *     <li>Returns a response object describing whether the student is inside or outside the boundary</li>
-     * </ul>
-     * </p>
-     *
-     * @param request             the request payload containing latitude, longitude, and location ID
-     * @return a {@link LocationTrackingResponse} containing boundary status and a user-friendly message
-     *
-     * @throws IllegalStateException if:
-     *         <ul>
-     *             <li>The user cannot be found</li>
-     *             <li>The student profile associated with the user does not exist</li>
-     *             <li>The target location does not exist</li>
-     *         </ul>
-     */
-    LocationTrackingResponse verifyCurrentLocation(LocationTrackingRequest request);
 
     /**
      * Verifies if student is within the event's venue location.
