@@ -1,18 +1,15 @@
 package com.attendease.backend.student.controller.location.verification;
 
 import com.attendease.backend.domain.location.tracking.EventLocationTrackingRequest;
-import com.attendease.backend.domain.location.tracking.LocationTrackingRequest;
 import com.attendease.backend.domain.location.tracking.LocationTrackingResponse;
 import com.attendease.backend.student.service.location.verification.impl.LocationVerificationServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * WebSocket controller for real-time location verification.
+ * REST API controller for location verification.
  * <p>
  * Provides endpoints for students to verify their location against:
  * <ul>
@@ -22,11 +19,12 @@ import org.springframework.stereotype.Controller;
  * </ul>
  * </p>
  * <p>
- * All responses are sent only to the requesting user via {@code @SendToUser},
- * ensuring privacy and preventing broadcast of location data to other users.
+ * All endpoints require authentication and return location verification
+ * results specific to the authenticated user.
  * </p>
  */
-@Controller
+@RestController
+@RequestMapping("/api/student/location/verification")
 @RequiredArgsConstructor
 public class LocationVerificationController {
 
@@ -46,14 +44,14 @@ public class LocationVerificationController {
      * @param request contains eventId, latitude, and longitude
      * @return verification response for registration location
      */
-    @MessageMapping("/verify-registration-location")
-    @SendToUser("/queue/registration-location-verification")
-    public LocationTrackingResponse verifyEventRegistrationLocation(@Payload EventLocationTrackingRequest request) {
-        return locationVerificationService.verifyEventRegistrationLocation(
+    @PostMapping("/registration-location")
+    public ResponseEntity<LocationTrackingResponse> verifyEventRegistrationLocation(@RequestBody EventLocationTrackingRequest request) {
+        LocationTrackingResponse response = locationVerificationService.verifyEventRegistrationLocation(
                 request.getEventId(),
                 request.getLatitude(),
                 request.getLongitude()
         );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -70,14 +68,14 @@ public class LocationVerificationController {
      * @param request contains eventId, latitude, and longitude
      * @return verification response for venue location
      */
-    @MessageMapping("/verify-venue-location")
-    @SendToUser("/queue/venue-location-verification")
-    public LocationTrackingResponse verifyEventVenueLocation(@Payload EventLocationTrackingRequest request) {
-        return locationVerificationService.verifyEventVenueLocation(
+    @PostMapping("/venue-location")
+    public ResponseEntity<LocationTrackingResponse> verifyEventVenueLocation(@RequestBody EventLocationTrackingRequest request) {
+        LocationTrackingResponse response = locationVerificationService.verifyEventVenueLocation(
                 request.getEventId(),
                 request.getLatitude(),
                 request.getLongitude()
         );
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -89,10 +87,15 @@ public class LocationVerificationController {
      * their status is automatically upgraded to REGISTERED (or LATE if after event start).
      * </p>
      */
-    @MessageMapping("/verify-venue-location-with-upgrade")
-    @SendToUser("/queue/venue-location-auto-upgrade")
-    public LocationTrackingResponse verifyEventVenueLocationWithAutoUpgrade(@Payload EventLocationTrackingRequest request, Authentication authentication) {
+    @PostMapping("/venue-location/auto-upgrade")
+    public ResponseEntity<LocationTrackingResponse> verifyEventVenueLocationWithAutoUpgrade(@RequestBody EventLocationTrackingRequest request, Authentication authentication) {
         String authenticatedUserId = authentication.getName();
-        return locationVerificationService.verifyEventVenueLocationWithAutoUpgrade(authenticatedUserId,request.getEventId(),request.getLatitude(),request.getLongitude());
+        LocationTrackingResponse response = locationVerificationService.verifyEventVenueLocationWithAutoUpgrade(
+                authenticatedUserId,
+                request.getEventId(),
+                request.getLatitude(),
+                request.getLongitude()
+        );
+        return ResponseEntity.ok(response);
     }
 }

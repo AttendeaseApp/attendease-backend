@@ -83,36 +83,48 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
                 registrationRequest.getLatitude(),
                 registrationRequest.getLongitude());
 
-        if (!withinRegistrationLocation && !withinVenueLocation) {
-            log.warn("Student {} attempted registration outside both registration and venue location boundaries for event {}",
-                    student.getStudentNumber(), event.getEventId());
-            throw new IllegalStateException(
-                    String.format("You must be at either the registration location (%s) or venue location (%s) to check in for this event.",
-                            registrationLocation.getLocationName(),
-                            venueLocation.getLocationName()));
-        }
-
-        Optional<AttendanceRecords> existingRecord = attendanceRecordsRepository.findByStudentAndEvent(student, event);
         boolean strictValidation = event.getStrictLocationValidation() != null && event.getStrictLocationValidation();
 
-        if (existingRecord.isPresent()) {
-            AttendanceRecords record = existingRecord.get();
+        if (strictValidation) {
+            Optional<AttendanceRecords> existingRecord = attendanceRecordsRepository.findByStudentAndEvent(student, event);
+            if (existingRecord.isEmpty()) {
+                if (!withinRegistrationLocation) {
+                    log.warn("Student {} attempted strict validation registration outside registration location for event {}",
+                            student.getStudentNumber(), event.getEventId());
+                    throw new IllegalStateException(
+                            String.format("For strict validation events, you must first register at the registration location (%s). You are currently %s.",
+                                    registrationLocation.getLocationName(),
+                                    withinVenueLocation ? "at the venue location" : "outside both locations"));
+                }
+            } else {
+                AttendanceRecords record = existingRecord.get();
+                if (record.getAttendanceStatus() == AttendanceStatus.PARTIALLY_REGISTERED && withinVenueLocation) {
+                    upgradeToFullRegistration(record, venueLocation, now, event);
+                    log.info("Student {} upgraded from PARTIALLY_REGISTERED to REGISTERED at venue for event {}",
+                            student.getStudentNumber(), event.getEventId());
+                    return registrationRequest;
+                }
 
-            if (strictValidation &&
-                    record.getAttendanceStatus() == AttendanceStatus.PARTIALLY_REGISTERED &&
-                    withinVenueLocation) {
-
-                upgradeToFullRegistration(record, venueLocation, now, event);
-
-                log.info("Student {} upgraded from PARTIALLY_REGISTERED to REGISTERED at venue for event {}",
-                        student.getStudentNumber(), event.getEventId());
-
-                return registrationRequest;
+                throw new IllegalStateException(
+                        String.format("You are already registered for this event (Status: %s, Registered at: %s)",
+                                record.getAttendanceStatus(), record.getTimeIn()));
             }
-
-            throw new IllegalStateException(
-                    String.format("You are already registered for this event (Status: %s, Registered at: %s)",
-                            record.getAttendanceStatus(), record.getTimeIn()));
+        } else {
+            if (!withinRegistrationLocation && !withinVenueLocation) {
+                log.warn("Student {} attempted registration outside both registration and venue location boundaries for event {}",
+                        student.getStudentNumber(), event.getEventId());
+                throw new IllegalStateException(
+                        String.format("You must be at either the registration location (%s) or venue location (%s) to check in for this event.",
+                                registrationLocation.getLocationName(),
+                                venueLocation.getLocationName()));
+            }
+            Optional<AttendanceRecords> existingRecord = attendanceRecordsRepository.findByStudentAndEvent(student, event);
+            if (existingRecord.isPresent()) {
+                AttendanceRecords record = existingRecord.get();
+                throw new IllegalStateException(
+                        String.format("You are already registered for this event (Status: %s, Registered at: %s)",
+                                record.getAttendanceStatus(), record.getTimeIn()));
+            }
         }
 
         if (event.getFacialVerificationEnabled() && !event.getAttendanceLocationMonitoringEnabled()) {
@@ -146,6 +158,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
                 .build();
 
         attendanceRecordsRepository.save(record);
+        log.info("Student {} registered for event {} with status {} at location {}", student.getStudentNumber(), event.getEventId(), initialStatus, checkedInLocation.getLocationName());
         return registrationRequest;
     }
 
