@@ -191,21 +191,33 @@ public class AttendanceRecordsFinalizer {
 
         if (criteria == null || criteria.isAllStudents()) {
             expectedStudents = studentRepository.findAll();
-        } else if (!CollectionUtils.isEmpty(criteria.getSections())) {
-            expectedStudents = studentRepository.findBySectionIdIn(criteria.getSections());
         } else {
+            List<String> sectionsToCheck = criteria.getSelectedSections() != null && !criteria.getSelectedSections().isEmpty()
+                    ? criteria.getSelectedSections()
+                    : criteria.getSections();
+
+            List<String> coursesToCheck = criteria.getSelectedCourses() != null && !criteria.getSelectedCourses().isEmpty()
+                    ? criteria.getSelectedCourses()
+                    : criteria.getCourses();
+
+            List<String> clustersToCheck = criteria.getSelectedClusters() != null && !criteria.getSelectedClusters().isEmpty()
+                    ? criteria.getSelectedClusters()
+                    : criteria.getClusters();
+
             Set<Students> uniqueStudents = new HashSet<>();
 
-            if (!CollectionUtils.isEmpty(criteria.getCourses())) {
-                List<Section> courseSections = sectionRepository.findByCourseIdIn(criteria.getCourses());
+            if (!CollectionUtils.isEmpty(sectionsToCheck)) {
+                uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionsToCheck));
+            }
+            else if (!CollectionUtils.isEmpty(coursesToCheck)) {
+                List<Section> courseSections = sectionRepository.findByCourseIdIn(coursesToCheck);
                 List<String> sectionIds = courseSections.stream().map(Section::getId).toList();
                 if (!sectionIds.isEmpty()) {
                     uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
                 }
             }
-
-            if (!CollectionUtils.isEmpty(criteria.getClusters())) {
-                List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(criteria.getClusters());
+            else if (!CollectionUtils.isEmpty(clustersToCheck)) {
+                List<Course> clusterCourses = courseRepository.findByClusterClusterIdIn(clustersToCheck);
                 List<String> courseIds = clusterCourses.stream().map(Course::getId).toList();
                 if (!courseIds.isEmpty()) {
                     List<Section> clusterSections = sectionRepository.findByCourseIdIn(courseIds);
@@ -214,6 +226,15 @@ public class AttendanceRecordsFinalizer {
                         uniqueStudents.addAll(studentRepository.findBySectionIdIn(sectionIds));
                     }
                 }
+            }
+
+            if (criteria.getTargetYearLevels() != null && !criteria.getTargetYearLevels().isEmpty()) {
+                uniqueStudents = uniqueStudents.stream()
+                        .filter(student -> student.getSection() != null
+                                && criteria.getTargetYearLevels().contains(student.getSection().getYearLevel()))
+                        .collect(Collectors.toSet());
+                log.info("Filtered expected students by year levels {} for event {}",
+                        criteria.getTargetYearLevels(), event.getEventId());
             }
             expectedStudents = new ArrayList<>(uniqueStudents);
         }
