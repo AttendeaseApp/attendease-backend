@@ -19,7 +19,7 @@ server:
     max-http-form-post-size: 200MB
 
 jwt:
-  secret: ${JWT_SECRET:0gIcxb4s5qmWscBo58iu4BBb7FczeCVrOqldrTta98iwkSW9LTxAtMh0cUJ5dobmXHmntxbn55wkWOFxtAgXTA==}
+  secret: ${JWT_SECRET}
 
 # LOGGING CONFIGS
 logging:
