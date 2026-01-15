@@ -462,6 +462,16 @@ public final class EventManagementServiceImpl implements EventManagementService 
                     .build();
         }
 
+        List<String> originalClusters = (reqCriteria.getClusters() != null && !reqCriteria.getClusters().isEmpty())
+                ? new ArrayList<>(reqCriteria.getClusters())
+                : null;
+        List<String> originalCourses = (reqCriteria.getCourses() != null && !reqCriteria.getCourses().isEmpty())
+                ? new ArrayList<>(reqCriteria.getCourses())
+                : null;
+        List<String> originalSections = (reqCriteria.getSections() != null && !reqCriteria.getSections().isEmpty())
+                ? new ArrayList<>(reqCriteria.getSections())
+                : null;
+
         Set<String> clusterIds = new HashSet<>();
         Set<String> courseIds = new HashSet<>();
         Set<String> sectionIds = new HashSet<>();
@@ -593,13 +603,18 @@ public final class EventManagementServiceImpl implements EventManagementService 
 
         return EventEligibility.builder()
                 .allStudents(false)
+                // What user originally selected (for eligibility checks and descriptions)
+                .selectedClusters(originalClusters)
+                .selectedCourses(originalCourses)
+                .selectedSections(originalSections)
+                .targetYearLevels(reqCriteria.getTargetYearLevels())
+                // Auto-populated for internal use (all affected entities)
                 .clusters(new ArrayList<>(clusterIds))
                 .clusterNames(clusterNames)
                 .courses(new ArrayList<>(courseIds))
                 .courseNames(courseNames)
                 .sections(new ArrayList<>(sectionIds))
                 .sectionNames(sectionNames)
-                .targetYearLevels(reqCriteria.getTargetYearLevels())
                 .build();
     }
 
@@ -679,6 +694,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .semester(event.getSemester())
                 .semesterName(event.getSemesterName())
                 .targetYearLevels(criteria != null ? criteria.getTargetYearLevels() : null)
+                .eligibilityDescription(computeEligibilityDescription(criteria))
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {
@@ -720,6 +736,7 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 .semester(event.getSemester())
                 .semesterName(event.getSemesterName())
                 .targetYearLevels(criteria != null ? criteria.getTargetYearLevels() : null)
+                .eligibilityDescription(computeEligibilityDescription(criteria))
                 .build();
 
         if (criteria != null && !criteria.isAllStudents()) {
@@ -778,5 +795,86 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 );
             }
         }
+    }
+
+    private String computeEligibilityDescription(EventEligibility criteria) {
+        if (criteria == null || criteria.isAllStudents()) {
+            return "Open to all students";
+        }
+
+        List<String> parts = new ArrayList<>();
+
+        if (criteria.getTargetYearLevels() != null && !criteria.getTargetYearLevels().isEmpty()) {
+            parts.add(formatYearLevels(criteria.getTargetYearLevels()));
+        }
+
+        if (criteria.getSelectedSections() != null && !criteria.getSelectedSections().isEmpty()) {
+            List<String> sectionNames = sectionRepository.findAllById(criteria.getSelectedSections())
+                    .stream().map(Section::getSectionName).sorted().collect(Collectors.toList());
+
+            if (sectionNames.size() == 1) {
+                parts.add("Section " + sectionNames.get(0));
+            } else if (sectionNames.size() <= 3) {
+                parts.add("Sections " + String.join(", ", sectionNames));
+            } else {
+                parts.add(sectionNames.size() + " sections");
+            }
+        }
+        else if (criteria.getSelectedCourses() != null && !criteria.getSelectedCourses().isEmpty()) {
+            List<String> courseNames = courseRepository.findAllById(criteria.getSelectedCourses())
+                    .stream().map(Course::getCourseName).sorted().collect(Collectors.toList());
+
+            if (courseNames.size() == 1) {
+                parts.add("Course " + courseNames.get(0));
+            } else if (courseNames.size() <= 3) {
+                parts.add("Courses " + String.join(", ", courseNames));
+            } else {
+                parts.add(courseNames.size() + " courses");
+            }
+        }
+        else if (criteria.getSelectedClusters() != null && !criteria.getSelectedClusters().isEmpty()) {
+            List<String> clusterNames = clusterRepository.findAllById(criteria.getSelectedClusters())
+                    .stream().map(Cluster::getClusterName).sorted().collect(Collectors.toList());
+
+            if (clusterNames.size() == 1) {
+                parts.add("Cluster " + clusterNames.get(0));
+            } else if (clusterNames.size() <= 3) {
+                parts.add("Clusters " + String.join(", ", clusterNames));
+            } else {
+                parts.add(clusterNames.size() + " clusters");
+            }
+        }
+
+        return parts.isEmpty() ? "No eligible students" : String.join(" from ", parts);
+    }
+
+    private String formatYearLevels(List<Integer> yearLevels) {
+        if (yearLevels == null || yearLevels.isEmpty()) {
+            return "";
+        }
+        List<Integer> sorted = new ArrayList<>(yearLevels);
+        sorted.sort(Integer::compareTo);
+        List<String> formatted = sorted.stream()
+                .map(this::formatOrdinal)
+                .collect(Collectors.toList());
+        if (formatted.size() == 1) {
+            return formatted.getFirst() + " year students";
+        } else if (formatted.size() == 2) {
+            return formatted.get(0) + " and " + formatted.get(1) + " year students";
+        } else {
+            String allButLast = String.join(", ", formatted.subList(0, formatted.size() - 1));
+            return allButLast + ", and " + formatted.get(formatted.size() - 1) + " year students";
+        }
+    }
+
+    private String formatOrdinal(Integer number) {
+        if (number == null) return "";
+        return switch (number) {
+            case 1 -> "1st";
+            case 2 -> "2nd";
+            case 3 -> "3rd";
+            case 4 -> "4th";
+            default -> number + "th";
+        };
     }
 }

@@ -254,7 +254,6 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     }
 
     private boolean isStudentEligibleForEvent(Event event, Students student) {
-
         EventEligibility criteria = event.getEligibleStudents();
 
         if (criteria == null || criteria.isAllStudents()) {
@@ -266,20 +265,41 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
 
         Course course = student.getSection().getCourse();
         Cluster cluster = (course != null) ? course.getCluster() : null;
+        Integer studentYearLevel = student.getSection().getYearLevel();
 
-        if (criteria.getSections() != null
-                && criteria.getSections().contains(student.getSection().getId())) {
-            return true;
+        if (criteria.getSelectedSections() != null
+                && !criteria.getSelectedSections().isEmpty()
+                && criteria.getSelectedSections().contains(student.getSection().getId())) {
+            return matchesYearLevelIfSpecified(criteria, studentYearLevel);
         }
 
-        if (criteria.getCourses() != null
+        if (criteria.getSelectedCourses() != null
+                && !criteria.getSelectedCourses().isEmpty()
                 && course != null
-                && criteria.getCourses().contains(course.getId())) {
-            return true;
+                && criteria.getSelectedCourses().contains(course.getId())) {
+            return matchesYearLevelIfSpecified(criteria, studentYearLevel);
         }
 
-        return criteria.getClusters() != null
+        if (criteria.getSelectedClusters() != null
+                && !criteria.getSelectedClusters().isEmpty()
                 && cluster != null
-                && criteria.getClusters().contains(cluster.getClusterId());
+                && criteria.getSelectedClusters().contains(cluster.getClusterId())) {
+            return matchesYearLevelIfSpecified(criteria, studentYearLevel);
+        }
+
+	    return (criteria.getSelectedSections() == null || criteria.getSelectedSections().isEmpty())
+			    && (criteria.getSelectedCourses() == null || criteria.getSelectedCourses().isEmpty())
+			    && (criteria.getSelectedClusters() == null || criteria.getSelectedClusters().isEmpty())
+			    && criteria.getTargetYearLevels() != null
+			    && !criteria.getTargetYearLevels().isEmpty()
+			    && studentYearLevel != null
+			    && criteria.getTargetYearLevels().contains(studentYearLevel);
+    }
+
+    private boolean matchesYearLevelIfSpecified(EventEligibility criteria, Integer studentYearLevel) {
+        if (criteria.getTargetYearLevels() == null || criteria.getTargetYearLevels().isEmpty()) {
+            return true;
+        }
+        return studentYearLevel != null && criteria.getTargetYearLevels().contains(studentYearLevel);
     }
 }
