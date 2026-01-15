@@ -9,11 +9,14 @@ spring:
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 50MB
+      max-file-size: 200MB
+      max-request-size: 200MB
 
 server:
   port: 8082
+  tomcat:
+    max-swallow-size: 200MB
+    max-http-form-post-size: 200MB
 
 jwt:
   secret: ${JWT_SECRET:0gIcxb4s5qmWscBo58iu4BBb7FczeCVrOqldrTta98iwkSW9LTxAtMh0cUJ5dobmXHmntxbn55wkWOFxtAgXTA==}
