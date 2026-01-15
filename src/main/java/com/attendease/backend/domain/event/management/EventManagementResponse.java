@@ -45,6 +45,7 @@ public final class EventManagementResponse {
     private String semesterName;
 
     private EventStatus eventStatus;
+    private String eligibilityDescription;
     private boolean allStudents;
     private List<Integer> targetYearLevels;
     private List<String> sectionIDs;
