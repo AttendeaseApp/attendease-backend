@@ -1,8 +1,8 @@
-package com.attendease.backend.student.service.utils;
+package com.attendease.backend.client.biometrics.utility;
 
+import com.attendease.backend.exceptions.domain.Biometrics.InvalidBiometricImageException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,13 +16,14 @@ import org.springframework.web.multipart.MultipartFile;
  *     <li>Must contain exactly 5 images</li>
  *     <li>No image should be empty</li>
  * </ul>
- * If the validation fails, a {@link ResponseEntity} with a corresponding HTTP 400 (Bad Request)
- * response is returned. If validation passes, {@code null} is returned.
+ * If the validation fails, an {@link InvalidBiometricImageException} is thrown.
  * </p>
  */
 @Component
 @Slf4j
 public class BiometricImageRequestValidator {
+
+    private static final int REQUIRED_IMAGES = 5;
 
     /**
      * Validates a list of facial image files for registration.
@@ -36,25 +37,23 @@ public class BiometricImageRequestValidator {
      * </p>
      *
      * @param images the list of {@link MultipartFile} images to validate
-     * @return a {@link ResponseEntity} containing an error message if validation fails, or {@code null} if validation succeeds
+     * @throws InvalidBiometricImageException if validation fails
      */
-    public ResponseEntity<String> validateImages(List<MultipartFile> images) {
+    public void validateImages(List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
-            return ResponseEntity.badRequest().body("Image file cannot be null or empty");
+            throw new InvalidBiometricImageException("Image file cannot be null or empty");
         }
-        if (images.size() < 5) {
-            return ResponseEntity.badRequest().body("At least 5 face images required for registration");
+        if (images.size() < REQUIRED_IMAGES) {
+            throw new InvalidBiometricImageException("At least 5 face images required for registration");
         }
-        if (images.size() > 5) {
-            return ResponseEntity.badRequest().body("Maximum 5 images allowed");
+        if (images.size() > REQUIRED_IMAGES) {
+            throw new InvalidBiometricImageException("Maximum 5 images allowed");
         }
 
         for (int i = 0; i < images.size(); i++) {
             if (images.get(i).isEmpty()) {
-                return ResponseEntity.badRequest().body("Image " + (i + 1) + " is empty");
+                throw new InvalidBiometricImageException("Image " + (i + 1) + " is empty");
             }
         }
-
-        return null;
     }
 }
