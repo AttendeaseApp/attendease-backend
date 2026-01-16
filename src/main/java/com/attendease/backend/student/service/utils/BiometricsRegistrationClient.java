@@ -21,10 +21,6 @@ import com.attendease.backend.domain.biometrics.Registration.Response.Biometrics
 
 /**
  * Client component responsible for communicating with an external facial recognition service.
- * <p>
- * This client handles the preparation of multipart/form-data requests containing facial images,
- * sends them to the configured external API, and returns the extracted facial encoding data.
- * </p>
  */
 @Component
 @Slf4j
@@ -32,7 +28,6 @@ import com.attendease.backend.domain.biometrics.Registration.Response.Biometrics
 public class BiometricsRegistrationClient {
 
     private final RestTemplate restTemplate;
-    private final HttpHeaders httpHeaders;
     private final ObjectMapper objectMapper;
 
     /**
@@ -43,65 +38,107 @@ public class BiometricsRegistrationClient {
     private String extractMultipleFacialEncoding;
 
     /**
-     * Sends a list of facial images to the external facial recognition service and retrieves
-     * the corresponding facial encodings.
-     *
-     * <p>Each image is converted to a {@link ByteArrayResource} and added to a multipart request.
-     * The request is sent using {@link RestTemplate}, and the response is mapped to
-     * {@link BiometricsRegistrationResponse}.</p>
-     *
-     * @param images the list of facial image files to process
-     * @return a {@link BiometricsRegistrationResponse} containing extracted facial encodings and metadata
-     * @throws IOException if reading any of the image files fails
-     * @throws IllegalStateException if communication with the external service fails
+     * Sends a list of facial images to the external facial recognition service.
      */
     public BiometricsRegistrationResponse extractFacialEncodings(List<MultipartFile> images) throws IOException {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
-        for (MultipartFile file : images) {
-            ByteArrayResource resource = new ByteArrayResource(file.getBytes()) {
-                @Override
-                public String getFilename() {
-                    return file.getOriginalFilename();
-                }
-            };
-            body.add("files", resource);
-        }
-
-        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, httpHeaders);
-
+        log.info("Preparing to send {} images to facial service", images.size());
+        log.info("Target URL: {}", extractMultipleFacialEncoding);
+        long totalSize = images.stream().mapToLong(MultipartFile::getSize).sum();
+        log.info("Total upload size: {} MB ({} bytes)", totalSize / (1024 * 1024), totalSize);
+        MultiValueMap<String, Object> body = buildMultipartBody(images);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = createRequestEntity(body);
         try {
-            ResponseEntity<BiometricsRegistrationResponse> response = restTemplate.postForEntity(extractMultipleFacialEncoding, requestEntity, BiometricsRegistrationResponse.class);
-
-            return response.getBody();
+            log.info("Sending request to facial service...");
+            ResponseEntity<BiometricsRegistrationResponse> response = restTemplate.postForEntity(
+                    extractMultipleFacialEncoding,
+                    requestEntity,
+                    BiometricsRegistrationResponse.class
+            );
+            BiometricsRegistrationResponse responseBody = response.getBody();
+            if (responseBody == null) {
+                log.error("Received null response body from facial recognition service");
+                throw new IllegalStateException("Face processing service returned empty response");
+            }
+            log.info("Successfully received response from facial service - Status: {}", response.getStatusCode());
+            return responseBody;
         } catch (HttpClientErrorException e) {
-            String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
-            log.error("Facial recognition service returned client error ({}): {}", e.getStatusCode(), errorMessage);
-            throw new IllegalStateException(errorMessage);
+            return handleClientError(e);
         } catch (HttpServerErrorException e) {
-            String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
-            log.error("Facial recognition service returned server error ({}): {}", e.getStatusCode(), errorMessage);
-            throw new IllegalStateException("Face processing service error: " + errorMessage);
+            return handleServerError(e);
         } catch (Exception e) {
-            log.error("Failed to communicate with facial recognition service: {}", e.getMessage(), e);
-            throw new IllegalStateException("Face processing service unavailable: " + e.getMessage());
+            return handleGenericError(e);
         }
     }
 
+    private MultiValueMap<String, Object> buildMultipartBody(List<MultipartFile> images) throws IOException {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        for (int i = 0; i < images.size(); i++) {
+            MultipartFile file = images.get(i);
+            log.debug("Processing image {}: {} ({} KB)", i + 1, file.getOriginalFilename(), file.getSize() / 1024);
+            try {
+                ByteArrayResource resource = createByteArrayResource(file);
+                body.add("files", resource);
+            } catch (IOException e) {
+                log.error("Failed to read image file at index {}: {}", i, file.getOriginalFilename(), e);
+                throw new IOException("Failed to read image file: " + file.getOriginalFilename(), e);
+            }
+        }
+        return body;
+    }
+
+    private ByteArrayResource createByteArrayResource(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+        return new ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+    }
+
+    private HttpEntity<MultiValueMap<String, Object>> createRequestEntity(MultiValueMap<String, Object> body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        return new HttpEntity<>(body, headers);
+    }
+
+    private BiometricsRegistrationResponse handleClientError(HttpClientErrorException e) {
+        String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
+        log.error("Facial recognition service returned client error ({}): {}", e.getStatusCode(), errorMessage);
+        log.error("Request URL: {}", extractMultipleFacialEncoding);
+        throw new IllegalStateException(errorMessage);
+    }
+
+    private BiometricsRegistrationResponse handleServerError(HttpServerErrorException e) {
+        String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
+        log.error("Facial recognition service returned server error ({}): {}", e.getStatusCode(), errorMessage);
+        throw new IllegalStateException("Face processing service error: " + errorMessage);
+    }
+
+    private BiometricsRegistrationResponse handleGenericError(Exception e) {
+        log.error("Failed to communicate with facial recognition service", e);
+        log.error("Target URL was: {}", extractMultipleFacialEncoding);
+        throw new IllegalStateException("Face processing service unavailable: " + e.getMessage(), e);
+    }
 
     private String extractErrorDetail(String responseBody) {
-        try {
-            if (responseBody != null && !responseBody.isEmpty()) {
-                JsonNode jsonNode = objectMapper.readTree(responseBody);
-                if (jsonNode.has("detail")) {
-                    return jsonNode.get("detail").asText();
-                }
-            }
-            return responseBody;
-        } catch (Exception e) {
-            log.warn("Failed to parse error response, returning raw body: {}", e.getMessage());
-            return responseBody;
+        if (responseBody == null || responseBody.isEmpty()) {
+            return "Unknown error occurred";
         }
+        try {
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            if (jsonNode.has("detail")) {
+                return jsonNode.get("detail").asText();
+            }
+            if (jsonNode.has("message")) {
+                return jsonNode.get("message").asText();
+            }
+            if (jsonNode.has("error")) {
+                return jsonNode.get("error").asText();
+            }
+        } catch (Exception e) {
+            log.debug("Failed to parse error response as JSON: {}", e.getMessage());
+        }
+        return responseBody;
     }
 }

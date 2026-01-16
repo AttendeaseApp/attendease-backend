@@ -14,14 +14,6 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * Client service responsible for interacting with the external biometrics microservice.
- * <p>
- * Provides methods for:
- * <ul>
- *     <li>Extracting facial encodings from a Base64-encoded image</li>
- *     <li>Comparing a student's uploaded facial encoding against their registered encoding</li>
- * </ul>
- * </p>
- * This component abstracts away all HTTP communication and request/response mapping.
  */
 @Slf4j
 @Service
@@ -43,20 +35,13 @@ public class BiometricsVerificationClient {
     private String verifyFacialAuthentication;
 
     /**
-     * Sends a Base64-encoded image to the biometrics service for face detection and encoding extraction.
-     *
-     * @param imageBase64 Base64-encoded facial image
-     * @return an {@link EventRegistrationBiometricsVerificationResponse} containing the extracted encoding and detection status
-     *
-     * @throws RuntimeException if:
-     *         <ul>
-     *             <li>The biometrics service returns an error</li>
-     *             <li>No encoding is returned</li>
-     *             <li>A network or serialization error occurs</li>
-     *         </ul>
+     * Extracts facial encoding from a Base64 image.
      */
     public EventRegistrationBiometricsVerificationResponse extractFaceEncoding(String imageBase64) {
         try {
+            log.info("Extracting face encoding from Base64 image");
+            log.debug("Target URL extractSingleFaceEncoding: {}", extractSingleFaceEncoding);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -66,38 +51,32 @@ public class BiometricsVerificationClient {
             HttpEntity<Base64ImageRequest> entity = new HttpEntity<>(request, headers);
 
             ResponseEntity<EventRegistrationBiometricsVerificationResponse> response = restTemplate.postForEntity(
-                extractSingleFaceEncoding,
-                entity,
-                EventRegistrationBiometricsVerificationResponse.class
+                    extractSingleFaceEncoding,
+                    entity,
+                    EventRegistrationBiometricsVerificationResponse.class
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                log.info("Successfully extracted face encoding");
                 return response.getBody();
             }
 
+            log.error("Failed to extract face encoding - Status: {}", response.getStatusCode());
             throw new RuntimeException("Failed to extract face encoding");
         } catch (Exception e) {
-            log.error("Error extracting face encoding: {}", e.getMessage());
+            log.error("Error extracting face encoding from URL: {}", extractSingleFaceEncoding, e);
             throw new RuntimeException("Face detection failed: " + e.getMessage());
         }
     }
 
     /**
-     * Sends two facial encodings to the biometrics service to determine whether they match.
-     *
-     * @param uploadedEncoding  the facial encoding derived from the user's uploaded image
-     * @param referenceEncoding the pre-registered encoding stored for the student
-     * @return a {@link BiometricsVerificationResponse} describing whether the two encodings match
-     *
-     * @throws RuntimeException if:
-     *         <ul>
-     *             <li>The verification service returns an error</li>
-     *             <li>The response body is missing</li>
-     *             <li>A network or serialization issue occurs</li>
-     *         </ul>
+     * Verifies two facial encodings to the biometrics service to determine whether they match.
      */
     public BiometricsVerificationResponse verifyFace(List<Float> uploadedEncoding, List<Float> referenceEncoding) {
         try {
+            log.info("Verifying face encodings");
+            log.debug("Target URL verifyFacialAuthentication: {}", verifyFacialAuthentication);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -110,12 +89,14 @@ public class BiometricsVerificationClient {
             ResponseEntity<BiometricsVerificationResponse> response = restTemplate.postForEntity(verifyFacialAuthentication, entity, BiometricsVerificationResponse.class);
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                log.info("Face verification completed - Match: {}", response.getBody().getIs_face_matched());
                 return response.getBody();
             }
 
+            log.error("Failed to verify face - Status: {}", response.getStatusCode());
             throw new RuntimeException("Failed to verify face");
         } catch (Exception e) {
-            log.error("Error verifying face: {}", e.getMessage());
+            log.error("Error verifying face at URL: {}", verifyFacialAuthentication, e);
             throw new RuntimeException("Face verification failed: " + e.getMessage());
         }
     }
