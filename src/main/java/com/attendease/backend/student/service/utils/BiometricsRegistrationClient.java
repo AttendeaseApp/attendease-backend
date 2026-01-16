@@ -2,6 +2,9 @@ package com.attendease.backend.student.service.utils;
 
 import java.io.IOException;
 import java.util.List;
+
+import com.attendease.backend.exceptions.domain.Biometrics.FacialRecognitionServiceException;
+import com.attendease.backend.exceptions.domain.Biometrics.Registration.BiometricProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +31,6 @@ import com.attendease.backend.domain.biometrics.Registration.Response.Biometrics
 public class BiometricsRegistrationClient {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
 
     /**
      * Endpoint URL for extracting multiple facial encodings from images.
@@ -57,16 +59,22 @@ public class BiometricsRegistrationClient {
             BiometricsRegistrationResponse responseBody = response.getBody();
             if (responseBody == null) {
                 log.error("Received null response body from facial recognition service");
-                throw new IllegalStateException("Face processing service returned empty response");
+                throw new BiometricProcessingException("Face processing service returned empty response");
             }
             log.info("Successfully received response from facial service - Status: {}", response.getStatusCode());
             return responseBody;
         } catch (HttpClientErrorException e) {
-            return handleClientError(e);
+            log.error("Facial recognition service returned client error ({}): ", e.getStatusCode());
+            log.error("CLIENT ERROR Target URL was: {}", extractMultipleFacialEncoding);
+            throw new FacialRecognitionServiceException(e.getResponseBodyAsString());
         } catch (HttpServerErrorException e) {
-            return handleServerError(e);
+            log.error("Facial recognition service returned server error ({}): ", e.getStatusCode());
+            log.error("SERVICE ERROR Target URL was: {}", extractMultipleFacialEncoding);
+            throw new FacialRecognitionServiceException("Face processing service error: " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            return handleGenericError(e);
+            log.error("Failed to communicate with facial recognition service", e);
+            log.error("COMMUNICATING ERROR Target URL was: {}", extractMultipleFacialEncoding);
+            throw new FacialRecognitionServiceException("Face processing service unavailable: " + e.getMessage(), e);
         }
     }
 
@@ -100,45 +108,5 @@ public class BiometricsRegistrationClient {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         return new HttpEntity<>(body, headers);
-    }
-
-    private BiometricsRegistrationResponse handleClientError(HttpClientErrorException e) {
-        String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
-        log.error("Facial recognition service returned client error ({}): {}", e.getStatusCode(), errorMessage);
-        log.error("Request URL: {}", extractMultipleFacialEncoding);
-        throw new IllegalStateException(errorMessage);
-    }
-
-    private BiometricsRegistrationResponse handleServerError(HttpServerErrorException e) {
-        String errorMessage = extractErrorDetail(e.getResponseBodyAsString());
-        log.error("Facial recognition service returned server error ({}): {}", e.getStatusCode(), errorMessage);
-        throw new IllegalStateException("Face processing service error: " + errorMessage);
-    }
-
-    private BiometricsRegistrationResponse handleGenericError(Exception e) {
-        log.error("Failed to communicate with facial recognition service", e);
-        log.error("Target URL was: {}", extractMultipleFacialEncoding);
-        throw new IllegalStateException("Face processing service unavailable: " + e.getMessage(), e);
-    }
-
-    private String extractErrorDetail(String responseBody) {
-        if (responseBody == null || responseBody.isEmpty()) {
-            return "Unknown error occurred";
-        }
-        try {
-            JsonNode jsonNode = objectMapper.readTree(responseBody);
-            if (jsonNode.has("detail")) {
-                return jsonNode.get("detail").asText();
-            }
-            if (jsonNode.has("message")) {
-                return jsonNode.get("message").asText();
-            }
-            if (jsonNode.has("error")) {
-                return jsonNode.get("error").asText();
-            }
-        } catch (Exception e) {
-            log.debug("Failed to parse error response as JSON: {}", e.getMessage());
-        }
-        return responseBody;
     }
 }
