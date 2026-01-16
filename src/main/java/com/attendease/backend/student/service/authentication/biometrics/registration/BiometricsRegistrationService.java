@@ -1,8 +1,6 @@
 package com.attendease.backend.student.service.authentication.biometrics.registration;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 
 /**
@@ -15,20 +13,10 @@ import java.util.List;
 public interface BiometricsRegistrationService {
 
     /**
-     * Registers facial biometrics for a student associated with the given user ID.
+     * Registers facial biometric data for a student.
      *
-     * <p>This method performs the following steps:</p>
-     * <ol>
-     *     <li>Validate uploaded image files.</li>
-     *     <li>Retrieve the student number associated with the user ID.</li>
-     *     <li>Call an external facial recognition service to extract facial encodings.</li>
-     *     <li>Validate the API response and encoding data.</li>
-     *     <li>Persist the biometric data to the database.</li>
-     * </ol>
-     *
-     * @param authenticatedUserId the ID of the user whose facial biometrics are being registered
-     * @param images a list of uploaded image files containing the student's face
-     * @return a {@link ResponseEntity} with success or error message
+     * @param authenticatedUserId the authenticated user ID
+     * @param images the list of facial images to process if  encoding is invalid
      */
-    ResponseEntity<String> registerFacialBiometrics(String authenticatedUserId, List<MultipartFile> images);
+    void registerFacialBiometrics(String authenticatedUserId, List<MultipartFile> images);
 }

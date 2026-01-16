@@ -3,9 +3,13 @@ package com.attendease.backend.exceptions.handling;
 import com.attendease.backend.domain.exception.error.ErrorResponse;
 import com.attendease.backend.domain.exception.error.csv.CsvImportErrorResponse;
 import com.attendease.backend.domain.exception.validation.ValidationErrorResponse;
+import com.attendease.backend.exceptions.domain.Biometrics.Registration.BiometricAlreadyRegisteredException;
+import com.attendease.backend.exceptions.domain.Biometrics.Registration.BiometricProcessingException;
 import com.attendease.backend.exceptions.domain.Event.*;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.exceptions.domain.Location.*;
+import com.attendease.backend.exceptions.domain.Biometrics.*;
+import com.attendease.backend.exceptions.domain.Student.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -217,6 +221,70 @@ public class ExceptionHandling {
     public ResponseEntity<ErrorResponse> handleInvalidLocationPurpose(InvalidLocationPurposeException ex) {
         ErrorResponse error = new ErrorResponse(
                 "INVALID_LOCATION_PURPOSE",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /*
+     * BIOMETRICS RELATED EXCEPTIONS
+     */
+
+    @ExceptionHandler(BiometricAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleBiometricAlreadyRegistered(BiometricAlreadyRegisteredException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "BIOMETRIC_ALREADY_REGISTERED",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleStudentNotFound(StudentNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "STUDENT_NOT_FOUND",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(BiometricProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleBiometricProcessing(BiometricProcessingException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "BIOMETRIC_PROCESSING_ERROR",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FacialRecognitionServiceException.class)
+    public ResponseEntity<ErrorResponse> handleFacialRecognitionService(FacialRecognitionServiceException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "FACIAL_RECOGNITION_SERVICE_ERROR",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
+    @ExceptionHandler(InvalidFacialEncodingException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFacialEncoding(InvalidFacialEncodingException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_FACIAL_ENCODING",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidBiometricImageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidBiometricImage(InvalidBiometricImageException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_BIOMETRIC_IMAGE",
                 ex.getMessage(),
                 LocalDateTime.now()
         );
