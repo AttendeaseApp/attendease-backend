@@ -4,12 +4,18 @@ import com.attendease.backend.domain.biometrics.Verification.Request.Base64Image
 import com.attendease.backend.domain.biometrics.Verification.Request.BiometricsVerificationRequest;
 import com.attendease.backend.domain.biometrics.Verification.Response.BiometricsVerificationResponse;
 import com.attendease.backend.domain.biometrics.Verification.Response.EventRegistrationBiometricsVerificationResponse;
+import com.attendease.backend.exceptions.domain.Biometrics.FacialRecognitionServiceException;
 import java.util.List;
+
+import com.attendease.backend.exceptions.domain.Biometrics.Registration.BiometricProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -36,6 +42,11 @@ public class BiometricsVerificationClient {
 
     /**
      * Extracts facial encoding from a Base64 image.
+     *
+     * @param imageBase64 the Base64 encoded image
+     * @return EventRegistrationBiometricsVerificationResponse containing the facial encoding
+     * @throws BiometricProcessingException if face detection fails
+     * @throws FacialRecognitionServiceException if the external service is unavailable
      */
     public EventRegistrationBiometricsVerificationResponse extractFaceEncoding(String imageBase64) {
         try {
@@ -62,15 +73,40 @@ public class BiometricsVerificationClient {
             }
 
             log.error("Failed to extract face encoding - Status: {}", response.getStatusCode());
-            throw new RuntimeException("Failed to extract face encoding");
+            throw new BiometricProcessingException("Failed to extract face encoding from image");
+
+        } catch (HttpClientErrorException e) {
+            log.error("Client error while extracting face encoding: Status {}, Body: {}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BiometricProcessingException("Invalid image format or face not detected in the image");
+
+        } catch (HttpServerErrorException e) {
+            log.error("Server error from facial recognition service: Status {}", e.getStatusCode());
+            throw new FacialRecognitionServiceException(
+                    "Facial recognition service is currently unavailable. Please try again later.");
+
+        } catch (ResourceAccessException e) {
+            log.error("Cannot connect to facial recognition service: {}", e.getMessage());
+            throw new FacialRecognitionServiceException(
+                    "Cannot connect to facial recognition service. Please try again later.");
+
+        } catch (BiometricProcessingException | FacialRecognitionServiceException e) {
+            throw e;
+
         } catch (Exception e) {
-            log.error("Error extracting face encoding from URL: {}", extractSingleFaceEncoding, e);
-            throw new RuntimeException("Face detection failed: " + e.getMessage());
+            log.error("Unexpected error extracting face encoding from URL: {}", extractSingleFaceEncoding, e);
+            throw new BiometricProcessingException("Face detection failed: " + e.getMessage());
         }
     }
 
     /**
-     * Verifies two facial encodings to the biometrics service to determine whether they match.
+     * Verifies two facial encodings to determine whether they match.
+     *
+     * @param uploadedEncoding the facial encoding from the uploaded image
+     * @param referenceEncoding the reference facial encoding from the database
+     * @return BiometricsVerificationResponse containing verification result
+     * @throws BiometricProcessingException if verification fails
+     * @throws FacialRecognitionServiceException if the external service is unavailable
      */
     public BiometricsVerificationResponse verifyFace(List<Float> uploadedEncoding, List<Float> referenceEncoding) {
         try {
@@ -94,10 +130,26 @@ public class BiometricsVerificationClient {
             }
 
             log.error("Failed to verify face - Status: {}", response.getStatusCode());
-            throw new RuntimeException("Failed to verify face");
+            throw new BiometricProcessingException("Failed to complete facial verification");
+
+        } catch (HttpClientErrorException e) {
+            log.error("Client error during face verification: Status {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new BiometricProcessingException("Invalid facial encoding data provided for verification");
+
+        } catch (HttpServerErrorException e) {
+            log.error("Server error from facial verification service: Status {}", e.getStatusCode());
+            throw new FacialRecognitionServiceException("Facial verification service is currently unavailable. Please try again later.");
+
+        } catch (ResourceAccessException e) {
+            log.error("Cannot connect to facial verification service: {}", e.getMessage());
+            throw new FacialRecognitionServiceException("Cannot connect to facial verification service. Please try again later.");
+
+        } catch (BiometricProcessingException | FacialRecognitionServiceException e) {
+            throw e;
+
         } catch (Exception e) {
-            log.error("Error verifying face at URL: {}", verifyFacialAuthentication, e);
-            throw new RuntimeException("Face verification failed: " + e.getMessage());
+            log.error("Unexpected error verifying face at URL: {}", verifyFacialAuthentication, e);
+            throw new BiometricProcessingException("Face verification failed: " + e.getMessage());
         }
     }
 }

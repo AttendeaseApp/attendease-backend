@@ -13,7 +13,6 @@ spring:
       max-file-size: 200MB
       max-request-size: 200MB
       file-size-threshold: 2MB
-      location: ${java.io.tmpdir}
 
 server:
   port: 8082
