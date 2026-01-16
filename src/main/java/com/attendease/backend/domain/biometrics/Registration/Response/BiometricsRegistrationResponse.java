@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.biometrics.Registration.Response;
 
+import com.attendease.backend.client.biometrics.registration.BiometricsRegistrationClient;
 import com.attendease.backend.student.service.authentication.biometrics.registration.impl.BiometricsRegistrationServiceImpl;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
@@ -13,7 +14,7 @@ import lombok.Data;
  * </p>
  * <p>
  * Typical usage occurs in {@link BiometricsRegistrationServiceImpl#registerFacialBiometrics(String, List)}
- * where this response is returned by the {@link com.attendease.backend.student.service.utils.BiometricsRegistrationClient#extractFacialEncodings(List)} method.
+ * where this response is returned by the {@link BiometricsRegistrationClient#extractFacialEncodings(List)} method.
  * </p>
  */
 @Data

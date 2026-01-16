@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.utils;
+package com.attendease.backend.client.biometrics.verification;
 
 import com.attendease.backend.domain.biometrics.Verification.Request.Base64ImageRequest;
 import com.attendease.backend.domain.biometrics.Verification.Request.BiometricsVerificationRequest;

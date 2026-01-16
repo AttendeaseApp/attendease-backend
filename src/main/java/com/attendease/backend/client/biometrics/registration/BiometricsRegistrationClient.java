@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.utils;
+package com.attendease.backend.client.biometrics.registration;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,8 +17,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.attendease.backend.domain.biometrics.Registration.Response.BiometricsRegistrationResponse;
 

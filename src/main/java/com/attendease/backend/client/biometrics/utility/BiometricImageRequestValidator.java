@@ -1,4 +1,4 @@
-package com.attendease.backend.student.service.utils;
+package com.attendease.backend.client.biometrics.utility;
 
 import com.attendease.backend.exceptions.domain.Biometrics.InvalidBiometricImageException;
 import java.util.List;

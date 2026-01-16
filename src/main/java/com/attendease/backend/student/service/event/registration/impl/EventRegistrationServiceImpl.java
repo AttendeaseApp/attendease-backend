@@ -20,7 +20,7 @@ import com.attendease.backend.repository.event.EventRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.repository.users.UserRepository;
 import com.attendease.backend.student.service.event.registration.EventRegistrationService;
-import com.attendease.backend.student.service.utils.BiometricsVerificationClient;
+import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
 import com.attendease.backend.student.service.utils.LocationValidator;
 import java.time.LocalDateTime;
 import java.util.Optional;

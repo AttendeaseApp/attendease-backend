@@ -1,6 +1,8 @@
 package com.attendease.backend.domain.biometrics.Verification.Request;
 
 import java.util.List;
+
+import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
 import lombok.Data;
 
 /**
@@ -12,7 +14,7 @@ import lombok.Data;
  *     <li>{@code reference_encoding} — the stored facial encoding that is pre-registered for the student</li>
  * </ul>
  *
- * <p>Used by the {@link com.attendease.backend.student.service.utils.BiometricsVerificationClient}
+ * <p>Used by the {@link BiometricsVerificationClient}
  * to confirm if the uploaded face matches the pre-registered face.</p>
  */
 @Data

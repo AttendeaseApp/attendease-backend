@@ -11,8 +11,8 @@ import com.attendease.backend.exceptions.domain.Student.StudentNotFoundException
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.students.StudentRepository;
 import com.attendease.backend.student.service.authentication.biometrics.registration.BiometricsRegistrationService;
-import com.attendease.backend.student.service.utils.BiometricImageRequestValidator;
-import com.attendease.backend.student.service.utils.BiometricsRegistrationClient;
+import com.attendease.backend.client.biometrics.utility.BiometricImageRequestValidator;
+import com.attendease.backend.client.biometrics.registration.BiometricsRegistrationClient;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;

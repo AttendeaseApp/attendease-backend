@@ -1,6 +1,8 @@
 package com.attendease.backend.domain.biometrics.Verification.Response;
 
 import java.util.List;
+
+import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
 import lombok.Data;
 
 /**
@@ -13,7 +15,7 @@ import lombok.Data;
  *     <li>{@code facialEncoding} — the extracted facial encoding represented as a list of floats</li>
  * </ul>
  *
- * <p>Used primarily by {@link com.attendease.backend.student.service.utils.BiometricsVerificationClient}.</p>
+ * <p>Used primarily by {@link BiometricsVerificationClient}.</p>
  */
 @Data
 public class EventRegistrationBiometricsVerificationResponse {

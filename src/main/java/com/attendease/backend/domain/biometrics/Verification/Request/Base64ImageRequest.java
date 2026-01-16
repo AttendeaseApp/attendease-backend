@@ -1,5 +1,6 @@
 package com.attendease.backend.domain.biometrics.Verification.Request;
 
+import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
 import lombok.Data;
 
 /**
@@ -11,7 +12,7 @@ import lombok.Data;
  * </p>
  *
  * <p>
- * This class is used in {@link com.attendease.backend.student.service.utils.BiometricsVerificationClient#extractFaceEncoding(String)}
+ * This class is used in {@link BiometricsVerificationClient#extractFaceEncoding(String)}
  * when sending a request to the biometrics service.
  * </p>
  */
