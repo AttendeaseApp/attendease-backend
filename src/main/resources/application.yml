@@ -9,14 +9,23 @@ spring:
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
   servlet:
     multipart:
+      enabled: true
       max-file-size: 200MB
       max-request-size: 200MB
+      file-size-threshold: 2MB
+      location: ${java.io.tmpdir}
 
 server:
   port: 8082
   tomcat:
     max-swallow-size: 200MB
     max-http-form-post-size: 200MB
+    max-http-header-size: 8KB
+    connection-timeout: 60000
+    threads:
+      max: 200
+      min-spare: 10
+  max-http-request-header-size: 8KB
 
 jwt:
   secret: ${JWT_SECRET}
@@ -35,6 +44,11 @@ logging:
           socket:
             messaging:
               StompSubProtocolHandler: TRACE
+        boot:
+          autoconfigure:
+            web:
+              servlet:
+                MultipartAutoConfiguration: DEBUG
       mongodb:
         driver: INFO
     com:
