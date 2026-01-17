@@ -4,7 +4,6 @@ import com.attendease.backend.domain.academic.Academic;
 import com.attendease.backend.domain.cluster.Cluster;
 import com.attendease.backend.domain.course.Course;
 import com.attendease.backend.domain.enums.EventStatus;
-import com.attendease.backend.domain.enums.location.LocationEnvironment;
 import com.attendease.backend.domain.enums.location.LocationPurpose;
 import com.attendease.backend.domain.event.eligibility.EventEligibility;
 import com.attendease.backend.domain.event.Event;
@@ -13,7 +12,6 @@ import com.attendease.backend.domain.event.management.EventManagementResponse;
 import com.attendease.backend.domain.location.Location;
 import com.attendease.backend.domain.section.Section;
 import com.attendease.backend.exceptions.domain.Event.*;
-import com.attendease.backend.exceptions.domain.Location.InvalidLocationEnvironmentException;
 import com.attendease.backend.exceptions.domain.Location.InvalidLocationPurposeException;
 import com.attendease.backend.exceptions.domain.Location.LocationNotFoundException;
 import com.attendease.backend.osa.service.event.management.EventManagementService;
@@ -123,7 +121,6 @@ public final class EventManagementServiceImpl implements EventManagementService 
         Location venueLocation = locationRepository.findById(venueLocationId)
                 .orElseThrow(() -> new LocationNotFoundException("The selected location for venue does not exist: " + venueLocationId));
 
-        validateAttendanceMonitoringWithVenueType(venueLocation, request.getAttendanceLocationMonitoringEnabled());
         validateLocationPurposes(regLocation, venueLocation);
 
         eventSession.setVenueLocation(venueLocation);
@@ -273,20 +270,9 @@ public final class EventManagementServiceImpl implements EventManagementService 
                 Location venueLocation = locationRepository.findById(newVenueLocationId)
                         .orElseThrow(() -> new LocationNotFoundException("The selected location for venue does not exist: " + newVenueLocationId));
 
-                validateAttendanceMonitoringWithVenueType(venueLocation,
-                        updateEvent.getAttendanceLocationMonitoringEnabled() != null
-                                ? updateEvent.getAttendanceLocationMonitoringEnabled()
-                                : existingEvent.getAttendanceLocationMonitoringEnabled());
-
                 existingEvent.setVenueLocation(venueLocation);
                 existingEvent.setVenueLocationId(newVenueLocationId);
                 existingEvent.setVenueLocationName(venueLocation.getLocationName());
-            }
-            if (updateEvent.getAttendanceLocationMonitoringEnabled() != null && newVenueLocationId == null) {
-                validateAttendanceMonitoringWithVenueType(
-                        existingEvent.getVenueLocation(),
-                        updateEvent.getAttendanceLocationMonitoringEnabled()
-                );
             }
 
             validateLocationPurposes(existingEvent.getRegistrationLocation(), existingEvent.getVenueLocation());
@@ -758,18 +744,6 @@ public final class EventManagementServiceImpl implements EventManagementService 
         }
         if (venueLocation != null && !LocationPurpose.EVENT_VENUE.equals(venueLocation.getPurpose())) {
             throw new InvalidLocationPurposeException("Venue location must have purpose EVENT_VENUE (current: " + venueLocation.getPurpose() + ")");
-        }
-    }
-
-
-    private void validateAttendanceMonitoringWithVenueType(Location venueLocation, Boolean attendanceMonitoringEnabled) {
-        if (Boolean.TRUE.equals(attendanceMonitoringEnabled) &&
-                venueLocation != null &&
-                LocationEnvironment.INDOOR.equals(venueLocation.getEnvironment())) {
-            throw new InvalidLocationEnvironmentException(
-                    "Attendance location monitoring cannot be enabled for INDOOR venues. " +
-                            "This feature is only available for OUTDOOR venues where GPS tracking is reliable."
-            );
         }
     }
 
