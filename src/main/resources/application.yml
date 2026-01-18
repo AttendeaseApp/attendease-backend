@@ -43,6 +43,7 @@ logging:
           socket:
             messaging:
               StompSubProtocolHandler: TRACE
+          multipart: DEBUG
         boot:
           autoconfigure:
             web:
@@ -50,12 +51,25 @@ logging:
                 MultipartAutoConfiguration: DEBUG
       mongodb:
         driver: INFO
+      apache:
+        tomcat:
+          util:
+            http:
+              fileupload: DEBUG
     com:
       attendease:
         backend:
           configurations: TRACE
+          client:
+            biometrics: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,facial-service
 
 info:
   timezone: ${user.timezone:UTC}

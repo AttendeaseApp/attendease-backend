@@ -16,20 +16,20 @@ cors:
     - http://localhost:5173
   osa-path-pattern: /api/osa/**
 
-# FACIAL RECOGNITION SERVICE (LOCAL)
-facial:
-  recognition:
-    service:
-      url: http://127.0.0.1:8001/
-  verification:
-    endpoint: ${facial.recognition.service.url}verification/authenticate-face
-
-extract:
-  multiple:
-    facial:
-      encoding:
-        endpoint: ${facial.recognition.service.url}extract-multiple-face-encodings
-  single:
-    facial:
-      encoding:
-        endpoint: ${facial.recognition.service.url}extract-face-encoding
+## FACIAL RECOGNITION SERVICE (LOCAL)
+#facial:
+#  recognition:
+#    service:
+#      url: http://127.0.0.1:8000/
+#  verification:
+#    endpoint: ${facial.recognition.service.url}verification/authenticate-face
+#
+#extract:
+#  multiple:
+#    facial:
+#      encoding:
+#        endpoint: ${facial.recognition.service.url}extract-multiple-face-encodings
+#  single:
+#    facial:
+#      encoding:
+#        endpoint: ${facial.recognition.service.url}extract-face-encoding

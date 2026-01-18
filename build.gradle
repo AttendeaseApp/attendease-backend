@@ -35,6 +35,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.security:spring-security-messaging'
 
+    //Actuator
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
@@ -42,7 +46,7 @@ dependencies {
 
     // Caching
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-cache
-    implementation("org.springframework.boot:spring-boot-starter-cache:4.0.1")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
     // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
 

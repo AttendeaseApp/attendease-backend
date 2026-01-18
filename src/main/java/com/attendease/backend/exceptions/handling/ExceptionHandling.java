@@ -10,17 +10,20 @@ import com.attendease.backend.exceptions.domain.ImportException.CsvImportExcepti
 import com.attendease.backend.exceptions.domain.Location.*;
 import com.attendease.backend.exceptions.domain.Biometrics.*;
 import com.attendease.backend.exceptions.domain.Student.StudentNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class ExceptionHandling {
 
@@ -289,5 +292,21 @@ public class ExceptionHandling {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        log.error("=== UPLOAD SIZE EXCEEDED ===");
+        log.error("Exception message: {}", exc.getMessage());
+        log.error("Max upload size: {}", exc.getMaxUploadSize());
+        log.error("Stack trace: ", exc);
+
+        ErrorResponse error = new ErrorResponse(
+                "FILE_SIZE_EXCEEDED",
+                String.format("Total upload size exceeds maximum limit of %d MB. Please reduce image file sizes.",
+                        exc.getMaxUploadSize() / (1024 * 1024)),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
     }
 }
