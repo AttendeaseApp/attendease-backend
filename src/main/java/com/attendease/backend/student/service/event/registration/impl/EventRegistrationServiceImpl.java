@@ -28,6 +28,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -43,7 +44,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
     private final LocationValidator locationValidator;
 
     @Override
-    public EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest) {
+    public EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest, MultipartFile faceImage) {
 
         User user = userRepository.findById(authenticatedUserId)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found"));
@@ -128,10 +129,10 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
 
         if (event.getFacialVerificationEnabled() && !event.getAttendanceLocationMonitoringEnabled()) {
-            if (registrationRequest.getFaceImageBase64() == null || registrationRequest.getFaceImageBase64().isEmpty()) {
+            if (faceImage == null || faceImage.isEmpty()) {
                 throw new IllegalStateException("Face image is required for check-in when facial verification is enabled");
             }
-            verifyStudentFace(student.getStudentNumber(), registrationRequest.getFaceImageBase64());
+            verifyStudentFace(student.getStudentNumber(), faceImage);
         }
 
         AttendanceStatus initialStatus = determineInitialStatus(
@@ -190,7 +191,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         return null;
     }
 
-    private void upgradeToFullRegistration(AttendanceRecords record,Location venueLocation,LocalDateTime now,Event event) {
+    private void upgradeToFullRegistration(AttendanceRecords record, Location venueLocation, LocalDateTime now, Event event) {
         boolean isLate = now.isAfter(event.getStartingDateTime());
         record.setAttendanceStatus(isLate ? AttendanceStatus.LATE : AttendanceStatus.REGISTERED);
         record.setLocation(venueLocation);
@@ -219,8 +220,7 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
         }
     }
 
-    private void verifyStudentFace(String studentNumber, String faceImageBase64) {
-
+    private void verifyStudentFace(String studentNumber, MultipartFile faceImage) {
         try {
             BiometricData biometricData = biometricsRepository.findByStudentNumber(studentNumber)
                     .orElseThrow(() -> new IllegalStateException(
@@ -230,21 +230,39 @@ public class EventRegistrationServiceImpl implements EventRegistrationService {
                 throw new IllegalStateException("Student's facial encoding is not registered");
             }
 
-            EventRegistrationBiometricsVerificationResponse encodingResponse =
-                    biometricsVerificationService.extractFaceEncoding(faceImageBase64);
+            log.info("Extracting facial encoding from uploaded image for student: {}", studentNumber);
+            EventRegistrationBiometricsVerificationResponse encodingResponse = biometricsVerificationService.extractFaceEncoding(faceImage);
 
             if (!encodingResponse.getSuccess() || encodingResponse.getFacialEncoding() == null) {
                 throw new IllegalStateException("Failed to detect face in uploaded image");
             }
 
+            Double quality = encodingResponse.getQuality();
+            if (quality != null) {
+                log.info("Face detection quality score for student {}: {}", studentNumber, quality);
+                if (quality < 50) {
+                    log.warn("Low quality face detection ({}) for student {}", quality, studentNumber);
+                }
+            }
+
+            log.info("Comparing facial encodings for student: {}", studentNumber);
             BiometricsVerificationResponse verificationResponse =
                     biometricsVerificationService.verifyFace(
                             encodingResponse.getFacialEncoding(),
                             biometricData.getFacialEncoding());
 
-            if (!verificationResponse.getSuccess() || !verificationResponse.getIs_face_matched()) {
-                throw new IllegalStateException("Facial verification failed. Please try again with better lighting.");
+            if (!verificationResponse.getIs_face_matched()) {
+                log.warn("Face verification failed for student {}. Distance: {}, Confidence: {}",
+                        studentNumber,
+                        verificationResponse.getFace_distance(),
+                        verificationResponse.getConfidence());
+                throw new IllegalStateException(
+                        String.format("Facial verification failed (confidence: %.2f%%). Please try again with better lighting.",
+                                (verificationResponse.getConfidence() != null ? verificationResponse.getConfidence() * 100 : 0)));
             }
+
+            log.info("Face verification successful for student {}. Confidence: {}", studentNumber, verificationResponse.getConfidence());
+
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {

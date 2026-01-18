@@ -1,8 +1,9 @@
 package com.attendease.backend.domain.biometrics.Verification.Response;
 
-import java.util.List;
+import java.util.Map;
 
 import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -21,5 +22,24 @@ import lombok.Data;
 public class EventRegistrationBiometricsVerificationResponse {
 
     private Boolean success;
-    private List<Float> facialEncoding;
+
+    @JsonProperty("facialEncoding")
+    private java.util.List<Float> facialEncoding;
+
+    private String message;
+
+    private Map<String, Object> metadata;
+
+    /**
+     * Helper method to get the quality score from metadata
+     */
+    public Double getQuality() {
+        if (metadata != null && metadata.containsKey("average_quality")) {
+            Object quality = metadata.get("average_quality");
+            if (quality instanceof Number) {
+                return ((Number) quality).doubleValue();
+            }
+        }
+        return null;
+    }
 }
