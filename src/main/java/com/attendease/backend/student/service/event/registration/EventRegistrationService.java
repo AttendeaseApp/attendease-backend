@@ -1,6 +1,7 @@
 package com.attendease.backend.student.service.event.registration;
 
 import com.attendease.backend.domain.event.registration.EventRegistrationRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * EventRegistrationServiceImpl is responsible for handling student event registrations.
@@ -33,5 +34,5 @@ public interface EventRegistrationService {
      * @throws IllegalStateException if the user, student, event, location, or biometrics are invalid,
      *                               or if registration conditions are not met
      */
-    EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest);
+	EventRegistrationRequest eventRegistration(String authenticatedUserId, EventRegistrationRequest registrationRequest, MultipartFile faceImage);
 }

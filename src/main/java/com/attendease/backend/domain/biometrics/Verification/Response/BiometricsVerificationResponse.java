@@ -1,6 +1,6 @@
 package com.attendease.backend.domain.biometrics.Verification.Response;
 
-import com.attendease.backend.client.biometrics.verification.BiometricsVerificationClient;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -8,17 +8,23 @@ import lombok.Data;
  *
  * <p>This DTO contains the outcome of the verification process, including:</p>
  * <ul>
- *     <li>{@code success} — whether the verification request was processed successfully</li>
- *     <li>{@code verified} — general verification flag (may be used for extended workflows)</li>
- *     <li>{@code is_face_matched} — indicates whether the uploaded encoding matches the stored reference encoding</li>
+ *     <li>{@code is_face_matched} — whether the uploaded encoding matches the stored reference encoding</li>
+ *     <li>{@code face_distance} — Euclidean distance between encodings (lower = more similar)</li>
+ *     <li>{@code confidence} — confidence score (1.0 - distance), higher = more confident match</li>
  * </ul>
- *
- * <p>Used primarily by {@link BiometricsVerificationClient}.</p>
  */
 @Data
 public class BiometricsVerificationResponse {
 
-    private Boolean success;
-    private Boolean verified;
+    @JsonProperty("is_face_matched")
     private Boolean is_face_matched;
+
+    @JsonProperty("face_distance")
+    private Double face_distance;
+
+    private Double confidence;
+
+    private Boolean success;
+
+    private Boolean verified;
 }
