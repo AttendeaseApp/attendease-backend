@@ -55,4 +55,7 @@ public interface AttendanceRecordsRepository extends MongoRepository<AttendanceR
     Optional<AttendanceRecords> findByStudentAndEvent(Students student, Event event);
 
     void deleteByStudent_StudentNumber(String studentNumber);
+
+    Long countByLocationLocationId(String locationId);
+
 }

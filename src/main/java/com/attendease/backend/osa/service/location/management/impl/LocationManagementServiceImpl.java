@@ -130,14 +130,17 @@ public final class LocationManagementServiceImpl implements LocationManagementSe
     @Override
     public void deleteLocationById(String locationId) {
         Location location = locationRepository.findById(locationId).orElseThrow(() -> new LocationNotFoundException(locationId));
-        Long eventSessionCount = eventRepository.countByVenueLocationId(locationId);
-        Long attendanceRecordCount = attendanceRecordsRepository.countByEventLocationId(locationId);
 
-        if (eventSessionCount > 0 || attendanceRecordCount > 0) {
+        Long venueEventCount = eventRepository.countByVenueLocationId(locationId);
+        Long regEventCount = eventRepository.countByRegistrationLocationId(locationId);
+        Long attendanceCountByEventLocationId = attendanceRecordsRepository.countByEventLocationId(locationId);
+        Long attendanceCountByLocationRef = attendanceRecordsRepository.countByLocationLocationId(locationId);
+
+        if (venueEventCount > 0 || regEventCount > 0 || attendanceCountByEventLocationId > 0 || attendanceCountByLocationRef > 0) {
             throw new LocationInUseException(
                     location.getLocationName(),
-                    eventSessionCount,
-                    attendanceRecordCount,
+                    venueEventCount + regEventCount,
+                    attendanceCountByEventLocationId + attendanceCountByLocationRef,
                     "delete"
             );
         }
