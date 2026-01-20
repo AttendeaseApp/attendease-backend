@@ -92,4 +92,6 @@ public interface EventRepository extends MongoRepository<Event, String> {
     List<Event> findByEventStatusInAndAcademicYearIdAndSemester(List<EventStatus> finalized, String academicYearId, Integer semester);
 
     List<Event> findByAcademicYearId(String academicYearId);
+
+	Long countByRegistrationLocationId(String locationId);
 }
