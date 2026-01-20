@@ -12,6 +12,7 @@ import com.attendease.backend.domain.user.User;
 import com.attendease.backend.exceptions.domain.ImportException.CsvImportException;
 import com.attendease.backend.osa.service.management.user.account.ManagementUserAccountService;
 import com.attendease.backend.osa.service.utility.csv.parser.UserCsvParser;
+import com.attendease.backend.repository.attendanceRecords.AttendanceRecordsRepository;
 import com.attendease.backend.repository.biometrics.BiometricsRepository;
 import com.attendease.backend.repository.section.SectionRepository;
 import com.attendease.backend.repository.students.StudentRepository;
@@ -34,6 +35,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RequiredArgsConstructor
 public class ManagementUserAccountServiceImpl implements ManagementUserAccountService {
+    private final AttendanceRecordsRepository attendanceRecordsRepository;
 
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
@@ -107,7 +109,7 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
         List<User> users = userRepository.findAll();
         List<Students> students = studentRepository.findByUserIn(users);
         log.info("Retrieved {} students and {} users", students.size(), users.size());
-        Map<String, Students> studentMap = students.stream().collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
+        Map<String, Students> studentMap = students.stream().filter(s -> s.getUser() != null).collect(Collectors.toMap(s -> s.getUser().getUserId(), s -> s));
         return users.stream().map(user -> mapToResponseDTO(user, studentMap.get(user.getUserId()))).collect(Collectors.toList());
     }
 
@@ -160,6 +162,10 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "user not found: " + userId);
         }
         studentRepository.findByUser_UserId(userId).ifPresent(student -> {
+            String studentNumber = student.getStudentNumber();
+            attendanceRecordsRepository.deleteByStudent_StudentNumber(studentNumber);
+            log.info("Deleted attendance records for studentNumber={}", studentNumber);
+
             if (student.getFacialData() != null) {
                 biometricsRepository.deleteById(student.getFacialData().getFacialId());
             }
@@ -188,14 +194,19 @@ public class ManagementUserAccountServiceImpl implements ManagementUserAccountSe
             log.info("No students found in section: {}", sectionName);
             return;
         }
-        List<String> userIds = students.stream().map(Students::getUserId).toList();
+        List<String> userIds = students.stream().map(Students::getUserId).filter(Objects::nonNull).toList();
+
+        students.forEach(student -> attendanceRecordsRepository.deleteByStudent_StudentNumber(student.getStudentNumber()));
         students.stream()
-                .filter(s -> s.getFacialData() != null)
-                .forEach(s -> biometricsRepository.deleteById(s.getFacialData().getFacialId()));
+                .map(Students::getFacialData)
+                .filter(Objects::nonNull)
+                .map(BiometricData::getFacialId)
+                .forEach(biometricsRepository::deleteById);
+
         studentRepository.deleteAll(students);
         userRepository.deleteAllById(userIds);
-        log.info("Deleted {} students and their associated user accounts from section: {}",
-                students.size(), sectionName);
+
+        log.info("Deleted {} students, attendance records, and user accounts from section {}", students.size(), sectionName);
     }
 
     /**
