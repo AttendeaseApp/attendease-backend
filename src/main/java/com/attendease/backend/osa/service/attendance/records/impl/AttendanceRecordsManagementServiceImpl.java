@@ -356,11 +356,19 @@ public final class AttendanceRecordsManagementServiceImpl implements AttendanceR
 		long totalIdle = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.IDLE).count();
 		long totalLate = records.stream().filter(r -> r.getAttendanceStatus() == AttendanceStatus.LATE).count();
 
+		String regLocationName = event.getRegistrationLocation() != null
+				? event.getRegistrationLocation().getLocationName()
+				: "No Registration Location";
+
+		String venueLocationName = event.getVenueLocation() != null
+				? event.getVenueLocation().getLocationName()
+				: "No Venue Location";
+
 		return FinalizedAttendanceRecordsResponse.builder()
 				.eventId(event.getEventId())
 				.eventName(event.getEventName())
-				.registrationLocationName(event.getRegistrationLocationName())
-				.venueLocationName(event.getVenueLocationName())
+				.registrationLocationName(regLocationName)
+				.venueLocationName(venueLocationName)
 				.registrationDateTime(event.getRegistrationDateTime())
 				.startingDateTime(event.getStartingDateTime())
 				.endingDateTime(event.getEndingDateTime())
