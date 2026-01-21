@@ -18,52 +18,58 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ManagementEventMonitoringServiceImpl implements ManagementEventMonitoringService {
 
-    private final EventRepository eventRepository;
-    private final AttendanceRecordsRepository attendanceRecordsRepository;
+	private final EventRepository eventRepository;
+	private final AttendanceRecordsRepository attendanceRecordsRepository;
 
-    @Override
-    public List<Event> getEventWithUpcomingRegistrationOngoingStatuses() {
-        return eventRepository.findByEventStatusIn(List.of(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
-    }
+	@Override
+	public List<Event> getEventWithUpcomingRegistrationOngoingStatuses() {
+		return eventRepository.findByEventStatusIn(List.of(EventStatus.UPCOMING, EventStatus.REGISTRATION, EventStatus.ONGOING));
+	}
 
-    @Override
-    public EventAttendeesResponse getAttendeesByEventWithRegisteredAttendanceStatus(String eventId) {
-        List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
+	@Override
+	public EventAttendeesResponse getAttendeesByEventWithRegisteredAttendanceStatus(String eventId) {
+		List<AttendanceRecords> records = attendanceRecordsRepository.findByEventEventId(eventId);
 
-        List<AttendeesResponse> attendees = records
-            .stream()
-            .filter(Objects::nonNull)
-            .filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED || record.getAttendanceStatus() == AttendanceStatus.LATE)
-            .filter(record -> record.getStudent() != null && record.getStudent().getUser() != null)
-            .map(this::mapToAttendeeResponse)
-            .distinct()
-            .toList();
+		List<AttendeesResponse> attendees = records
+				.stream()
+				.filter(Objects::nonNull)
+				.filter(record -> record.getAttendanceStatus() == AttendanceStatus.REGISTERED || record.getAttendanceStatus() == AttendanceStatus.LATE)
+				.filter(record -> record.getStudent() != null && record.getStudent().getUser() != null)
+				.map(this::mapToAttendeeResponse)
+				.distinct()
+				.toList();
 
-        return EventAttendeesResponse.builder().totalAttendees(attendees.size()).attendees(attendees).build();
-    }
+		return EventAttendeesResponse.builder().totalAttendees(attendees.size()).attendees(attendees).build();
+	}
 
-    private AttendeesResponse mapToAttendeeResponse(AttendanceRecords record) {
-        var student = record.getStudent();
-        var user = student.getUser();
-        String sectionName = (student.getSection() != null) ? student.getSection().getSectionName() : "";
+	private AttendeesResponse mapToAttendeeResponse(AttendanceRecords record) {
+		var student = record.getStudent();
+		var user = student.getUser();
+		var section = student.getSection();
+		var course = section != null ? section.getCourse() : null;
+		var cluster = course != null ? course.getCluster() : null;
 
-        return AttendeesResponse.builder()
-            .userId(user.getUserId())
-            .firstName(user.getFirstName())
-            .lastName(user.getLastName())
-            .email(user.getEmail())
-            .contactNumber(user.getContactNumber())
-            .accountStatus(user.getAccountStatus())
-            .userType(user.getUserType())
-            .createdAt(user.getCreatedAt())
-            .updatedAt(user.getUpdatedAt())
-            .studentId(student.getId())
-            .studentNumber(student.getStudentNumber())
-            .sectionName(sectionName)
-            .attendanceStatus(record.getAttendanceStatus())
-            .reason(record.getReason())
-            .timeIn(record.getTimeIn())
-            .attendanceRecordId(record.getRecordId())
-            .build();
-    }
+		return AttendeesResponse.builder()
+				.attendanceRecordId(record.getRecordId())
+				.userId(user.getUserId())
+				.firstName(user.getFirstName())
+				.lastName(user.getLastName())
+				.email(user.getEmail())
+				.contactNumber(user.getContactNumber())
+				.accountStatus(user.getAccountStatus())
+				.userType(user.getUserType())
+				.attendanceStatus(record.getAttendanceStatus())
+				.reason(record.getReason() != null ? record.getReason() : "")
+				.timeIn(record.getTimeIn())
+				.timeOut(record.getTimeOut())
+				.createdAt(user.getCreatedAt())
+				.updatedAt(user.getUpdatedAt())
+				.studentId(student.getId())
+				.studentNumber(student.getStudentNumber())
+				.yearLevel(student.getYearLevel())
+				.sectionName(section != null ? section.getSectionName() : "")
+				.courseName(course != null ? course.getCourseName() : "")
+				.clusterName(cluster != null ? cluster.getClusterName() : "")
+				.build();
+	}
 }
