@@ -67,15 +67,20 @@ all built manually inside the Spring Boot application
 
 ---
 
-###  2. No Role Separation. All Accounts Should Had Equal Access
-**Problem:** OSA or the Student Affairs (ACTS AS ADMIN TO ALL) had access to all data including the User Accounts and its management which should be unecesarry for this role. There was no dedicated admin module.
+### 2. Lack of Granular Role-Based Access Control (RBAC)
+**Problem:** There was no separation between "Administrative" and "Operational" roles. The Office of Student Affairs (OSA) acted as a "Super Admin," granting them access to sensitive system configurations and user account management that were unnecessary for their daily tasks.
 
 **Why it was bad:**
-- OSA staff could access admin functions they should not see
-- No principle of least privilege
+- **Violation of Least Privilege:** OSA staff could accidentally (or intentionally) modify system-level user data or security settings.
+- **Security Risk:** If a single OSA staff account was compromised, the entire system—including user credentials and logs—was exposed.
+- **No Audit Trail:** Because everyone had "Admin" power, it was impossible to track who made specific high-level changes.
 
-**Re-Implementation Fix:** RBAC implementation via Auth0 roles. Each role only accesses its permitted routes.
-
+**Future Stakeholder & User Type Definitions:**
+In a production ready version, the roles should be strictly decoupled:
+* **System Admin (Technical):** Manages server health, database backups, and Auth0 configurations. No access to student attendance records.
+* **OSA Staff (Operational):** Manages and monitor events, manages location, and generates reports. No access to user password management or system audit logs.
+* **Student (End-User):** STILL should accesses only their personal attendance history and event registration.
+  
 ---
 
 ###  3. MongoDB for Relational Data
