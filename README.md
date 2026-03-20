@@ -6,12 +6,7 @@ An Automated Attendance Monitoring System using Geofencing and Facial Recognitio
 
 **Jake Viado** *Lead Developer & System Architect of RCians Attendease*
 
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/jakeeviado)
-
-> **"Built with passion 24/7 and I don’t ever want that to happen again hahaha"**
-> 
-> Looking back, most of that all-nighter grind was spent fighting technical debt and architectural decisions made before I knew better
----
+https://github.com/jakeeviado
 
 ## Project Overview
 
@@ -33,9 +28,19 @@ own attendance through their mobile devices.
 - **Event Registration & Tracking** — students can register for events; attendance is tracked
   and monitored in real time
 - **Role-based Access** — OSA and students see only what is relevant to their role
-  
----
 
+---
+## System Architecture
+
+| Layer                              | Technology            | Role & Implementation                                                                                       |
+|:-----------------------------------|:----------------------|:------------------------------------------------------------------------------------------------------------|
+| **Service Layer (Core)**           | LayerTechnology       | Primary Backend: Handles business logic, event orchestration, and real-time WebSocket updates.              |
+| **Facial Recogntion Microservice** | Microservice          | Dedicated service for Facial Recognition processing and identity verification.                              |
+| **Presentation (Web)**             | Presentation (Web)    | OSA Module: Administrative module for event, location, user, academic management and attendance monitoring. |
+| **Presentation (Mobile)**          | Presentation (Mobile) | Student Module: Built with Expo for GPS tracking, Geofencing, and student check-ins.                        |
+| **Database**                       | Database              | NoSQL storage for flexible student profiles.                                                                |
+
+---
 
 ## Do I Recommend Using This Iteration?
 
@@ -52,7 +57,7 @@ If you are here to study how **Spring Boot, Python, MongoDB, WebSockets, and Mic
 
 ## Bad Design Decisions (This Version)
 
-These were identified issues in this implementation that have since been addressed during and after the final wave of development of this project
+These were identified issues in this implementation that have never been addressed during and after the final wave of development of this project
 
 ###  1. Dedicated User Account Management Inside Spring Boot
 **Problem:** User registration, password hashing, session management, and role logic were
