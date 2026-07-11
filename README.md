@@ -1,39 +1,30 @@
-# RCians Attendease
+## RCians Attendease Core
 
-An Automated Attendance Monitoring System using Geofencing and Facial Recognition Technologies for the College Students of Rogationist College - Silang, Cavite, Philippines
+Automated Attendance Monitoring System using Geofencing and Facial Recognition Technologies
 
-## Project Overview
+### Project Overview
 
-RCians Attendease is an automated attendance monitoring and tracking system built for the college students of Rogationist College. It automates student attendance management and event registration by leveraging mobile Geofencing and GPS to detect student presence within a defined location boundary, eliminating manual attendance taking entirely.
+RCians Attendease eliminates manual attendance taking by replacing paper logs with a robust, location-aware digital system. Designed for the Office of Student Affairs (OSA), the system ensures academic integrity by verifying student presence through real-time GPS boundary detection and biometric authentication.
 
-To ensure identity integrity during registration, Attendease integrates a dedicated Facial Recognition service that validates a student's identity before completing their registration preventing proxy attendance and unauthorized event sign-ups.
+### Core Features
 
-The system serves two primary user roles: **OSA (Office of Student Affairs)** staff who manage
-events, monitor attendance, and generate reports, and **Students** who register and track their
-own attendance through their mobile devices.
-
----
-## Core Features
-
-- **Geofencing & GPS-based Attendance** — automatically marks attendance when a student's device
+- **Geofencing & GPS-based Attendance** automatically marks attendance when a student's device
   enters the defined campus or event boundary
-- **Facial Recognition Validation** — a separate microservice verifies student identity during
+- **Facial Recognition Validation** a separate microservice verifies student identity during
   registration to prevent proxy attendance
-- **Event Registration & Tracking** — students can register for events; attendance is tracked
+- **Event Registration & Tracking** students can register for events; attendance is tracked
   and monitored in real time
-- **Role-based Access** — OSA and students see only what is relevant to their role
+- **Role-based Access** OSA and students see only what is relevant to their role
+
+### System Architecture
+
+The system follows a scalable **3-Tier Architecture**, ensuring a clean separation between the user interface, business logic, and data storage.
+
+| Tier                   | Components                             | Implementation & Role                                                                                               |
+| :--------------------- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| **Presentation Layer** | Admin Web Portal & Student Mobile App  | Provides role-specific interfaces for OSA staff and students, handling GPS/Geofencing triggers via Expo.            |
+| **Application Layer**  | Core Service & Biometrics Microservice | Handles core business logic, event orchestration, real-time WebSocket updates, and facial recognition verification. |
+| **Data Layer**         | NoSQL Database                         | Manages persistent storage for student profiles, event logs, and attendance records.                                |
 
 ---
-## System Architecture
-
-| Layer                              | Technology            | Role & Implementation                                                                                       |
-|:-----------------------------------|:----------------------|:------------------------------------------------------------------------------------------------------------|
-| **Service Layer (Core)**           | LayerTechnology       | Primary Backend: Handles business logic, event orchestration, and real-time WebSocket updates.              |
-| **Facial Recogntion Microservice** | Microservice          | Dedicated service for Facial Recognition processing and identity verification.                              |
-| **Presentation (Web)**             | Presentation (Web)    | OSA Module: Administrative module for event, location, user, academic management and attendance monitoring. |
-| **Presentation (Mobile)**          | Presentation (Mobile) | Student Module: Built with Expo for GPS tracking, Geofencing, and student check-ins.                        |
-| **Database**                       | Database              | NoSQL storage for flexible student profiles.                                                                |
-
----
-
-**for RCians**
+For the College Department of Rogationist College - Silang, Cavite, Philippines
